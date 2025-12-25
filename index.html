@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dasboard</title>
+
+  <!-- ✅ PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+
+      --shadow: 0 10px 30px rgba(15,23,42,.10);
+      --shadow2: 0 2px 10px rgba(15,23,42,.10);
+
+      --topbar-h: 74px;
+      --sb-w: 260px;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin:0;
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding-top: var(--topbar-h);
+    }
+
+    /* ===== Navbar ===== */
+    .navbar{
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(229,231,235,.9);
+      box-shadow: 0 8px 30px rgba(15,23,42,.08);
+      padding: 14px 16px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 10;
+      height: var(--topbar-h);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .menu-icon{
+      position:absolute;
+      left: 16px;
+      width:44px; height:44px;
+      display:grid;
+      place-items:center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(96,165,250,.10));
+      color: #2563eb;
+      font-size: 20px;
+      cursor:pointer;
+      box-shadow: var(--shadow2);
+      user-select:none;
+      border: 1px solid rgba(37,99,235,.18);
+    }
+    .menu-icon:active{ transform: scale(.98); }
+
+    .navbar h1{
+      font-size: 20px;
+      margin:0;
+      font-weight: 1000;
+      letter-spacing:.2px;
+    }
+
+    /* ✅ Sidebar overlay (navbar এর উপর) */
+    .sidebar-overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      z-index: 9998;
+      opacity:0;
+      pointer-events:none;
+      transition:.2s;
+    }
+    .sidebar-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* ✅ Sidebar */
+    .sidebar{
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sb-w);
+      height: 100%;
+      transform: translateX(-110%);
+      transition: .28s ease;
+      z-index: 9999;
+      background: linear-gradient(180deg, #070c18 0%, #0b1020 35%, #0f172a 70%, #070c18 100%);
+      box-shadow: 0 30px 110px rgba(0,0,0,.45);
+      padding: 14px 12px 18px 12px;
+      overflow: auto;
+    }
+    .sidebar.open{ transform: translateX(0); }
+
+    .sb-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 6px 6px 10px 6px;
+    }
+
+    .sb-title{
+      color:#ffffff;
+      font-weight: 1000;
+      font-size: 26px;
+      line-height: 1.05;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+
+    .sb-sub{
+      color: rgba(255,255,255,.70);
+      font-weight: 800;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .sb-close{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius: 14px;
+      cursor:pointer;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      box-shadow: 0 14px 30px rgba(0,0,0,.35);
+      backdrop-filter: blur(6px);
+    }
+    .sb-close:active{ transform: scale(.98); }
+
+    .sb-divider{
+      height: 1px;
+      background: rgba(255,255,255,.10);
+      margin: 12px 0 14px 0;
+    }
+
+    .sb-links{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      padding: 0 6px;
+    }
+
+    .sidebar a{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: rgba(255,255,255,.95);
+      text-decoration:none;
+      font-weight: 900;
+      font-size: 15px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 12px 30px rgba(0,0,0,.25);
+      transition: .18s;
+    }
+    .sidebar a:hover{
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.18);
+      transform: translateY(-1px);
+    }
+    .sidebar a:active{ transform: translateY(0); }
+
+    .sb-ic{
+      width:36px;
+      height:36px;
+      border-radius: 12px;
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      font-size: 18px;
+      flex: 0 0 auto;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    /* ✅ Install Button (only shows when available) */
+    #installBtn{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      cursor:pointer;
+    }
+
+    /* ===== Main ===== */
+    .main-content{
+      padding: 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    /* ===== Cards ===== */
+    .card{
+      border-radius: 20px;
+      padding: 18px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,.55);
+      box-shadow: 0 14px 40px rgba(15,23,42,.14);
+      color: #fff;
+      min-height: 110px;
+      text-align:center;
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      width: 230px;
+      height: 230px;
+      right: -95px;
+      top: -125px;
+      background: rgba(255,255,255,.20);
+      filter: blur(2px);
+      border-radius: 999px;
+    }
+
+    .card-text{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+      width:100%;
+    }
+
+    .card h3{
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: .4px;
+      font-weight: 1000;
+      opacity: .98;
+    }
+
+    .card p{
+      font-size: 25px;
+      font-weight: 1000;
+      margin: 0;
+      letter-spacing: .2px;
+      line-height: 1.05;
+      text-shadow: 0 10px 26px rgba(0,0,0,.18);
+    }
+
+    .card small{ display:none; }
+    .icon{ display:none; }
+
+    /* 8 cards theme */
+    .card.total{  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 35%, #f97316 100%); }
+    .card.stock{  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 55%, #60a5fa 100%); }
+    .card.pending{background: linear-gradient(135deg, #f59e0b 0%, #fb7185 55%, #ef4444 100%); }
+    .card.hand{   background: linear-gradient(135deg, #10b981 0%, #22c55e 55%, #84cc16 100%); }
+    .card.sales{  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 55%, #a855f7 100%); }
+    .card.expense{background: linear-gradient(135deg, #7c3aed 0%, #ec4899 55%, #fb7185 100%); }
+    .card.profit{ background: linear-gradient(135deg, #16a34a 0%, #22c55e 55%, #06b6d4 100%); }
+    .card.baki{   background: linear-gradient(135deg, #111827 0%, #334155 55%, #0f172a 100%); }
+
+    /* ✅ Loading Overlay */
+    .loading{
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(6px);
+      opacity:0;
+      pointer-events:none;
+      transition:.18s ease;
+    }
+    .loading.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .loading-card{
+      background: rgba(15,23,42,.92);
+      color:#fff;
+      border-radius: 18px;
+      padding: 18px 18px;
+      min-width: 220px;
+      box-shadow: 0 25px 80px rgba(0,0,0,.35);
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .spinner{
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.25);
+      border-top-color: rgba(255,255,255,.95);
+      animation: spin .9s linear infinite;
+      flex: 0 0 auto;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px){
+      .main-content{ padding: 14px; }
+      :root{ --sb-w: 250px; }
+      .sb-title{ font-size: 24px; }
+      .sidebar a{ font-size: 14px; }
+      .sb-ic{ width:34px; height:34px; font-size:17px; }
+      .sb-close{ width:42px; height:42px; font-size:20px; }
+      .grid{ grid-template-columns: 1fr; }
+      .card p{ font-size: 32px; }
+      .card h3{ font-size: 16px; }
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+  <!-- ✅ Loading -->
+  <div id="loading" class="loading">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div style="font-weight:1000; letter-spacing:.2px;">Loading...</div>
+    </div>
+  </div>
+
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebarFromOverlay()"></div>
+
+  <div class="navbar">
+    <span class="menu-icon" onclick="toggleSidebar(event)">☰</span>
+    <h1>আমার ব্যাবসা</h1>
+  </div>
+
+  <div id="sidebar" class="sidebar">
+    <div class="sb-head">
+      <div>
+        <div class="sb-title">Dashboard</div>
+        <div class="sb-sub">মেনু</div>
+      </div>
+      <button class="sb-close" onclick="closeSidebarFromOverlay()" aria-label="Close">×</button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-links">
+      <a href="#" onclick="goToPage('index')"><span class="sb-ic">🏠</span> Dashboard</a>
+      <a href="#" onclick="goToPage('hisab')"><span class="sb-ic">🧾</span> লেনদেন</a>
+      <a href="#" onclick="goToPage('stock')"><span class="sb-ic">📦</span> মালের স্টক</a>
+      <a href="#" onclick="goToPage('today')"><span class="sb-ic">📅</span> আজকের সেল</a>
+      <a href="#" onclick="goToPage('baki')"><span class="sb-ic">🧍</span> বাকীর হিসাব</a>
+
+      <!-- ✅ Install App (only shows when supported) -->
+      <a id="installBtn" href="#" onclick="installPWA(); return false;">
+        <span class="sb-ic">📲</span> Install App
+      </a>
+
+      <!-- ✅ Logout -->
+      <a href="#" onclick="HISAB_AUTH.doLogout(); return false;">
+        <span class="sb-ic">🚪</span> Logout
+      </a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="grid">
+      <div class="card total">
+        <div class="card-text">
+          <h3>Total Balance</h3>
+          <p id="cardTotal">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+      </div>
+
+      <div class="card stock">
+        <div class="card-text">
+          <h3>Stock Balance</h3>
+          <p id="cardStock">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      </div>
+
+      <div class="card pending">
+        <div class="card-text">
+          <h3>Pending Amount</h3>
+          <p id="cardPending">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-hourglass-half"></i></div>
+      </div>
+
+      <div class="card hand">
+        <div class="card-text">
+          <h3>Hand Cash</h3>
+          <p id="cardHandCash">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+      </div>
+
+      <div class="card sales">
+        <div class="card-text">
+          <h3>Today Sales</h3>
+          <p id="cardTodaySales">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-cart-shopping"></i></div>
+      </div>
+
+      <div class="card expense">
+        <div class="card-text">
+          <h3>Today Expense</h3>
+          <p id="cardTodayExpense">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-receipt"></i></div>
+      </div>
+
+      <div class="card profit">
+        <div class="card-text">
+          <h3>Today Profit</h3>
+          <p id="cardTodayProfit">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-sack-dollar"></i></div>
+      </div>
+
+      <div class="card baki">
+        <div class="card-text">
+          <h3>Total Due</h3>
+          <p id="cardBakiTotal">৳ 0</p>
+          <small>hidden</small>
+        </div>
+        <div class="icon"><i class="fa-solid fa-user-clock"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Auth + Install -->
+  <script src="./auth.js"></script>
+  <script src="./install.js"></script>
+
+  <!-- ✅ Service Worker Register -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+
+  <!-- ✅ Firebase based JS -->
+  <script type="module">
+    import { database } from './firebase-config.js';
+    import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    /* =========================
+       Loading Controller
+       ========================= */
+    const loadFlags = { packages:false, shipments:false, cash:false, transactions:false, baki:false };
+    let loadingTimer = null;
+
+    function showLoading(){
+      document.getElementById('loading').classList.add('show');
+    }
+    function hideLoading(){
+      document.getElementById('loading').classList.remove('show');
+    }
+    function startLoadingPulse(){
+      showLoading();
+      if (loadingTimer) clearTimeout(loadingTimer);
+      loadingTimer = setTimeout(() => {
+        if (Object.values(loadFlags).every(Boolean)) hideLoading();
+      }, 250);
+    }
+    function markLoaded(key){
+      loadFlags[key] = true;
+      if (Object.values(loadFlags).every(Boolean)) hideLoading();
+    }
+
+    /* =========================
+       Sidebar + Navbar (আগের মতোই)
+       ========================= */
+    window.toggleSidebar = function(event) {
+      if (event) event.stopPropagation();
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('sidebarOverlay');
+      sb.classList.toggle('open');
+      if (sb.classList.contains('open')) ov.classList.add('show');
+      else ov.classList.remove('show');
+    }
+
+    window.closeSidebarFromOverlay = function(){
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+
+    document.addEventListener('click', (event) => {
+      const sb = document.getElementById('sidebar');
+      const menuIcon = document.querySelector('.menu-icon');
+      if (!sb.contains(event.target) && event.target !== menuIcon) {
+        window.closeSidebarFromOverlay();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.closeSidebarFromOverlay();
+    });
+
+    window.goToPage = function(page) {
+      window.location.href = page + '.html';
+    }
+
+    /* =========================
+       Helpers
+       ========================= */
+    function todayISO(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+
+    function safeISODate(v){
+      return v ? String(v).slice(0,10) : "";
+    }
+
+    function toBDT(n){
+      const val = Number(n) || 0;
+      try{
+        return "৳ " + val.toLocaleString("en-US", { maximumFractionDigits: 0 });
+      }catch(e){
+        return "৳ " + Math.round(val).toLocaleString();
+      }
+    }
+
+    /* =========================
+       Dashboard State
+       ========================= */
+    const state = {
+      packages: {},
+      shipments: [],
+      cash: [],
+      transactions: [],
+      bakiDueTotal: 0,        // ✅ শুধু পাওনা (Due)
+      collectionTotal: 0,     // ✅ today.html payment(cashReceived) মোট (ডাবল কাউন্ট ছাড়া)
+      bakiPaidTotal: 0        // ✅ NEW: baki.html collection (paidAmt total) -> Hand Cash এ যোগ হবে
+    };
+
+    function num(x){ return Number(x) || 0; }
+
+    function computeShipmentAmount(sh, packagesMap){
+      if (num(sh.amount) > 0) return num(sh.amount);
+      if (Array.isArray(sh.items)){
+        let t = 0;
+        for (const it of sh.items){
+          const bp = num(packagesMap?.[it.pkgKey]?.buyPrice);
+          const pcs = num(it.totalPieces);
+          t += bp * pcs;
+        }
+        return t;
+      }
+      return 0;
+    }
+
+    function computeStockBalance(packagesMap){
+      let total = 0;
+      for (const p of Object.values(packagesMap || {})){
+        const stock = num(p.stock);
+        const buyPrice = num(p.buyPrice);
+        total += stock * buyPrice;
+      }
+      return total;
+    }
+
+    /* ✅ RULES:
+       cashTransactions:
+       - deposit  => Hand Cash +
+       - cashout  => Hand Cash -
+       - bank     => Hand Cash - AND Pending +   (bank transfer: hand -> pending)
+
+       ✅ CHANGE:
+       - Today Sales এর টাকা Hand Cash এ যোগ হবে না
+       - today.html payment (cashReceived) -> Hand Cash
+       - baki.html collection (paidAmt total) -> Hand Cash
+    */
+    function computeCashAndPending(cashRows, shipmentRows, packagesMap, collectionTotal, bakiPaidTotal){
+      let hand = 0;
+      let pending = 0;
+
+      for (const r of (cashRows || [])){
+        const type = String(r.type || "").toLowerCase();
+        const amt = num(r.cashAmount ?? r.amount);
+
+        if (type === "deposit"){
+          hand += amt;
+        }else if (type === "cashout"){
+          hand -= amt;
+        }else if (type === "bank"){
+          hand -= amt;
+          pending += amt;
+        }
+      }
+
+      // ✅ today.html payment -> Hand Cash
+      hand += num(collectionTotal);
+
+      // ✅ NEW: baki.html collection (paidAmt total) -> Hand Cash
+      hand += num(bakiPaidTotal);
+
+      // shipments purchase => pending কমবে (ক্রয়মূল্য)
+      let shipBuy = 0;
+      for (const sh of (shipmentRows || [])){
+        shipBuy += computeShipmentAmount(sh, packagesMap);
+      }
+      pending -= shipBuy;
+
+      return { hand, pending };
+    }
+
+    function computeTodayExpense(cashRows){
+      const t = todayISO();
+      let todayExpense = 0;
+      for (const r of (cashRows || [])){
+        const type = String(r.type || "").toLowerCase();
+        const d = safeISODate(r.date);
+        if (type === "cashout" && d === t){
+          todayExpense += num(r.cashAmount ?? r.amount);
+        }
+      }
+      return todayExpense;
+    }
+
+    function findPackageBuyByName(pkgName, packagesMap){
+      const name = String(pkgName || "");
+      for (const p of Object.values(packagesMap || {})){
+        if (String(p.name || "") === name) return num(p.buyPrice);
+      }
+      return 0;
+    }
+
+    function computeTodaySalesProfitFromTransactions(transactionsRows, packagesMap){
+      const t = todayISO();
+      let sales = 0;
+      let profit = 0;
+
+      for (const tr of (transactionsRows || [])){
+        const d = safeISODate(tr.date);
+        if (d !== t) continue;
+
+        const type = String(tr.type || "Out");
+        const qty = num(tr.totalPcs);
+        const sell = num(tr.pkgSellPrice);
+        const amt = qty * sell;
+
+        const buy = findPackageBuyByName(tr.pkgName, packagesMap);
+        const unitProfit = sell - buy;
+        const pAmt = unitProfit * qty;
+
+        if (type === "Out"){
+          sales += amt;
+          profit += pAmt;
+        }else{
+          sales -= amt;
+          profit -= pAmt;
+        }
+      }
+
+      return { sales, profit };
+    }
+
+    /* ✅ Baki: শুধু Due card এ যাবে */
+    function computeBakiDueOnly(transactionsRows){
+      let dueTotal = 0;
+
+      for (const tr of (transactionsRows || [])){
+        const dues = tr?.dues;
+        if (!Array.isArray(dues)) continue;
+
+        for (const d of dues){
+          const amt = num(d?.amt);
+          const paid = num(d?.paidAmt);
+          const due = amt - paid;
+          if (due > 0) dueTotal += due;
+        }
+      }
+
+      return dueTotal;
+    }
+
+    /* ✅ today.html payment cashReceived কে group-wise (date+person) একবার করে যোগ (ডাবল কাউন্ট রোধ) */
+    function computeCollectionTotalFromTransactions(transactionsRows){
+      const map = new Map(); // key: date_person -> cash
+      for (const tr of (transactionsRows || [])){
+        const person = String(tr.personName || "");
+        const date = safeISODate(tr.date);
+        const cash = num(tr.cashReceived);
+
+        if (!person || !date) continue;
+
+        const k = `${date}_${person}`;
+        const prev = map.get(k) || 0;
+        if (cash > prev) map.set(k, cash);
+      }
+
+      let total = 0;
+      for (const v of map.values()) total += num(v);
+      return total;
+    }
+
+    /* ✅ NEW: baki.html collection (paidAmt total) */
+    function computeBakiPaidTotalFromTransactions(transactionsRows){
+      let total = 0;
+      for (const tr of (transactionsRows || [])){
+        const dues = tr?.dues;
+        if (!Array.isArray(dues)) continue;
+        for (const d of dues){
+          total += num(d?.paidAmt);
+        }
+      }
+      return total;
+    }
+
+    function render(){
+      const stockBalance = computeStockBalance(state.packages);
+
+      const { hand, pending } = computeCashAndPending(
+        state.cash,
+        state.shipments,
+        state.packages,
+        state.collectionTotal,
+        state.bakiPaidTotal
+      );
+
+      const total = stockBalance + hand + pending;
+
+      const todayExpense = computeTodayExpense(state.cash);
+      const { sales: todaySales, profit: todayProfit } =
+        computeTodaySalesProfitFromTransactions(state.transactions, state.packages);
+
+      $("cardStock").textContent = toBDT(stockBalance);
+      $("cardHandCash").textContent = toBDT(hand);
+      $("cardPending").textContent = toBDT(pending);
+      $("cardTotal").textContent = toBDT(total);
+
+      $("cardTodayExpense").textContent = toBDT(todayExpense);
+      $("cardTodaySales").textContent = toBDT(todaySales);
+      $("cardTodayProfit").textContent = toBDT(todayProfit);
+
+      $("cardBakiTotal").textContent = toBDT(state.bakiDueTotal);
+    }
+
+    /* =========================
+       Firebase listeners
+       ========================= */
+
+    function pulse(){ startLoadingPulse(); }
+
+    // 1) packages
+    pulse();
+    onValue(ref(database, "packages"), (snap) => {
+      const map = {};
+      snap.forEach(ch => { map[ch.key] = ch.val(); });
+      state.packages = map;
+      markLoaded('packages');
+      render();
+    });
+
+    // 2) shipments
+    pulse();
+    onValue(ref(database, "shipments"), (snap) => {
+      const arr = [];
+      snap.forEach(ch => {
+        const v = ch.val() || {};
+        arr.push({ key: ch.key, ...v, date: safeISODate(v.date), createdAt: v.createdAt ?? 0 });
+      });
+      state.shipments = arr;
+      markLoaded('shipments');
+      render();
+    });
+
+    // 3) cashTransactions
+    pulse();
+    onValue(ref(database, "cashTransactions"), (snap) => {
+      const arr = [];
+      snap.forEach(ch => {
+        const v = ch.val() || {};
+        arr.push({
+          key: ch.key,
+          ...v,
+          date: safeISODate(v.date),
+          createdAt: v.createdAt ?? 0,
+          cashAmount: num(v.cashAmount ?? v.amount),
+          amount: num(v.cashAmount ?? v.amount)
+        });
+      });
+      state.cash = arr;
+      markLoaded('cash');
+      render();
+    });
+
+    // 4) transactions (today sale/return + baki dues + payment cashReceived)
+    pulse();
+    onValue(ref(database, "transactions"), (snap) => {
+      const arr = [];
+      snap.forEach(ch => {
+        const v = ch.val() || {};
+        arr.push({
+          key: ch.key,
+          ...v,
+          date: safeISODate(v.date),
+          totalPcs: num(v.totalPcs),
+          pkgSellPrice: num(v.pkgSellPrice),
+          type: v.type || "Out",
+          pkgName: v.pkgName || "",
+          personName: v.personName || "",
+          cashReceived: num(v.cashReceived),
+          dues: Array.isArray(v.dues) ? v.dues : []
+        });
+      });
+
+      state.transactions = arr;
+
+      // ✅ Due card: শুধু due
+      state.bakiDueTotal = computeBakiDueOnly(state.transactions);
+
+      // ✅ today.html payment (cashReceived)
+      state.collectionTotal = computeCollectionTotalFromTransactions(state.transactions);
+
+      // ✅ NEW: baki.html collection (paidAmt total)
+      state.bakiPaidTotal = computeBakiPaidTotalFromTransactions(state.transactions);
+
+      markLoaded('transactions');
+      markLoaded('baki');
+      render();
+    });
+
+    // Initial render
+    render();
+  </script>
+
+</body>
+</html>
