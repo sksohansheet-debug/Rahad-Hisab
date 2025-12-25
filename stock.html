@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+
+      --brand:#2563eb;
+      --brand2:#60a5fa;
+
+      --good:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --shadow2: 0 2px 10px rgba(15,23,42,.08);
+
+      --r12:12px;
+      --r16:16px;
+      --r18:18px;
+
+      --topbar-h: 110px;
+
+      /* ✅ sidebar width like screenshot */
+      --sb-w: 295px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+        var(--bg);
+      padding-top: var(--topbar-h);
+      color: var(--text);
+    }
+
+    /* =========================
+       ✅ NEW: Modern Page Loader
+    ========================== */
+    .page-loader{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(14px);
+      padding: 16px;
+    }
+    .loader-card{
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      padding: 26px 30px;
+      border-radius: 24px;
+      text-align:center;
+      box-shadow: 0 40px 120px rgba(0,0,0,.35);
+      width: min(420px, 92vw);
+    }
+    .loader-spin{
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      border: 5px solid #e5e7eb;
+      border-top-color: var(--brand);
+      margin: 0 auto;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg);} }
+    .loader-text{
+      margin-top: 12px;
+      font-weight: 1000;
+      color:#0f172a;
+      font-size: 14px;
+      letter-spacing: .2px;
+    }
+
+    /* ===== Navbar ===== */
+    .navbar{
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(229,231,235,.9);
+      box-shadow: 0 8px 30px rgba(15,23,42,.06);
+      padding: 10px 14px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+    .nav-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .nav-top span{
+      width:42px; height:42px;
+      display:grid;
+      place-items:center;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+      color: var(--brand);
+      font-size: 20px !important;
+      cursor:pointer;
+      box-shadow: var(--shadow2);
+      user-select:none;
+    }
+    .navbar h1{
+      font-size: 18px;
+      margin:0;
+      font-weight: 1000;
+      color: #0f172a;
+      letter-spacing:.2px;
+    }
+
+    .nav-buttons{
+      display:flex;
+      gap: 10px;
+      justify-content:center;
+    }
+    .btn{
+      flex:1;
+      padding: 10px 10px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 1000;
+      color: white;
+      text-align:center;
+      transition:.15s;
+      box-shadow: var(--shadow2);
+      white-space: nowrap;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn-cat{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+    .btn-pkg{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
+    .btn-stock{ background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1)); color:#111827; }
+
+    /* ✅ Sidebar overlay (like screenshot) */
+    .sidebar-overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      z-index: 80;
+      opacity:0;
+      pointer-events:none;
+      transition:.2s;
+    }
+    .sidebar-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* ✅ Sidebar (UPDATED to match screenshot) */
+    .sidebar{
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sb-w);
+      height: 100%;
+      transform: translateX(-110%);
+      transition: .28s ease;
+      z-index: 90;
+
+      background: linear-gradient(180deg, #0b1224 0%, #0f172a 45%, #0b1224 100%);
+      box-shadow: 0 30px 80px rgba(0,0,0,.28);
+
+      padding: 14px 14px 18px 14px;
+      overflow:auto;
+    }
+    .sidebar.open{ transform: translateX(0); }
+
+    /* header like screenshot: Taka Hisab + মেনু + X */
+    .sb-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 8px 4px 12px 4px;
+    }
+    .sb-title{
+      color:#fff;
+      font-weight: 1000;
+      font-size: 20px;
+      line-height: 1.1;
+      margin: 2px 0 0 0;
+    }
+    .sb-sub{
+      color: rgba(255,255,255,.65);
+      font-weight: 800;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .sb-close{
+      width:44px; height:44px;
+      border:none;
+      border-radius: 16px;
+      cursor:pointer;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+    .sb-close:active{ transform: scale(.98); }
+
+    .sb-divider{
+      height: 1px;
+      background: rgba(255,255,255,.08);
+      margin: 10px 0 14px 0;
+    }
+
+    .sb-links{ display:flex; flex-direction:column; gap: 12px; }
+
+    .sb-item{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 16px;
+
+      color: rgba(255,255,255,.92);
+      text-decoration:none;
+      font-weight: 1000;
+      font-size: 15px;
+
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition: .18s;
+    }
+    .sb-item:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.16);
+      transform: translateY(-1px);
+    }
+    .sb-ic{
+      width:34px; height:34px;
+      border-radius: 12px;
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size: 16px;
+    }
+
+    /* ===== Category + Cards ===== */
+    .category-section{
+      margin: 12px 10px 18px 10px;
+      background: rgba(255,255,255,.90);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 12px 0 6px 0;
+      overflow:hidden;
+    }
+    .category-title{
+      font-size: 15px;
+      font-weight: 1000;
+      margin: 0 14px 10px 14px;
+      color: #0f172a;
+      border-left: 5px solid var(--brand);
+      padding-left: 10px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .package-scroll-container{
+      display:flex;
+      overflow-x:auto;
+      white-space:nowrap;
+      padding: 6px 14px 14px 14px;
+      gap: 12px;
+      scrollbar-width:none;
+    }
+    .package-scroll-container::-webkit-scrollbar{ display:none; }
+
+    .package-card{
+      min-width: 150px;
+      max-width: 150px;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(229,231,235,.9);
+      position: relative;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(15,23,42,.06);
+      overflow:hidden;
+      transition:.15s;
+    }
+    .package-card:hover{ transform: translateY(-2px); }
+
+    .pkg-img-wrapper{
+      position: relative;
+      text-align:center;
+      background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.01));
+      padding: 8px 8px 0 8px;
+    }
+    .package-card img{
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .info-icon{
+      position:absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,.95);
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: var(--shadow2);
+      cursor:pointer;
+      font-size: 13px;
+      color: #111827;
+      border: 1px solid rgba(229,231,235,.9);
+    }
+
+    .pkg-details{ padding: 10px 10px 12px 10px; }
+    .pkg-name{
+      font-size: 13px;
+      font-weight: 1000;
+      color: #0f172a;
+      margin: 0;
+      white-space: normal;
+      height: 38px;
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow:hidden;
+    }
+    .pkg-price{
+      font-size: 15px;
+      color:#111827;
+      font-weight: 1000;
+      margin: 6px 0 8px 0;
+    }
+    .pkg-price::before{ content:"৳"; margin-right:2px; }
+
+    .display-stock{
+      background: rgba(37,99,235,.06);
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: 12px;
+      font-size: 12px;
+      padding: 6px 8px;
+      text-align:center;
+      color: #0f172a;
+      font-weight: 1000;
+      margin: 0 auto;
+      width: 92%;
+    }
+
+    /* ===== Modal / Form ===== */
+    .modal{
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.60);
+      z-index:100;
+      justify-content:center;
+      align-items:center;
+      padding: 16px;
+    }
+
+    /* ✅ UPDATED: modal width bigger + elements centered */
+    .modal-content{
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(229,231,235,.9);
+      padding: 18px;
+      border-radius: 18px;
+      width: 92%;
+      max-width: 520px; /* ✅ bigger */
+      overflow-y:auto;
+      max-height: 90vh;
+      box-shadow: 0 40px 120px rgba(0,0,0,.25);
+      margin: 0 auto;
+    }
+    .modal-content h2{
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 1000;
+      text-align:center;
+      color:#0f172a;
+    }
+
+    label{
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      display:block;
+      margin-top: 10px;
+      margin-left: 2px;
+      text-align:left;
+    }
+    input, select{
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0 10px 0;
+      border: 1px solid rgba(229,231,235,.95);
+      border-radius: 14px;
+      box-sizing:border-box;
+      font-family: inherit;
+      font-weight: 800;
+      outline:none;
+      background:#fff;
+      text-align:center; /* ✅ elements middle */
+    }
+    input:focus, select:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+    }
+    select:disabled{ background:#f0f0f0; cursor:not-allowed; }
+
+    /* ✅ NEW: Colorful boxes */
+    #shipDate{
+      background: linear-gradient(135deg, rgba(219,234,254,1), rgba(239,246,255,1));
+      border-color: rgba(37,99,235,.20);
+    }
+    #stockCatSelect{
+      background: linear-gradient(135deg, rgba(220,252,231,1), rgba(236,253,245,1));
+      border-color: rgba(22,163,74,.22);
+    }
+    #stockPkgSelect{
+      background: linear-gradient(135deg, rgba(237,233,254,1), rgba(245,243,255,1));
+      border-color: rgba(124,58,237,.22);
+    }
+    /* ✅ shipPerson box now used as filter (colorful) */
+    #shipPerson{
+      background: linear-gradient(135deg, rgba(255,237,213,1), rgba(255,247,237,1));
+      border-color: rgba(245,158,11,.25);
+    }
+    #catName, #pkgName, #pkgCaseQty, #pkgBuyPrice, #pkgSellPrice,
+    #editPkgName, #editPkgCaseQty, #editPkgBuyPrice, #editPkgSellPrice{
+      background: linear-gradient(135deg, rgba(241,245,249,1), rgba(255,255,255,1));
+      border-color: rgba(148,163,184,.35);
+    }
+
+    .edit-img-preview{
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      display:block;
+      margin: 10px auto;
+      border: 1px solid rgba(229,231,235,.95);
+      border-radius: 16px;
+      background: rgba(15,23,42,.02);
+      padding: 8px;
+    }
+
+    .save-btn{
+      width:100%;
+      background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
+      color:white;
+      border:none;
+      padding: 12px;
+      border-radius: 16px;
+      cursor:pointer;
+      font-weight: 1000;
+      margin-top: 10px;
+      box-shadow: var(--shadow2);
+    }
+    .delete-btn{
+      width:100%;
+      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+      color:white;
+      border:none;
+      padding: 12px;
+      border-radius: 16px;
+      cursor:pointer;
+      font-weight: 1000;
+      margin-top: 10px;
+      box-shadow: var(--shadow2);
+    }
+    .close-link{
+      display:block;
+      text-align:center;
+      margin-top: 14px;
+      color: var(--muted);
+      cursor:pointer;
+      font-size: 13px;
+      text-decoration: underline;
+      font-weight: 800;
+    }
+
+    /* Add Stock modal list view (keep) */
+    .calc-box{
+      margin-top: 6px;
+      background: rgba(37,99,235,.06);
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: 16px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 1000;
+      color: #0f172a;
+      text-align: center;
+    }
+    .list-wrap{
+      margin-top: 14px;
+      border-top: 1px solid rgba(229,231,235,.9);
+      padding-top: 12px;
+    }
+    .list-title{
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 1000;
+      color: #0f172a;
+    }
+    .item-card{
+      background: #fff;
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 16px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(15,23,42,.05);
+    }
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .item-top b{
+      font-size: 13px;
+      color:#0f172a;
+    }
+    .item-small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.4;
+      font-weight: 800;
+    }
+    .remove-item{
+      border:none;
+      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+      color:white;
+      font-weight: 1000;
+      padding: 8px 10px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-size: 12px;
+      white-space: nowrap;
+      box-shadow: var(--shadow2);
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ✅ NEW: Page Loader (shows before data loads) -->
+<div id="pageLoader" class="page-loader">
+  <div class="loader-card">
+    <div class="loader-spin"></div>
+    <div class="loader-text">ডাটা লোড হচ্ছে...</div>
+  </div>
+</div>
+
+<!-- ✅ Sidebar overlay -->
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebarFromOverlay()"></div>
+
+<div class="navbar">
+  <div class="nav-top">
+    <span onclick="toggleSidebar(event)">☰</span>
+    <h1>Stock Management</h1>
+    <div style="width: 42px;"></div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-cat" onclick="openModal('catModal')">+ Category</button>
+    <button class="btn btn-pkg" onclick="openModal('pkgModal')">+ Package</button>
+    <button class="btn btn-stock" onclick="openModal('stockAddModal')">+ Add Stock</button>
+  </div>
+</div>
+
+<!-- ✅ Sidebar (updated HTML like screenshot) -->
+<div id="sidebar" class="sidebar">
+  <div class="sb-head">
+    <div>
+      <div class="sb-title">Stock Hisab</div>
+      <div class="sb-sub">মেনু</div>
+    </div>
+    <button class="sb-close" onclick="closeSidebarFromOverlay()" aria-label="Close">✕</button>
+  </div>
+  <div class="sb-divider"></div>
+
+  <div class="sb-links">
+    <a class="sb-item" href="index.html"><span class="sb-ic">🏠</span> Dashboard</a>
+    <a class="sb-item" href="hisab.html"><span class="sb-ic">🧾</span> লেনদেন</a>
+    <a class="sb-item" href="stock.html"><span class="sb-ic">📦</span> মালের স্টক</a>
+    <a class="sb-item" href="today.html"><span class="sb-ic">📅</span> আজকের সেল</a>
+    <a class="sb-item" href="baki.html"><span class="sb-ic">🧍</span> বাকীর হিসাব</a>
+  </div>
+</div>
+
+<div id="displayArea"></div>
+
+<div id="catModal" class="modal">
+  <div class="modal-content">
+    <h2>নতুন ক্যাটাগরি</h2>
+    <input type="text" id="catName" placeholder="ক্যাটাগরির নাম">
+    <button class="save-btn" id="saveCategory">Save Category</button>
+    <span class="close-link" onclick="closeModal('catModal')">বন্ধ করুন</span>
+  </div>
+</div>
+
+<div id="pkgModal" class="modal">
+  <div class="modal-content">
+    <h2>নতুন প্যাকেজ</h2>
+    <select id="pkgCategory"><option value="">ক্যাটাগরি সিলেক্ট করুন</option></select>
+    <input type="text" id="pkgName" placeholder="প্যাকেজের নাম">
+    <input type="number" id="pkgCaseQty" placeholder="এক কেসে কত পিছ (যেমন: ১২)">
+    <input type="number" id="pkgBuyPrice" placeholder="কেনা মূল্য (Buy Price)">
+    <input type="number" id="pkgSellPrice" placeholder="বিক্রয় মূল্য (Sell Price)">
+    <input type="file" id="pkgImgInput" accept="image/*">
+    <img id="imgPreview" style="width:90px; height:90px; object-fit:cover; display:none; margin:10px auto; border-radius:16px; border:1px solid rgba(229,231,235,.95);">
+    <button class="save-btn" id="savePackage">Save Package</button>
+    <span class="close-link" onclick="closeModal('pkgModal')">বন্ধ করুন</span>
+  </div>
+</div>
+
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h2 style="text-align:center;">প্যাকেজ ডিটেইলস</h2>
+    <img id="editImgPreview" class="edit-img-preview" src="">
+    <input type="hidden" id="editPkgKey">
+    <label>ক্যাটাগরি:</label>
+    <select id="editPkgCategory"></select>
+    <label>প্যাকেজ নাম:</label>
+    <input type="text" id="editPkgName">
+    <label>কেস হিসাব (Qty per Case):</label>
+    <input type="number" id="editPkgCaseQty">
+    <label>কেনা মূল্য (Buy Price):</label>
+    <input type="number" id="editPkgBuyPrice">
+    <label>বিক্রয় মূল্য (Sell Price):</label>
+    <input type="number" id="editPkgSellPrice">
+    <button class="save-btn" id="updatePackage">Update Details</button>
+    <button class="delete-btn" id="deletePackage">Delete Package</button>
+    <span class="close-link" onclick="closeModal('editModal')">বন্ধ করুন</span>
+  </div>
+</div>
+
+<div id="stockAddModal" class="modal">
+  <div class="modal-content">
+    <h2>স্টক অ্যাড করুন</h2>
+
+    <!-- ✅ UPDATED: Date box + Shipment/Normal filter right side -->
+    <div style="display:flex; gap: 10px;">
+      <div style="flex:1;">
+        <label>তারিখ:</label>
+        <input type="date" id="shipDate">
+      </div>
+      <div style="flex:1;">
+        <label>ফিল্টার:</label>
+        <!-- ✅ ONLY Shipment + Normal, default Shipment -->
+        <select id="shipPerson">
+          <option value="Shipment" selected>সিপমেন্ট</option>
+          <option value="Normal">নরমাল</option>
+        </select>
+      </div>
+    </div>
+
+    <label>ক্যাটাগরি সিলেক্ট করুন:</label>
+    <select id="stockCatSelect"></select>
+
+    <label>প্যাকেজ সিলেক্ট করুন:</label>
+    <select id="stockPkgSelect" disabled><option value="">আগে ক্যাটাগরি বেছে নিন</option></select>
+
+    <div style="display:flex; gap: 10px;">
+      <div style="flex:1;">
+        <label>কয় কেস?</label>
+        <input type="number" id="inputCases" value="0">
+      </div>
+      <div style="flex:1;">
+        <label>খুচরা পিস?</label>
+        <input type="number" id="inputPcs" value="0">
+      </div>
+    </div>
+
+    <div class="calc-box" id="totalPiecesBox">মোট: 0 পিস</div>
+
+    <button class="save-btn" id="addToListBtn">OK (Add to List)</button>
+
+    <div class="list-wrap">
+      <h3 class="list-title">Transaction List</h3>
+      <div id="shipmentList"></div>
+    </div>
+
+    <button class="save-btn" id="saveStockBtn">Update Stock</button>
+
+    <span class="close-link" onclick="closeModal('stockAddModal')">বন্ধ করুন</span>
+  </div>
+</div>
+
+<script type="module">
+  import { database } from './firebase-config.js';
+  import { ref, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  const IMGBB_API_KEY = "B5c56ef8aba99aac2f560c6848a658f1";
+  let allPackages = {};
+
+  let shipmentItems = [];
+
+  /* ✅ loader control */
+  const pageLoader = document.getElementById('pageLoader');
+  let catLoaded = false;
+  let pkgLoaded = false;
+  function tryHideLoader(){
+    if(catLoaded && pkgLoaded){
+      pageLoader.style.display = 'none';
+    }
+  }
+
+  function todayISO() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function updateTotalPieces() {
+    const pkgKey = document.getElementById('stockPkgSelect').value;
+    const cases = parseInt(document.getElementById('inputCases').value) || 0;
+    const pcs = parseInt(document.getElementById('inputPcs').value) || 0;
+
+    let caseQty = 1;
+    if (pkgKey && allPackages[pkgKey]) {
+      caseQty = parseInt(allPackages[pkgKey].caseQty) || 1;
+    }
+    const total = (cases * caseQty) + pcs;
+    const box = document.getElementById('totalPiecesBox');
+    if (box) box.innerText = `মোট: ${total} পিস`;
+    return total;
+  }
+
+  function renderShipmentList() {
+    const listEl = document.getElementById('shipmentList');
+    if (!listEl) return;
+
+    if (shipmentItems.length === 0) {
+      listEl.innerHTML = `<div style="color:#64748b; font-size:12px; font-weight:800;">এখনো কিছু যোগ করা হয়নি</div>`;
+      return;
+    }
+
+    listEl.innerHTML = shipmentItems.map((it, idx) => {
+      return `
+        <div class="item-card">
+          <div class="item-top">
+            <div>
+              <b>${it.pkgName}</b>
+              <div class="item-small">
+                কেস: ${it.cases}<br>
+                পিছ: ${it.pcs}<br>
+                মোট পিছ: ${it.totalPieces}
+              </div>
+            </div>
+            <button class="remove-item" onclick="removeShipmentItem(${idx})">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.removeShipmentItem = (idx) => {
+    shipmentItems.splice(idx, 1);
+    renderShipmentList();
+  };
+
+  function mapTotalsByPkg(items) {
+    const m = {};
+    items.forEach(it => { m[it.pkgKey] = (m[it.pkgKey] || 0) + (it.totalPieces || 0); });
+    return m;
+  }
+
+  function calcAmountFromItems(items) {
+    let total = 0;
+    items.forEach(it => {
+      const buy = parseFloat(allPackages[it.pkgKey]?.buyPrice) || 0;
+      total += (it.totalPieces || 0) * buy;
+    });
+    return total;
+  }
+
+  function resetModalFields(id) {
+    if (id === 'catModal') {
+      const catName = document.getElementById('catName');
+      if (catName) catName.value = '';
+      return;
+    }
+
+    if (id === 'pkgModal') {
+      const pkgCategory = document.getElementById('pkgCategory');
+      const pkgName = document.getElementById('pkgName');
+      const pkgCaseQty = document.getElementById('pkgCaseQty');
+      const pkgBuyPrice = document.getElementById('pkgBuyPrice');
+      const pkgSellPrice = document.getElementById('pkgSellPrice');
+      const pkgImgInput = document.getElementById('pkgImgInput');
+      const imgPreview = document.getElementById('imgPreview');
+
+      if (pkgCategory) pkgCategory.value = '';
+      if (pkgName) pkgName.value = '';
+      if (pkgCaseQty) pkgCaseQty.value = '';
+      if (pkgBuyPrice) pkgBuyPrice.value = '';
+      if (pkgSellPrice) pkgSellPrice.value = '';
+      if (pkgImgInput) pkgImgInput.value = '';
+      if (imgPreview) { imgPreview.src = ''; imgPreview.style.display = 'none'; }
+      return;
+    }
+
+    if (id === 'stockAddModal') {
+      shipmentItems = [];
+      const shipDate = document.getElementById('shipDate');
+      const shipPerson = document.getElementById('shipPerson');
+      const stockCatSelect = document.getElementById('stockCatSelect');
+      const stockPkgSelect = document.getElementById('stockPkgSelect');
+      const inputCases = document.getElementById('inputCases');
+      const inputPcs = document.getElementById('inputPcs');
+
+      if (shipDate) shipDate.value = todayISO();
+
+      /* ✅ default Shipment selected */
+      if (shipPerson) shipPerson.value = "Shipment";
+
+      if (stockCatSelect) stockCatSelect.value = '';
+      if (stockPkgSelect) {
+        stockPkgSelect.disabled = true;
+        stockPkgSelect.innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
+      }
+      if (inputCases) inputCases.value = 0;
+      if (inputPcs) inputPcs.value = 0;
+
+      updateTotalPieces();
+      renderShipmentList();
+      return;
+    }
+  }
+
+  window.openModal = (id) => {
+    if (id !== 'editModal') resetModalFields(id);
+    document.getElementById(id).style.display = 'flex';
+
+    if(id === 'stockAddModal') {
+      populateStockCategories();
+      document.getElementById('stockPkgSelect').disabled = true;
+      document.getElementById('stockPkgSelect').innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
+      renderShipmentList();
+      updateTotalPieces();
+    }
+  };
+
+  window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+  /* ✅ Sidebar toggle + overlay (logic unchanged) */
+  window.toggleSidebar = (e) => {
+    e.stopPropagation();
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    sb.classList.toggle('open');
+    if (sb.classList.contains('open')) ov.classList.add('show');
+    else ov.classList.remove('show');
+  };
+  window.closeSidebarFromOverlay = () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  };
+  document.addEventListener('click', (event) => {
+    const sb = document.getElementById('sidebar');
+    const menuIcon = document.querySelector('.nav-top span');
+    if (!sb.contains(event.target) && event.target !== menuIcon) {
+      sb.classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.closeSidebarFromOverlay();
+  });
+
+  // ১. ক্যাটাগরি ও প্যাকেজ লোড
+  onValue(ref(database, 'categories'), (catSnapshot) => {
+    const pkgCatSelect = document.getElementById('pkgCategory');
+    const editPkgCatSelect = document.getElementById('editPkgCategory');
+    const displayArea = document.getElementById('displayArea');
+
+    let options = '<option value="">ক্যাটাগরি সিলেক্ট করুন</option>';
+    displayArea.innerHTML = '';
+
+    catSnapshot.forEach((catChild) => {
+      const catName = catChild.val().name;
+      options += `<option value="${catName}">${catName}</option>`;
+
+      const section = document.createElement('div');
+      section.className = 'category-section';
+      section.innerHTML = `
+        <div class="category-title">${catName}</div>
+        <div class="package-scroll-container" id="scroll-${catName.replace(/\\s+/g, '')}"></div>
+      `;
+      displayArea.appendChild(section);
+    });
+
+    pkgCatSelect.innerHTML = options;
+    editPkgCatSelect.innerHTML = options;
+
+    catLoaded = true;
+    tryHideLoader();
+
+    onValue(ref(database, 'packages'), (pkgSnapshot) => {
+      document.querySelectorAll('.package-scroll-container').forEach(el => el.innerHTML = '');
+      allPackages = {};
+
+      pkgSnapshot.forEach((pkgChild) => {
+        const pkg = pkgChild.val();
+        const pkgKey = pkgChild.key;
+
+        if (pkg.hidden === true) return;
+
+        allPackages[pkgKey] = { ...pkg, key: pkgKey };
+
+        const targetId = `scroll-${pkg.category.replace(/\\s+/g, '')}`;
+        const targetScroll = document.getElementById(targetId);
+
+        if(targetScroll) {
+          const card = document.createElement('div');
+          card.className = 'package-card';
+          card.innerHTML = `
+            <div class="pkg-img-wrapper">
+              <img src="${pkg.img}">
+              <div class="info-icon" onclick="openEditModal('${pkgKey}')"><i class="fas fa-info"></i></div>
+            </div>
+            <div class="pkg-details">
+              <p class="pkg-name">${pkg.name}</p>
+              <p class="pkg-price">${pkg.sellPrice}</p>
+              <div class="display-stock">Stock: ${pkg.stock || 0}</div>
+            </div>
+          `;
+          targetScroll.appendChild(card);
+        }
+      });
+
+      pkgLoaded = true;
+      tryHideLoader();
+    });
+  });
+
+  // ২. স্টক অ্যাড ফাংশনালিটি
+  function populateStockCategories() {
+    const stockCatSelect = document.getElementById('stockCatSelect');
+    onValue(ref(database, 'categories'), (snapshot) => {
+      let options = '<option value="">ক্যাটাগরি বেছে নিন</option>';
+      snapshot.forEach(child => {
+        options += `<option value="${child.val().name}">${child.val().name}</option>`;
+      });
+      stockCatSelect.innerHTML = options;
+    }, { onlyOnce: true });
+  }
+
+  document.getElementById('stockCatSelect').onchange = (e) => {
+    const selectedCat = e.target.value;
+    const stockPkgSelect = document.getElementById('stockPkgSelect');
+
+    if (selectedCat === "") {
+      stockPkgSelect.disabled = true;
+      stockPkgSelect.innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
+      updateTotalPieces();
+      return;
+    }
+
+    let options = '<option value="">প্যাকেজ বেছে নিন</option>';
+    let found = false;
+    Object.values(allPackages).forEach(pkg => {
+      if(pkg.category === selectedCat) {
+        options += `<option value="${pkg.key}">${pkg.name}</option>`;
+        found = true;
+      }
+    });
+
+    if(found) {
+      stockPkgSelect.disabled = false;
+      stockPkgSelect.innerHTML = options;
+    } else {
+      stockPkgSelect.disabled = true;
+      stockPkgSelect.innerHTML = '<option value="">এই ক্যাটাগরিতে কোনো প্যাকেজ নেই</option>';
+    }
+    updateTotalPieces();
+  };
+
+  document.getElementById('stockPkgSelect').addEventListener('change', updateTotalPieces);
+  document.getElementById('inputCases').addEventListener('input', updateTotalPieces);
+  document.getElementById('inputPcs').addEventListener('input', updateTotalPieces);
+
+  document.getElementById('addToListBtn').onclick = () => {
+    const date = document.getElementById('shipDate').value;
+    const pkgKey = document.getElementById('stockPkgSelect').value;
+
+    // ✅ person now: Shipment or Normal
+    const person = (document.getElementById('shipPerson').value || "Shipment").trim();
+
+    const cases = parseInt(document.getElementById('inputCases').value) || 0;
+    const pcs = parseInt(document.getElementById('inputPcs').value) || 0;
+
+    if (!date) return alert("তারিখ সিলেক্ট করুন!");
+    if (!pkgKey) return alert("আগে প্যাকেজ সিলেক্ট করুন!");
+
+    const pkg = allPackages[pkgKey];
+    const caseQty = parseInt(pkg.caseQty) || 1;
+    const totalPieces = (cases * caseQty) + pcs;
+
+    if (totalPieces <= 0) return alert("কমপক্ষে কিছু স্টক দিন!");
+
+    shipmentItems.push({ date, pkgKey, pkgName: pkg.name, person, cases, pcs, caseQty, totalPieces });
+    renderShipmentList();
+
+    document.getElementById('stockPkgSelect').value = "";
+    document.getElementById('inputCases').value = 0;
+    document.getElementById('inputPcs').value = 0;
+    updateTotalPieces();
+  };
+
+  document.getElementById('saveStockBtn').onclick = async () => {
+    if (shipmentItems.length === 0) return alert("লিস্টে কিছু নেই!");
+
+    try {
+      const pkgSnap = await get(ref(database, 'packages'));
+      const latestPackages = {};
+      pkgSnap.forEach(child => { latestPackages[child.key] = child.val(); });
+
+      const updates = {};
+      const addMap = mapTotalsByPkg(shipmentItems);
+      Object.keys(addMap).forEach(pkgKey => {
+        const addQty = addMap[pkgKey] || 0;
+        const currentStock = parseInt(latestPackages[pkgKey]?.stock) || 0;
+        updates[`packages/${pkgKey}/stock`] = currentStock + addQty;
+      });
+
+      const firstDate = shipmentItems[0].date;
+      const firstPerson = (shipmentItems[0].person || "Shipment").trim();
+      const grandTotal = shipmentItems.reduce((s, it) => s + it.totalPieces, 0);
+      const amountTotal = calcAmountFromItems(shipmentItems);
+
+      const newKeyRef = push(ref(database, 'shipments'));
+      updates[`shipments/${newKeyRef.key}`] = {
+        date: firstDate,
+        person: firstPerson,
+        totalStock: grandTotal,
+        amount: amountTotal,
+        items: shipmentItems,
+        createdAt: Date.now()
+      };
+
+      await update(ref(database), updates);
+
+      alert("স্টক সফলভাবে আপডেট হয়েছে এবং শিপমেন্ট সেভ হয়েছে!");
+      closeModal('stockAddModal');
+
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      alert("স্টক আপডেট করতে সমস্যা হয়েছে!");
+    }
+  };
+
+  document.getElementById('saveCategory').onclick = () => {
+    const name = document.getElementById('catName').value.trim();
+    if(name) push(ref(database, 'categories'), { name }).then(() => {
+      alert("ক্যাটাগরি সেভ হয়েছে!");
+      closeModal('catModal');
+      document.getElementById('catName').value = '';
+    });
+  };
+
+  document.getElementById('savePackage').onclick = async () => {
+    const btn = document.getElementById('savePackage');
+    const cat = document.getElementById('pkgCategory').value;
+    const name = document.getElementById('pkgName').value;
+    const caseQty = document.getElementById('pkgCaseQty').value;
+    const buyPrice = document.getElementById('pkgBuyPrice').value;
+    const sellPrice = document.getElementById('pkgSellPrice').value;
+    const file = document.getElementById('pkgImgInput').files[0];
+
+    if(cat && name && sellPrice && file) {
+      btn.innerText = "Uploading..."; btn.disabled = true;
+      const formData = new FormData(); formData.append("image", file);
+      try {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+        const result = await res.json();
+        if(result.success) {
+          await push(ref(database, 'packages'), {
+            category: cat,
+            name: name,
+            caseQty: parseInt(caseQty) || 0,
+            buyPrice: buyPrice,
+            sellPrice: sellPrice,
+            img: result.data.url,
+            stock: 0,
+            hidden: false
+          });
+          alert("প্যাকেজ সেভ হয়েছে!");
+          closeModal('pkgModal');
+        }
+      } catch (e) { alert("Error uploading image!"); }
+      finally { btn.innerText = "Save Package"; btn.disabled = false; }
+    } else alert("সব তথ্য দিন!");
+  };
+
+  window.openEditModal = (key) => {
+    const data = allPackages[key];
+    document.getElementById('editPkgKey').value = key;
+    document.getElementById('editPkgName').value = data.name;
+    document.getElementById('editPkgCaseQty').value = data.caseQty || '';
+    document.getElementById('editPkgBuyPrice').value = data.buyPrice || '';
+    document.getElementById('editPkgSellPrice').value = data.sellPrice;
+    document.getElementById('editPkgCategory').value = data.category;
+    document.getElementById('editImgPreview').src = data.img;
+    openModal('editModal');
+  };
+
+  document.getElementById('updatePackage').onclick = () => {
+    const key = document.getElementById('editPkgKey').value;
+    update(ref(database, `packages/${key}`), {
+      name: document.getElementById('editPkgName').value,
+      caseQty: parseInt(document.getElementById('editPkgCaseQty').value) || 0,
+      buyPrice: document.getElementById('editPkgBuyPrice').value,
+      sellPrice: document.getElementById('editPkgSellPrice').value,
+      category: document.getElementById('editPkgCategory').value
+    }).then(() => { alert("আপডেট হয়েছে!"); closeModal('editModal'); });
+  };
+
+  document.getElementById('deletePackage').onclick = () => {
+    if(confirm("ডিলিট করবেন?")) {
+      const key = document.getElementById('editPkgKey').value;
+      update(ref(database, `packages/${key}`), { hidden: true })
+      .then(() => {
+        alert("এই পেজ থেকে প্যাকেজটি সরানো হয়েছে, ডাটাবেজে ডাটা থাকবে!");
+        closeModal('editModal');
+      });
+    }
+  };
+
+  document.getElementById('pkgImgInput').onchange = (e) => {
+    const preview = document.getElementById('imgPreview');
+    preview.src = URL.createObjectURL(e.target.files[0]);
+    preview.style.display = 'block';
+  };
+
+  // ✅ default date set on first load + default Shipment
+  const shipDateEl = document.getElementById('shipDate');
+  if (shipDateEl && !shipDateEl.value) shipDateEl.value = todayISO();
+  const shipPersonEl = document.getElementById('shipPerson');
+  if (shipPersonEl) shipPersonEl.value = "Shipment";
+
+</script>
+</body>
+</html>
