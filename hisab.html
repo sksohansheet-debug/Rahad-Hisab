@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taka Hisab - লেনদেন</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --brand:#2563eb;
+      --brand2:#60a5fa;
+      --good:#16a34a;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --info:#1d4ed8;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --shadow2: 0 2px 10px rgba(15,23,42,.08);
+      --r12: 12px;
+      --r16: 16px;
+      --topbar-h: 68px;
+
+      /* ✅ NEW: Table Header Look */
+      --thead-bg1: rgba(37,99,235,.18);
+      --thead-bg2: rgba(16,185,129,.10);
+      --thead-text: #0f172a;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Bengali", Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.08), transparent 55%),
+                  radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    /* ===== ✅ Modern Loader ===== */
+    .loader-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15,23,42,.35);
+      backdrop-filter: blur(10px);
+    }
+    .loader-overlay.show{ display:flex; }
+    .loader-card{
+      width: 100%;
+      max-width: 520px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      box-shadow: 0 40px 120px rgba(0,0,0,.25);
+      overflow: hidden;
+    }
+    .loader-top{
+      padding: 14px 14px 10px 14px;
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(229,231,235,.85);
+      background: linear-gradient(180deg, rgba(37,99,235,.10), rgba(16,185,129,.06));
+    }
+    .spinner{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 4px solid rgba(37,99,235,.18);
+      border-top-color: rgba(37,99,235,.85);
+      animation: spin .9s linear infinite;
+      box-shadow: 0 10px 30px rgba(15,23,42,.08);
+      flex: 0 0 auto;
+    }
+    @keyframes spin{
+      to{ transform: rotate(360deg); }
+    }
+    .loader-text b{
+      display:block;
+      font-size: 15px;
+      font-weight: 1000;
+      color: #0f172a;
+      letter-spacing: .2px;
+    }
+    .loader-text span{
+      display:block;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+    }
+    .skeleton{
+      padding: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    .sk-row{
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg,
+        rgba(15,23,42,.06),
+        rgba(37,99,235,.10),
+        rgba(15,23,42,.06)
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.1s ease-in-out infinite;
+    }
+    .sk-row:nth-child(2){ width: 88%; }
+    .sk-row:nth-child(3){ width: 78%; }
+    .sk-row:nth-child(4){ width: 92%; }
+    .sk-row:nth-child(5){ width: 65%; }
+    @keyframes shimmer{
+      0%{ background-position: 0% 0; }
+      100%{ background-position: 200% 0; }
+    }
+
+    /* ===== Topbar ===== */
+    .topbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:var(--topbar-h);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(229,231,235,.9);
+      z-index: 50;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 0 14px;
+    }
+    .topbar-inner{
+      width:100%;
+      max-width: 1100px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 120px;
+    }
+    .menu-btn{
+      width:42px; height:42px;
+      border:none;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+      color: var(--brand);
+      font-size: 20px;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      box-shadow: var(--shadow2);
+    }
+    .title{
+      margin:0;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: -2px;
+    }
+    .title-wrap{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+
+    /* ===== Layout ===== */
+    .page{
+      padding-top: calc(var(--topbar-h) + 14px);
+      padding-bottom: 20px;
+    }
+    .container{
+      width:100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 14px;
+    }
+
+    /* ===== Sidebar + overlay ===== */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      z-index: 45;
+      opacity:0;
+      pointer-events:none;
+      transition: .25s;
+    }
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .sidebar{
+      position:fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 270px;
+      transform: translateX(-110%);
+      transition: .28s ease;
+      z-index: 60;
+      background: linear-gradient(180deg, #0f172a, #111827 55%, #0b1224);
+      color: #fff;
+      padding: 16px 14px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.25);
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+    .sidebar.open{
+      transform: translateX(0);
+    }
+    .side-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 8px 6px;
+    }
+    .side-logo{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .side-logo b{ font-size: 16px; }
+    .side-logo span{ font-size: 12px; color: rgba(255,255,255,.7); }
+
+    .close-side{
+      width:40px; height:40px;
+      border:none;
+      border-radius: 14px;
+      cursor:pointer;
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      font-size: 18px;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .nav a{
+      text-decoration:none;
+      color: rgba(255,255,255,.92);
+      padding: 12px 12px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      transition: .2s;
+    }
+    .nav a:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.12);
+    }
+
+    /* ===== Cards ===== */
+    .card{
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: var(--r16);
+      box-shadow: var(--shadow);
+    }
+
+    /* ===== Top actions ===== */
+    .top-actions{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 520px){
+      .top-actions{ grid-template-columns: 1fr; }
+    }
+
+    .pill-btn{
+      border:none;
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      font-weight: 900;
+      font-size: 14px;
+      color:#fff;
+      box-shadow: var(--shadow2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      transition: .15s;
+      letter-spacing: .2px;
+    }
+    .pill-btn:active{ transform: scale(.99); }
+
+    .btn-deposit{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
+    .btn-cashout{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); }
+    .btn-bank{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+
+    /* ===== Filter row ===== */
+    .filters{
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .filter-grid{
+      display:grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      gap: 10px;
+      align-items: end;
+    }
+    @media (max-width: 860px){
+      .filter-grid{ grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px){
+      .filter-grid{ grid-template-columns: 1fr; }
+    }
+
+    .label{
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      margin: 0 0 6px 4px;
+    }
+
+    .select, .input{
+      width:100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: #fff;
+      outline:none;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+    }
+    .select:focus, .input:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .date-filter-btn{
+      width:100%;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(37,99,235,.06), rgba(37,99,235,.03));
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-weight: 900;
+      cursor:pointer;
+      text-align:left;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+      transition:.15s;
+    }
+    .date-filter-btn:hover{ border-color: rgba(37,99,235,.35); }
+
+    .money-box{
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.05));
+      border: 1px solid rgba(37,99,235,.25);
+      font-weight: 1000;
+      color: #1e3a8a;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 44px;
+    }
+
+    /* ===== Table ===== */
+    .table-wrap{ overflow:auto; }
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+      min-width: 980px;
+    }
+
+    thead th{
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, var(--thead-bg1), var(--thead-bg2));
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(15,23,42,.10);
+      z-index: 1;
+      color: var(--thead-text);
+      font-size: 14px;
+      font-weight: 1000;
+      letter-spacing: .2px;
+    }
+
+    th, td{
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(229,231,235,.75);
+      text-align:left;
+      white-space: nowrap;
+      color: #111827;
+      font-weight: 700;
+    }
+
+    #hisabTableBody td:nth-child(1) { background-color: rgba(100, 100, 100, 0.05); }
+    #hisabTableBody td:nth-child(2) { background-color: rgba(249, 115, 22, 0.05); }
+    #hisabTableBody td:nth-child(3) { background-color: rgba(124, 58, 237, 0.05); }
+    #hisabTableBody td:nth-child(4) { background-color: rgba(59, 130, 246, 0.05); }
+    #hisabTableBody td:nth-child(5) { background-color: rgba(16, 185, 129, 0.05); }
+    #hisabTableBody td:nth-child(6) { background-color: rgba(236, 72, 153, 0.05); }
+    #hisabTableBody td:nth-child(7) { background-color: rgba(245, 158, 11, 0.05); }
+    #hisabTableBody td:nth-child(8) { background-color: rgba(107, 114, 128, 0.05); }
+    #hisabTableBody td:nth-child(9) { background-color: rgba(255, 255, 255, 0.05); }
+
+    tbody tr:hover{ background: rgba(37,99,235,0.04); }
+
+    .money-deposit { color: var(--good) !important; font-weight: 900; }
+    .money-cashout { color: var(--bad) !important; font-weight: 900; }
+    .money-bank { color: var(--brand) !important; font-weight: 900; }
+    .money-shipment { color: #db2777 !important; font-weight: 900; }
+
+    .edit-btn{
+      border:none;
+      padding: 9px 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
+      color:#fff;
+      font-weight: 900;
+      font-size: 12px;
+      cursor:pointer;
+      box-shadow: var(--shadow2);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 1000;
+      font-size: 12px;
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      max-width: 260px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    .pill.shipment { color: #065f46; background: rgba(16,185,129,.18); border-color: rgba(16,185,129,.35); }
+    .pill.person-ahedul { color: #1d4ed8; background: rgba(29,78,216,.14); border-color: rgba(29,78,216,.25); }
+
+    /* ✅ Pagination (separate div, NOT inside table scroll) */
+    .pager-out{
+      margin-top: 10px;
+      padding: 10px 12px;
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pager-left{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pager-right{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pg-btn{
+      border: 1px solid rgba(229,231,235,.95);
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 1000;
+      font-size: 12px;
+      color: #0f172a;
+      box-shadow: 0 2px 10px rgba(15,23,42,.06);
+      transition: .12s;
+      min-width: 44px;
+      text-align:center;
+    }
+    .pg-btn:hover{ transform: translateY(-1px); border-color: rgba(37,99,235,.30); }
+    .pg-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+    .pg-btn.active{
+      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
+      color:#fff;
+      border-color: rgba(37,99,235,.25);
+    }
+    .pg-dots{
+      font-weight: 1000;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+    .pg-size{
+      width: 92px;
+      min-width: 92px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 1000;
+      font-size: 12px;
+    }
+
+    /* ===== Modal (unchanged) ===== */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      background: rgba(0,0,0,.55);
+      z-index: 100;
+    }
+    .modal.show{ display:flex; }
+    .modal-card{
+      width:100%;
+      max-width: 460px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 18px;
+      box-shadow: 0 40px 120px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .modal-head{
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(229,231,235,.8);
+      background: linear-gradient(180deg, rgba(37,99,235,.08), transparent);
+    }
+    .modal-title{
+      margin:0;
+      font-size: 16px;
+      font-weight: 1000;
+      letter-spacing:.2px;
+    }
+    .modal-x{
+      width:40px; height:40px;
+      border:none;
+      border-radius: 14px;
+      cursor:pointer;
+      background: rgba(15,23,42,.06);
+      font-size: 18px;
+      color: var(--text);
+    }
+    .modal-body{
+      padding: 14px;
+      max-height: 80vh;
+      overflow:auto;
+    }
+
+    .row-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 420px){
+      .row-2{ grid-template-columns: 1fr; }
+    }
+
+    .calc-box{
+      margin-top: 10px;
+      background: linear-gradient(180deg, rgba(37,99,235,.06), rgba(37,99,235,.03));
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 1000;
+      color: #1e3a8a;
+      text-align: center;
+    }
+
+    .btn{
+      width:100%;
+      border:none;
+      border-radius: 16px;
+      padding: 12px 12px;
+      margin-top: 10px;
+      cursor:pointer;
+      font-weight: 1000;
+      font-size: 13px;
+      box-shadow: var(--shadow2);
+      transition: .15s;
+    }
+    .btn:active{ transform: scale(.99); }
+
+    .btn-primary{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); color:#fff; }
+    .btn-save{ background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1)); color:#111827; }
+    .btn-danger{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); color:#fff; }
+    .btn-ghost{
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
+      text-decoration: underline;
+      margin-top: 8px;
+    }
+
+    /* Shipment list cards */
+    .list-wrap{
+      margin-top: 14px;
+      border-top: 1px solid rgba(229,231,235,.9);
+      padding-top: 12px;
+    }
+    .list-title{
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      font-weight: 1000;
+      color: #111827;
+    }
+    .item-card{
+      border: 1px solid rgba(229,231,235,.9);
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(15,23,42,.05);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .item-card b{
+      display:block;
+      font-size: 13px;
+      font-weight: 1000;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .item-small{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .remove-item{
+      border:none;
+      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+      color:#fff;
+      font-weight: 1000;
+      padding: 8px 10px;
+      border-radius: 14px;
+      cursor:pointer;
+      white-space: nowrap;
+      box-shadow: var(--shadow2);
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ✅ Modern Loader -->
+  <div id="loader" class="loader-overlay show" aria-live="polite" aria-busy="true">
+    <div class="loader-card">
+      <div class="loader-top">
+        <div class="spinner"></div>
+        <div class="loader-text">
+          <b>ডাটা লোড হচ্ছে…</b>
+          <span>Shipments + Cash Transactions আনছে</span>
+        </div>
+      </div>
+      <div class="skeleton">
+        <div class="sk-row" style="width:95%"></div>
+        <div class="sk-row"></div>
+        <div class="sk-row"></div>
+        <div class="sk-row"></div>
+        <div class="sk-row"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay"></div>
+  <aside id="sidebar" class="sidebar">
+    <div class="side-head">
+      <div class="side-logo">
+        <b>Taka Hisab</b>
+        <span>মেনু</span>
+      </div>
+      <button class="close-side" id="closeSidebarBtn">✕</button>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">🏠 Dashboard</a>
+      <a href="hisab.html">🧾 লেনদেন</a>
+      <a href="stock.html">📦 মালের স্টক</a>
+      <a href="today.html">📅 আজকের সেল</a>
+      <a href="baki.html">🧍 বাকীর হিসাব</a>
+    </nav>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <div class="title-wrap">
+          <p class="title">লেনদেন</p>
+          <p class="subtitle">Shipments + Cash Transactions</p>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-weight:800;">
+        Smooth • Clean • Fast
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+
+      <div class="top-actions">
+        <button class="pill-btn btn-deposit" id="openDepositBtn">💰 ডিপোজিট</button>
+        <button class="pill-btn btn-cashout" id="openCashoutBtn">🧾 ক্যাশ আউট</button>
+        <button class="pill-btn btn-bank" id="openBankBtn">🏦 ব্যাংক ট্রান্সফার</button>
+      </div>
+
+      <section class="card filters">
+        <div class="filter-grid">
+          <div>
+            <div class="label">Date Filter</div>
+            <button class="date-filter-btn" id="dateFilterBtn">📅 Date Filter: All</button>
+          </div>
+
+          <div>
+            <div class="label">ক্যাটাগরি ফিল্টার</div>
+            <select id="filterCategory" class="select">
+              <option value="">All</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="label">পারসোন ফিল্টার</div>
+            <select id="filterPerson" class="select">
+              <option value="">All</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="label">Total</div>
+            <div class="money-box" id="filterMoneyBox">মোট টাকা: 0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>নং</th>
+              <th>তারিখ</th>
+              <th>ক্যাটাগরি</th>
+              <th>পারসোন</th>
+              <th>মোট স্টক</th>
+              <th>পরিমান</th>
+              <th>খরচ টাকা</th>
+              <th>বিবরণ</th>
+              <th>এডিট</th>
+            </tr>
+          </thead>
+          <tbody id="hisabTableBody"></tbody>
+        </table>
+      </section>
+
+      <!-- ✅ Pagination (separate div like your image) -->
+      <section class="card pager-out" id="pagerBar">
+        <div class="pager-left" id="pagerControls"></div>
+        <div class="pager-right">
+          <select id="pageSizeSelect" class="select pg-size">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Date Filter Modal -->
+  <div id="dateFilterModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">📅 Date Filter</h2>
+        <button class="modal-x" data-close="#dateFilterModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="label">শুরু তারিখ</div>
+        <input type="date" id="filterStartDate" class="input">
+        <div class="label" style="margin-top:10px;">শেষ তারিখ</div>
+        <input type="date" id="filterEndDate" class="input">
+        <button class="btn btn-save" id="applyDateFilterBtn">Apply</button>
+        <button class="btn btn-danger" id="clearDateFilterBtn">Clear</button>
+        <button class="btn btn-ghost" data-close="#dateFilterModal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipment Modal -->
+  <div id="shipmentModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">📦 Edit Shipment</h2>
+        <button class="modal-x" data-close="#shipmentModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="label">তারিখ</div>
+        <input type="date" id="shipDate" class="input">
+        <div class="label" style="margin-top:10px;">ক্যাটাগরি</div>
+        <select id="shipCategory" class="select"><option value="">ক্যাটাগরি সিলেক্ট করুন</option></select>
+        <div class="label" style="margin-top:10px;">প্যাকেজ</div>
+        <select id="shipPackage" class="select" disabled><option value="">আগে ক্যাটাগরি বেছে নিন</option></select>
+        <div class="label" style="margin-top:10px;">শিপমেন্ট/পারসোন</div>
+        <input type="text" id="shipPerson" class="input" placeholder="যেমন: Shipment / Supplier নাম">
+        <div class="row-2" style="margin-top:10px;">
+          <div><div class="label">কয় কেস?</div><input type="number" id="shipCases" class="input" value="0" min="0"></div>
+          <div><div class="label">খুচরা পিস?</div><input type="number" id="shipPcs" class="input" value="0" min="0"></div>
+        </div>
+        <div class="calc-box" id="totalPiecesBox">মোট: 0 পিস</div>
+        <button class="btn btn-primary" id="addToListBtn">OK (Add to List)</button>
+        <div class="list-wrap">
+          <h3 class="list-title">Transaction List</h3>
+          <div id="shipmentList"></div>
+          <button class="btn btn-save" id="saveAllBtn">Update</button>
+          <button class="btn btn-danger" id="deleteAllBtn">Delete This Transaction</button>
+          <button class="btn btn-ghost" data-close="#shipmentModal">বন্ধ করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">💰 ডিপোজিট</h2>
+        <button class="modal-x" data-close="#depositModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="label">তারিখ</div>
+        <input type="date" id="depDate" class="input">
+
+        <!-- ✅ Category input removed; dropdown added (default: আমার ক্যাশ) -->
+        <div class="label" style="margin-top:10px;">ক্যাটাগরি</div>
+        <select id="depCategorySelect" class="select">
+          <option value="আমার ক্যাশ" selected>আমার ক্যাশ</option>
+        </select>
+
+        <div class="label" style="margin-top:10px;">পরিমান</div>
+        <input type="number" id="depAmount" class="input" value="0" min="0" placeholder="টাকার পরিমান">
+        <button class="btn btn-save" id="saveDepositBtn">Save Deposit</button>
+        <button class="btn btn-ghost" data-close="#depositModal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cashout Modal -->
+  <div id="cashoutModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">🧾 ক্যাশ আউট</h2>
+        <button class="modal-x" data-close="#cashoutModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="label">তারিখ</div>
+        <input type="date" id="coDate" class="input">
+        <div class="row-2" style="margin-top:10px;">
+          <div>
+            <div class="label">ক্যাটাগরি</div>
+            <select id="coCategory" class="select">
+              <option value="">ক্যাটাগরি সিলেক্ট করুন</option>
+              <option value="সেলারি">সেলারি</option>
+              <option value="গাড়ি বাবদ">গাড়ি বাবদ</option>
+              <option value="এক্সোসেরিজ">এক্সোসেরিজ</option>
+              <option value="সার্ভিস চার্জ">সার্ভিস চার্জ</option>
+              <option value="Advance">Advance</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">পারসোন</div>
+            <select id="coPerson" class="select"><option value="">পারসোন সিলেক্ট করুন</option></select>
+          </div>
+        </div>
+        <div class="label" style="margin-top:10px;">পরিমাণ</div>
+        <input type="number" id="coAmount" class="input" value="0" min="0" placeholder="টাকার পরিমান">
+        <div class="label" style="margin-top:10px;">বিবরণ</div>
+        <textarea id="coDetails" class="input" style="min-height:110px;resize:vertical" placeholder="বিবরণ লিখুন..."></textarea>
+        <button class="btn btn-save" id="saveCashoutBtn">Save Cash Out</button>
+        <button class="btn btn-ghost" data-close="#cashoutModal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Modal -->
+  <div id="bankModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">🏦 ব্যাংক ট্রান্সফার</h2>
+        <button class="modal-x" data-close="#bankModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="label">তারিখ</div>
+        <input type="date" id="bankDate" class="input">
+        <div class="label" style="margin-top:10px;">ক্যাটাগরি</div>
+        <select id="bankCategory" class="select">
+          <option value="">ক্যাটাগরি সিলেক্ট করুন</option>
+          <option value="ব্যাংক পে">ব্যাংক পে</option>
+          <option value="হেন্ড ক্যাশ">হেন্ড ক্যাশ</option>
+        </select>
+        <div class="label" style="margin-top:10px;">পরিমাণ</div>
+        <input type="number" id="bankAmount" class="input" value="0" min="0" placeholder="টাকার পরিমান">
+        <div class="label" style="margin-top:10px;">বিবরণ</div>
+        <textarea id="bankDetails" class="input" style="min-height:110px;resize:vertical" placeholder="বিবরণ লিখুন..."></textarea>
+        <button class="btn btn-save" id="saveBankBtn">Save Bank Transfer</button>
+        <button class="btn btn-ghost" data-close="#bankModal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Cash Modal -->
+  <div id="editCashModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">✏️ Edit Transaction</h2>
+        <button class="modal-x" data-close="#editCashModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCashKey">
+        <input type="hidden" id="editCashType">
+        <!-- ✅ keep original createdAt so edit doesn't become "new" -->
+        <input type="hidden" id="editCashCreatedAt">
+
+        <div class="label">তারিখ</div>
+        <input type="date" id="editCashDate" class="input">
+        <div class="label" style="margin-top:10px;">ক্যাটাগরি</div>
+        <input type="text" id="editCashCategory" class="input" placeholder="ক্যাটাগরি">
+        <div class="label" style="margin-top:10px;">পারসোন</div>
+        <select id="editCashPerson" class="select"><option value="">(ঐচ্ছিক)</option></select>
+        <div class="label" style="margin-top:10px;">টাকার পরিমান</div>
+        <input type="number" id="editCashAmount" class="input" value="0" min="0">
+        <div class="label" style="margin-top:10px;">বিবরণ</div>
+        <textarea id="editCashDetails" class="input" style="min-height:110px;resize:vertical" placeholder="বিবরণ..."></textarea>
+        <button class="btn btn-save" id="updateCashBtn">Update</button>
+        <button class="btn btn-danger" id="deleteCashBtn">Delete</button>
+        <button class="btn btn-ghost" data-close="#editCashModal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { database } from './firebase-config.js';
+    import { ref, onValue, get, update, remove, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    function openModal(id){ $(id).classList.add('show'); }
+    function closeModal(id){ $(id).classList.remove('show'); }
+
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); });
+    });
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-close]');
+      if (!btn) return;
+      const sel = btn.getAttribute('data-close');
+      if (sel && sel.startsWith('#')) {
+        const el = document.querySelector(sel);
+        if (el) el.classList.remove('show');
+      }
+    });
+
+    const sidebar = $('sidebar');
+    const overlay = $('overlay');
+    function openSidebar(){ sidebar.classList.add('open'); overlay.classList.add('show'); }
+    function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+    $('menuBtn').addEventListener('click', openSidebar);
+    $('closeSidebarBtn').addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    let allPackages = {};
+    let shipmentItems = [];
+    let categoriesCache = [];
+    let editingShipmentKey = null;
+    let originalItemsForEdit = [];
+    let personsList = [];
+    let shipmentsRows = [];
+    let cashRows = [];
+    let combinedRows = [];
+    let filterStart = "";
+    let filterEnd = "";
+    let filterCategory = "";
+    let filterPerson = "";
+
+    /* ✅ keep original createdAt for shipment edit */
+    let editingShipmentCreatedAt = null;
+
+    /* ✅ Pagination state (dropdown controlled) */
+    let pageSize = 10;
+    let currentPage = 1;
+
+    /* ✅ Loader state */
+    let shipmentsLoadedOnce = false;
+    let cashLoadedOnce = false;
+    function showLoader(){ $('loader')?.classList.add('show'); }
+    function hideLoader(){ $('loader')?.classList.remove('show'); }
+    showLoader();
+
+    function todayISO(){
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function escapeHtml(str){
+      return String(str ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+    }
+
+    function safeISODate(d){ return d ? String(d).slice(0,10) : ""; }
+
+    /* ✅ stable hash */
+    function hash32(str){
+      const s = (str || '').toString();
+      let h = 2166136261 >>> 0;
+      for (let i=0; i<s.length; i++){
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return h >>> 0;
+    }
+
+    /* ✅ UNIQUE color assignment (no collision) with localStorage persistence */
+    const COLOR_STORE_KEY = 'taka_hisab_pill_colors_v1';
+
+    function readColorStore(){
+      try{
+        const raw = localStorage.getItem(COLOR_STORE_KEY);
+        const obj = raw ? JSON.parse(raw) : {};
+        if (!obj || typeof obj !== 'object') return { cat:{}, person:{}, usedCat:[], usedPerson:[] };
+        obj.cat = obj.cat || {};
+        obj.person = obj.person || {};
+        obj.usedCat = Array.isArray(obj.usedCat) ? obj.usedCat : [];
+        obj.usedPerson = Array.isArray(obj.usedPerson) ? obj.usedPerson : [];
+        return obj;
+      }catch(e){
+        return { cat:{}, person:{}, usedCat:[], usedPerson:[] };
+      }
+    }
+    function writeColorStore(store){
+      try{ localStorage.setItem(COLOR_STORE_KEY, JSON.stringify(store)); }catch(e){}
+    }
+
+    function clampHue(h){
+      let x = Math.round(h) % 360;
+      if (x < 0) x += 360;
+      return x;
+    }
+
+    function pickUniqueHue(namespace, key){
+      const store = readColorStore();
+      const map = namespace === 'cat' ? store.cat : store.person;
+      const used = namespace === 'cat' ? store.usedCat : store.usedPerson;
+
+      const k = (key || '').trim();
+      if (!k) return 210; // fallback
+
+      if (map[k] != null) return clampHue(map[k]);
+
+      // start hue from hash, but ensure it doesn't collide with existing used hues
+      let hue = clampHue(hash32(namespace + '|' + k) % 360);
+      const usedSet = new Set(used.map(x => clampHue(x)));
+
+      // Golden-angle stepping to avoid duplicates
+      const step = 137.508;
+      let guard = 0;
+      while (usedSet.has(hue) && guard < 400){
+        hue = clampHue(hue + step);
+        guard++;
+      }
+
+      // Save
+      map[k] = hue;
+      used.push(hue);
+
+      if (namespace === 'cat') { store.cat = map; store.usedCat = used; }
+      else { store.person = map; store.usedPerson = used; }
+
+      writeColorStore(store);
+      return hue;
+    }
+
+    function pillStyleFromHue(hue){
+      // Modern readable pill colors
+      const h = clampHue(hue);
+      const bg = `hsla(${h}, 85%, 90%, .85)`;
+      const border = `hsla(${h}, 70%, 55%, .35)`;
+      const text = `hsl(${h}, 55%, 28%)`;
+      return `style="background:${bg};border-color:${border};color:${text};"`;
+    }
+
+    function categoryPillHTML(category, isShipment){
+      const c = (category || '').trim();
+      if (!c) return `<span class="pill" ${pillStyleFromHue(210)}>—</span>`;
+      if (isShipment) return `<span class="pill shipment">${escapeHtml(c)}</span>`;
+      const hue = pickUniqueHue('cat', c);
+      return `<span class="pill" ${pillStyleFromHue(hue)}>${escapeHtml(c)}</span>`;
+    }
+
+    function personPillHTML(person){
+      const p = (person || '').trim();
+      if (!p) return ``; // ✅ shipment person blank / empty
+      if (p === 'অহেদুল') return `<span class="pill person-ahedul">${escapeHtml(p)}</span>`;
+      const hue = pickUniqueHue('person', p);
+      return `<span class="pill" ${pillStyleFromHue(hue)}>${escapeHtml(p)}</span>`;
+    }
+
+    $('openDepositBtn').addEventListener('click', () => {
+      $('depDate').value = todayISO();
+      $('depAmount').value = 0;
+      $('depCategorySelect').value = 'আমার ক্যাশ';
+      openModal('depositModal');
+    });
+
+    $('openCashoutBtn').addEventListener('click', async () => {
+      $('coDate').value = todayISO(); $('coCategory').value = ''; $('coAmount').value = 0; $('coDetails').value = '';
+      await loadPersons(); fillPersonSelect('coPerson', personsList, true);
+      openModal('cashoutModal');
+    });
+
+    $('openBankBtn').addEventListener('click', () => {
+      $('bankDate').value = todayISO(); $('bankCategory').value = ''; $('bankAmount').value = 0; $('bankDetails').value = '';
+      openModal('bankModal');
+    });
+
+    $('dateFilterBtn').addEventListener('click', () => {
+      $('filterStartDate').value = filterStart || ''; $('filterEndDate').value = filterEnd || '';
+      openModal('dateFilterModal');
+    });
+
+    async function loadPersons(){
+      if (personsList.length > 0) return personsList;
+      const tryPaths = ['persons', 'todayPersons', 'today/people', 'people'];
+      for (const p of tryPaths) {
+        try {
+          const snap = await get(ref(database, p));
+          const arr = [];
+          if (snap.exists()) {
+            snap.forEach(ch => {
+              const v = ch.val();
+              if (typeof v === 'string') arr.push(v);
+              else if (v && (v.name || v.person || v.title)) arr.push(v.name || v.person || v.title);
+            });
+          }
+          const clean = arr.map(x => (x || '').toString().trim()).filter(Boolean);
+          if (clean.length > 0) { personsList = clean; return personsList; }
+        } catch (e) {}
+      }
+      return personsList;
+    }
+
+    function fillPersonSelect(selectId, list, includeEmpty){
+      const sel = $(selectId);
+      let opt = includeEmpty ? '<option value="">All</option>' : '';
+      if (selectId === 'coPerson') opt = '<option value="">পারসোন সিলেক্ট করুন</option>';
+      if (selectId === 'editCashPerson') opt = '<option value="">(ঐচ্ছিক)</option>';
+      list.forEach(n => opt += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`);
+      sel.innerHTML = opt;
+    }
+
+    $('saveDepositBtn').addEventListener('click', async () => {
+      const date = safeISODate($('depDate').value);
+      const category = ($('depCategorySelect').value || '').trim();
+      const amount = parseFloat($('depAmount').value) || 0;
+      if (!date || !category || amount <= 0) return alert("সব তথ্য সঠিক ভাবে দিন!");
+      const rec = { type:'deposit', date, category, person:'', cashAmount:amount, amount:amount, details:'', createdAt:Date.now() };
+      try{ await set(push(ref(database, 'cashTransactions')), rec); alert("ডিপোজিট সেভ হয়েছে!"); closeModal('depositModal'); } catch(e){ alert("সমস্যা হয়েছে!"); }
+    });
+
+    $('saveCashoutBtn').addEventListener('click', async () => {
+      const date = safeISODate($('coDate').value), category = $('coCategory').value, person = $('coPerson').value, amount = parseFloat($('coAmount').value) || 0, details = ($('coDetails').value || '').trim();
+      if (!date || !category || !person || amount <= 0) return alert("সব তথ্য দিন!");
+      const rec = { type:'cashout', date, category, person, cashAmount:amount, amount:amount, details, createdAt:Date.now() };
+      try{ await set(push(ref(database, 'cashTransactions')), rec); alert("ক্যাশ আউট সেভ হয়েছে!"); closeModal('cashoutModal'); } catch(e){ alert("সমস্যা হয়েছে!"); }
+    });
+
+    $('saveBankBtn').addEventListener('click', async () => {
+      const date = safeISODate($('bankDate').value), category = $('bankCategory').value, amount = parseFloat($('bankAmount').value) || 0, details = ($('bankDetails').value || '').trim();
+      if (!date || !category || amount <= 0) return alert("সব তথ্য দিন!");
+      const rec = { type:'bank', date, category, person:'', cashAmount:amount, amount:amount, details, createdAt:Date.now() };
+      try{ await set(push(ref(database, 'cashTransactions')), rec); alert("ব্যাংক ট্রান্সফার সেভ হয়েছে!"); closeModal('bankModal'); } catch(e){ alert("সমস্যা হয়েছে!"); }
+    });
+
+    function updateTotalPieces(){
+      const pkgKey = $('shipPackage').value, cases = parseInt($('shipCases').value) || 0, pcs = parseInt($('shipPcs').value) || 0;
+      let caseQty = pkgKey && allPackages[pkgKey] ? parseInt(allPackages[pkgKey].caseQty) || 1 : 1;
+      const total = (cases * caseQty) + pcs;
+      $('totalPiecesBox').innerText = `মোট: ${total} পিস`;
+      return total;
+    }
+
+    function calcAmountFromItems(items){
+      return items.reduce((total, it) => total + (it.totalPieces || 0) * (parseFloat(allPackages[it.pkgKey]?.buyPrice) || 0), 0);
+    }
+
+    function mapTotalsByPkg(items){
+      const m = {}; items.forEach(it => { m[it.pkgKey] = (m[it.pkgKey] || 0) + (it.totalPieces || 0); }); return m;
+    }
+
+    function loadCategoriesOnce(){
+      onValue(ref(database, 'categories'), (snapshot) => {
+        let options = '<option value="">ক্যাটাগরি সিলেক্ট করুন</option>';
+        categoriesCache = [];
+        snapshot.forEach(child => { const name = child.val().name; categoriesCache.push(name); options += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`; });
+        $('shipCategory').innerHTML = options;
+      }, { onlyOnce: true });
+      onValue(ref(database, 'packages'), (snapshot) => {
+        allPackages = {}; snapshot.forEach(child => { allPackages[child.key] = { ...child.val(), key: child.key }; });
+      }, { onlyOnce: true });
+    }
+
+    $('shipCategory').addEventListener('change', (e) => {
+      const selectedCat = e.target.value, pkgSelect = $('shipPackage');
+      if (!selectedCat) { pkgSelect.disabled = true; pkgSelect.innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>'; updateTotalPieces(); return; }
+      let options = '<option value="">প্যাকেজ সিলেক্ট করুন</option>', found = false;
+      Object.values(allPackages).forEach(pkg => { if (pkg.category === selectedCat && pkg.hidden !== true) { options += `<option value="${escapeHtml(pkg.key)}">${escapeHtml(pkg.name)}</option>`; found = true; } });
+      pkgSelect.disabled = !found; pkgSelect.innerHTML = found ? options : '<option value="">এই ক্যাটাগরিতে কোনো প্যাকেজ নেই</option>';
+      updateTotalPieces();
+    });
+
+    $('shipPackage').addEventListener('change', updateTotalPieces);
+    $('shipCases').addEventListener('input', updateTotalPieces);
+    $('shipPcs').addEventListener('input', updateTotalPieces);
+
+    $('addToListBtn').addEventListener('click', () => {
+      const date = safeISODate($('shipDate').value), cat = $('shipCategory').value, pkgKey = $('shipPackage').value, person = ($('shipPerson').value || "Shipment").trim(), cases = parseInt($('shipCases').value) || 0, pcs = parseInt($('shipPcs').value) || 0;
+      if (!date || !cat || !pkgKey) return alert("তথ্য দিন!");
+      const pkg = allPackages[pkgKey], caseQty = parseInt(pkg?.caseQty) || 1, totalPieces = (cases * caseQty) + pcs;
+      if (totalPieces <= 0) return alert("স্টক দিন!");
+      shipmentItems.push({ date, category: cat, pkgKey, pkgName: pkg?.name || '', person, cases, pcs, caseQty, totalPieces });
+      renderShipmentList();
+      $('shipPackage').value = ""; $('shipCases').value = 0; $('shipPcs').value = 0; updateTotalPieces();
+    });
+
+    function renderShipmentList(){
+      const listEl = $('shipmentList');
+      if (shipmentItems.length === 0) { listEl.innerHTML = `<div style="color:#6b7280;font-weight:800;font-size:12px;">এখনো কিছু যোগ করা হয়নি</div>`; return; }
+      listEl.innerHTML = shipmentItems.map((it, idx) => `
+        <div class="item-card">
+          <div><b>${escapeHtml(it.pkgName)}</b><div class="item-small">কেস: ${it.cases} • খুচরা: ${it.pcs}<br>মোট: ${it.totalPieces} পিস</div></div>
+          <button class="remove-item" data-remove-idx="${idx}">Delete</button>
+        </div>`).join('');
+    }
+
+    $('shipmentList').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-idx]');
+      if (btn) { shipmentItems.splice(parseInt(btn.getAttribute('data-remove-idx')), 1); renderShipmentList(); }
+    });
+
+    $('saveAllBtn').addEventListener('click', async () => {
+      if (!editingShipmentKey || shipmentItems.length === 0) return alert("ত্রুটি!");
+      try {
+        const pkgSnap = await get(ref(database, 'packages')), latestPackages = {};
+        pkgSnap.forEach(ch => { latestPackages[ch.key] = ch.val(); });
+
+        const updates = {}, newMap = mapTotalsByPkg(shipmentItems), oldMap = mapTotalsByPkg(originalItemsForEdit);
+
+        // ✅ only diff is applied (so stock never double-adds)
+        new Set([...Object.keys(oldMap), ...Object.keys(newMap)]).forEach(k => {
+          const diff = (newMap[k] || 0) - (oldMap[k] || 0);
+          if (diff !== 0) updates[`packages/${k}/stock`] = (parseInt(latestPackages[k]?.stock) || 0) + diff;
+        });
+
+        // ✅ keep original createdAt (edit হলে নতুন হবে না)
+        const keepCreatedAt = (editingShipmentCreatedAt != null) ? editingShipmentCreatedAt : (Date.now());
+
+        updates[`shipments/${editingShipmentKey}`] = {
+          date: shipmentItems[0].date,
+          person: ($('shipPerson').value || "Shipment").trim(),
+          totalStock: shipmentItems.reduce((s,it)=>s+it.totalPieces,0),
+          amount: calcAmountFromItems(shipmentItems),
+          items: shipmentItems,
+          createdAt: keepCreatedAt
+        };
+
+        await update(ref(database), updates);
+        alert("আপডেট সফল!");
+        closeModal('shipmentModal');
+      } catch (e) { alert("সমস্যা!"); }
+    });
+
+    $('deleteAllBtn').addEventListener('click', async () => {
+      if (!editingShipmentKey || !confirm("ডিলিট করবেন?")) return;
+      try {
+        const pkgSnap = await get(ref(database, 'packages')), latestPackages = {};
+        pkgSnap.forEach(ch => { latestPackages[ch.key] = ch.val(); });
+
+        // ✅ delete হলে আগের স্টক আবার কমে যাবে
+        const oldMap = mapTotalsByPkg(originalItemsForEdit), updates = {};
+        Object.keys(oldMap).forEach(k => { updates[`packages/${k}/stock`] = (parseInt(latestPackages[k]?.stock) || 0) - oldMap[k]; });
+
+        await update(ref(database), updates);
+        await remove(ref(database, `shipments/${editingShipmentKey}`));
+        alert("ডিলিট হয়েছে!");
+        closeModal('shipmentModal');
+      } catch (e) { alert("সমস্যা!"); }
+    });
+
+    window.editCash = async (key) => {
+      try{
+        await loadPersons(); fillPersonSelect('editCashPerson', personsList, false);
+        const snap = await get(ref(database, `cashTransactions/${key}`)); if (!snap.exists()) return;
+        const d = snap.val();
+        $('editCashKey').value = key; $('editCashType').value = d.type || '';
+        $('editCashCreatedAt').value = (d.createdAt != null ? String(d.createdAt) : '');
+        $('editCashDate').value = safeISODate(d.date) || todayISO();
+        $('editCashCategory').value = d.category || '';
+        $('editCashAmount').value = parseFloat(d.cashAmount ?? d.amount ?? 0) || 0;
+        $('editCashDetails').value = d.details || '';
+        const ps = $('editCashPerson'); ps.value = d.person || ''; ps.disabled = (d.type !== 'cashout');
+        openModal('editCashModal');
+      }catch(e){ alert("লোড করতে সমস্যা!"); }
+    };
+
+    $('updateCashBtn').addEventListener('click', async () => {
+      const key = $('editCashKey').value, type = $('editCashType').value, date = safeISODate($('editCashDate').value),
+            category = ($('editCashCategory').value || '').trim(), person = $('editCashPerson').value || '',
+            cashAmount = parseFloat($('editCashAmount').value) || 0, details = ($('editCashDetails').value || '').trim();
+
+      if (!key || !date || !category || cashAmount <= 0) return alert("তথ্য সঠিক দিন!");
+
+      try{
+        // ✅ createdAt change করবেন না (edit করলে নতুন ট্রানজেকশন হবে না)
+        const payload = {
+          date,
+          category,
+          person: (type === 'cashout' ? person : ''),
+          cashAmount,
+          amount: cashAmount,
+          details: (type === 'deposit' ? '' : details)
+        };
+        await update(ref(database, `cashTransactions/${key}`), payload);
+
+        alert("আপডেট হয়েছে!");
+        closeModal('editCashModal');
+      } catch(e){ alert("সমস্যা!"); }
+    });
+
+    $('deleteCashBtn').addEventListener('click', async () => {
+      const key = $('editCashKey').value;
+      if (key && confirm("ডিলিট করবেন?")) {
+        try{ await remove(ref(database, `cashTransactions/${key}`)); alert("ডিলিট হয়েছে!"); closeModal('editCashModal'); }
+        catch(e){ alert("সমস্যা!"); }
+      }
+    });
+
+    function setDateFilterBtnText(){
+      $('dateFilterBtn').innerText = (!filterStart && !filterEnd) ? "📅 Date Filter: All" : `📅 Date: ${filterStart || "—"} to ${filterEnd || "—"}`;
+    }
+
+    function resetPage(){ currentPage = 1; }
+
+    $('applyDateFilterBtn').addEventListener('click', () => {
+      filterStart = safeISODate($('filterStartDate').value);
+      filterEnd = safeISODate($('filterEndDate').value);
+      setDateFilterBtnText();
+      closeModal('dateFilterModal');
+      resetPage();
+      applyFiltersAndRender();
+    });
+    $('clearDateFilterBtn').addEventListener('click', () => {
+      filterStart = ""; filterEnd = "";
+      $('filterStartDate').value = ""; $('filterEndDate').value = "";
+      setDateFilterBtnText();
+      closeModal('dateFilterModal');
+      resetPage();
+      applyFiltersAndRender();
+    });
+    $('filterCategory').addEventListener('change', (e) => { filterCategory = e.target.value || ""; resetPage(); applyFiltersAndRender(); });
+    $('filterPerson').addEventListener('change', (e) => { filterPerson = e.target.value || ""; resetPage(); applyFiltersAndRender(); });
+
+    $('pageSizeSelect').addEventListener('change', (e) => {
+      pageSize = parseInt(e.target.value) || 10;
+      resetPage();
+      applyFiltersAndRender();
+    });
+
+    function inDateRange(d){
+      const dd = safeISODate(d);
+      if (!dd) return false;
+      if (filterStart && dd < filterStart) return false;
+      if (filterEnd && dd > filterEnd) return false;
+      return true;
+    }
+
+    /* ✅ Shipment: category column shows "Shipment", person column blank */
+    function normalizeCategoryForRow(r){
+      return r._type === 'shipment' ? 'Shipment' : (r.category || '');
+    }
+    function normalizePersonForRow(r){
+      return r._type === 'shipment' ? '' : (r.person || '');
+    }
+    function isShipmentCategorySelected(val){
+      return (val || '').trim().toLowerCase() === 'shipment' || (val || '').trim() === 'সিপমেন্ট';
+    }
+
+    function refreshFilterDropdowns(){
+      const catSet = new Set(), personSet = new Set();
+      catSet.add('Shipment');
+      (personsList || []).forEach(p => { if (p) personSet.add(p); });
+
+      combinedRows.forEach(r => {
+        const c = normalizeCategoryForRow(r), p = normalizePersonForRow(r);
+        if(c) catSet.add(c);
+        if(p) personSet.add(p);
+      });
+
+      const cSel = $('filterCategory'), prevC = filterCategory;
+      cSel.innerHTML = `<option value="">All</option>` +
+        Array.from(catSet).sort((a,b)=>a.localeCompare(b,'bn')).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      cSel.value = prevC || '';
+
+      const pSel = $('filterPerson'), prevP = filterPerson;
+      pSel.innerHTML = `<option value="">All</option>` +
+        Array.from(personSet).sort((a,b)=>a.localeCompare(b,'bn')).map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+      pSel.value = prevP || '';
+    }
+
+    /* ✅ Pagination renderer like your screenshot */
+    function renderPager(totalItems, totalPages){
+      const bar = $('pagerBar');
+      const controls = $('pagerControls');
+
+      if (totalItems <= pageSize){
+        bar.style.display = 'none';
+        controls.innerHTML = '';
+        return;
+      }
+
+      bar.style.display = 'flex';
+
+      if (currentPage > totalPages) currentPage = totalPages || 1;
+      if (currentPage < 1) currentPage = 1;
+
+      const btn = (label, page, disabled=false, active=false) => {
+        const dis = disabled ? 'disabled' : '';
+        const act = active ? 'active' : '';
+        return `<button class="pg-btn ${act}" ${dis} data-page="${page}">${label}</button>`;
+      };
+
+      let html = '';
+
+      html += btn('<<', 1, currentPage === 1);
+
+      const windowSize = 2;
+      const pages = [];
+      const add = (p) => { if (!pages.includes(p) && p>=1 && p<=totalPages) pages.push(p); };
+
+      add(1);
+      add(totalPages);
+      for (let p = currentPage - windowSize; p <= currentPage + windowSize; p++) add(p);
+
+      pages.sort((a,b)=>a-b);
+
+      let last = 0;
+      pages.forEach(p => {
+        if (p - last > 1) html += `<span class="pg-dots">…</span>`;
+        html += btn(String(p), p, false, p === currentPage);
+        last = p;
+      });
+
+      html += btn('>>', totalPages, currentPage === totalPages);
+
+      controls.innerHTML = html;
+
+      controls.querySelectorAll('[data-page]').forEach(el => {
+        el.addEventListener('click', () => {
+          const p = parseInt(el.getAttribute('data-page'));
+          if (!p || p === currentPage) return;
+          currentPage = p;
+          applyFiltersAndRender();
+        });
+      });
+    }
+
+    function applyFiltersAndRender(){
+      const tbody = $('hisabTableBody');
+      let filtered = combinedRows.slice();
+
+      const isFiltered = filterStart || filterEnd || filterCategory || filterPerson;
+
+      if (filterStart || filterEnd) filtered = filtered.filter(r => inDateRange(r.date || ''));
+      if (filterCategory) {
+        if (isShipmentCategorySelected(filterCategory)) filtered = filtered.filter(r => r._type === 'shipment');
+        else filtered = filtered.filter(r => normalizeCategoryForRow(r) === filterCategory);
+      }
+      if (filterPerson) filtered = filtered.filter(r => normalizePersonForRow(r) === filterPerson);
+
+      // ✅ newest added stays on TOP (createdAt desc)
+      filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+
+      let totalMoney = 0;
+      const isShipSelected = isShipmentCategorySelected(filterCategory);
+
+      filtered.forEach(r => {
+        if (r._type === 'shipment') {
+          if (isShipSelected) totalMoney += (r._computedAmount || 0);
+        } else {
+          if (!isShipSelected) totalMoney += (parseFloat(r.cashAmount) || 0);
+        }
+      });
+
+      const totalItems = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const pageRows = filtered.slice(startIdx, startIdx + pageSize);
+
+      tbody.innerHTML = '';
+
+      pageRows.forEach((r, i) => {
+        const idx = startIdx + i;
+        const date = r.date || '';
+        const category = normalizeCategoryForRow(r);
+        const person = normalizePersonForRow(r);
+
+        let totalStock = '-', amount = '-', cashMoney = 0, details = '', editFn = '', editKey = r.key;
+        let amountClass = '';
+        let cashClass = '';
+
+        const isShipRow = (r._type === 'shipment');
+
+        if (isShipRow) {
+          totalStock = r.totalStock || 0;
+          amount = Math.round(r._computedAmount || 0);
+          amountClass = 'money-shipment';
+          editFn = `editShipment('${editKey}')`;
+        } else {
+          cashMoney = Math.round(r.cashAmount || 0);
+          details = r.details || '';
+          editFn = `editCash('${editKey}')`;
+
+          if (r.type === 'deposit') cashClass = 'money-deposit';
+          else if (r.type === 'cashout') cashClass = 'money-cashout';
+          else if (r.type === 'bank') cashClass = 'money-bank';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${categoryPillHTML(category, isShipRow)}</td>
+          <td>${isShipRow ? '' : personPillHTML(person)}</td>
+          <td>${totalStock}</td>
+          <td class="${amountClass}">${amount}</td>
+          <td class="${cashClass}">${cashMoney}</td>
+          <td title="${escapeHtml(details)}">${escapeHtml(details)}</td>
+          <td><button class="edit-btn" onclick="${editFn}">Edit</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      $('filterMoneyBox').innerText = `মোট টাকা: ${isFiltered ? Math.round(totalMoney || 0) : 0}`;
+
+      refreshFilterDropdowns();
+      renderPager(totalItems, Math.max(1, Math.ceil(totalItems / pageSize)));
+
+      // ✅ hide loader only after both lists loaded at least once
+      if (shipmentsLoadedOnce && cashLoadedOnce) hideLoader();
+    }
+
+    async function loadAllTransactionsTable(){
+      let packagesMap = {};
+      try {
+        const pkgSnap = await get(ref(database, 'packages'));
+        pkgSnap.forEach(ch => { packagesMap[ch.key] = ch.val(); });
+      } catch (e) {}
+
+      onValue(ref(database, 'shipments'), (snapshot) => {
+        const rows = [];
+        snapshot.forEach(child => {
+          let r = { key: child.key, ...child.val() };
+          let amt = r.amount || 0;
+          if ((!r.amount || r.amount === 0) && Array.isArray(r.items)) {
+            amt = r.items.reduce((s, it) => s + (parseFloat(packagesMap[it.pkgKey]?.buyPrice) || 0) * (it.totalPieces || 0), 0);
+          }
+          r._computedAmount = amt;
+          r.date = safeISODate(r.date);
+          r.createdAt = r.createdAt || Date.now();
+          rows.push(r);
+        });
+        shipmentsRows = rows;
+        shipmentsLoadedOnce = true;
+        mergeAndRender();
+      });
+
+      onValue(ref(database, 'cashTransactions'), (snapshot) => {
+        const rows = [];
+        snapshot.forEach(child => {
+          let r = { key: child.key, ...child.val() };
+          r.cashAmount = parseFloat(r.cashAmount ?? r.amount ?? 0) || 0;
+          r.date = safeISODate(r.date);
+          r.createdAt = r.createdAt || Date.now();
+          rows.push(r);
+        });
+        cashRows = rows;
+        cashLoadedOnce = true;
+        mergeAndRender();
+      });
+    }
+
+    function mergeAndRender(){
+      combinedRows = [
+        ...shipmentsRows.map(r=>({...r,_type:'shipment'})),
+        ...cashRows.map(r=>({...r,_type:'cash'}))
+      ];
+      applyFiltersAndRender();
+    }
+
+    window.editShipment = async (key) => {
+      try {
+        loadCategoriesOnce();
+        const snap = await get(ref(database, `shipments/${key}`));
+        if (!snap.exists()) return;
+        const d = snap.val();
+        editingShipmentKey = key;
+
+        // ✅ keep original for stock diff + keep createdAt unchanged
+        originalItemsForEdit = JSON.parse(JSON.stringify(d.items || []));
+        shipmentItems = JSON.parse(JSON.stringify(d.items || []));
+        editingShipmentCreatedAt = (d.createdAt != null ? d.createdAt : null);
+
+        $('shipDate').value = safeISODate(d.date) || todayISO();
+        $('shipPerson').value = d.person || "Shipment";
+        renderShipmentList();
+        updateTotalPieces();
+        openModal('shipmentModal');
+      } catch (e) {}
+    };
+
+    $('depDate').value = todayISO();
+    $('coDate').value = todayISO();
+    $('shipDate').value = todayISO();
+    $('bankDate').value = todayISO();
+
+    $('pageSizeSelect').value = String(pageSize);
+
+    setDateFilterBtnText();
+    loadPersons().then(() => { refreshFilterDropdowns(); applyFiltersAndRender(); });
+    loadAllTransactionsTable();
+  </script>
+</body>
+</html>
+
