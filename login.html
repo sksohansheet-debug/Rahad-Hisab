@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Hisab</title>
+
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --shadow: 0 10px 30px rgba(15,23,42,.10);
+      --brand:#2563eb;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      padding:18px;
+    }
+    .card{
+      width:min(420px, 100%);
+      background:rgba(255,255,255,.88);
+      backdrop-filter: blur(10px);
+      border:1px solid rgba(229,231,235,.9);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    h1{
+      margin:0 0 6px 0;
+      font-size:22px;
+      font-weight:1000;
+    }
+    p{ margin:0 0 14px 0; color:var(--muted); font-weight:700; }
+    label{ display:block; margin:12px 0 6px; font-weight:900; }
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      font-weight:800;
+    }
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:none;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+    }
+    .err{
+      margin-top:10px;
+      color:#ef4444;
+      font-weight:900;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Login</h1>
+    <p>আইডি ও পাসওয়ার্ড দিয়ে ঢুকুন</p>
+
+    <label>ID</label>
+    <input id="uid" placeholder="Enter ID" autocomplete="username">
+
+    <label>Password</label>
+    <input id="upass" type="password" placeholder="Enter Password" autocomplete="current-password">
+
+    <button onclick="loginNow()">Login</button>
+    <div id="err" class="err">ভুল ID বা Password!</div>
+  </div>
+
+  <script src="./auth.js"></script>
+  <script>
+    function loginNow(){
+      const id = document.getElementById('uid').value.trim();
+      const pass = document.getElementById('upass').value;
+      const ok = window.HISAB_AUTH.doLogin(id, pass);
+      if(!ok){
+        const e = document.getElementById('err');
+        e.style.display = 'block';
+        return;
+      }
+      const u = new URL(location.href);
+      const ret = u.searchParams.get("return");
+      location.href = ret ? decodeURIComponent(ret) : "index.html";
+    }
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+
+</body>
+</html>
