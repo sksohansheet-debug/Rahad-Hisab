@@ -1001,7 +1001,7 @@
 
   /* =========================
      ✅ Input zero behavior
-     ✅ CHANGE: if input has data-keepzero="1" then DO NOT clear on focus
+     ✅ delivery table inputs use placeholder (no forced 0)
      ========================= */
   function setZeroClass(inp){
     const isZero = String(inp.value).trim() === "0";
@@ -1010,6 +1010,10 @@
 
   function bindZeroInput(inp){
     if (!inp) return;
+
+    // ✅ skip auto-zero when data-skipzero="1"
+    if (inp.dataset.skipzero === "1") return;
+
     if (inp.dataset.zeroBound === "1") return;
     inp.dataset.zeroBound = "1";
 
@@ -1022,7 +1026,6 @@
         inp.value = "";
         inp.classList.remove('is-zero');
       } else {
-        // keepZero => select all for easy overwrite
         try { inp.setSelectionRange(0, inp.value.length); } catch(e){}
       }
     });
@@ -1038,7 +1041,6 @@
     inp.addEventListener('blur', () => {
       if (inp.value === "" || inp.value == null) inp.value = "0";
       setZeroClass(inp);
-      // reset helper counter for "00" detection
       inp.dataset.zeroPress = "0";
     });
   }
@@ -1100,10 +1102,10 @@
   });
 
   /* =========================================================
-     ✅ Report rule
-     - "Sell money" shows ONLY when that group has any Return
-       otherwise it will show 0
-     ✅ group by transaction.groupId
+     ✅ Report rule (FIXED)
+     - "Sell money" shows when:
+        ✅ group has any Return
+        OR ✅ group has saleConfirmed (user confirmed even with Return=0)
      ========================================================= */
   window.applyFilters = () => {
     currentPage = 1;
@@ -1140,7 +1142,9 @@
 
         cash: 0,
         items: [],
-        lastKey: t.key || ""
+        lastKey: t.key || "",
+
+        saleConfirmed: false
       };
 
       if ((t.key || "") > (grouped[groupKey].lastKey || "")) grouped[groupKey].lastKey = t.key || "";
@@ -1148,6 +1152,9 @@
       const type = t.type || "Out";
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
       const totalPcs = parseInt(t.totalPcs) || 0;
+
+      // ✅ collect group confirm flag
+      if (t.saleConfirmed === true) grouped[groupKey].saleConfirmed = true;
 
       if(hasFilter) {
         const pkgInfo = Object.values(packages).find(p => p.name === t.pkgName);
@@ -1176,7 +1183,9 @@
     Object.keys(grouped).forEach(k => {
       const g = grouped[k];
       g.sellAmt = (g.outAmt || 0) - (g.returnAmt || 0);
-      g.displaySellAmt = ((g.returnPcs || 0) > 0) ? g.sellAmt : 0;
+
+      // ✅ FIXED RULE:
+      g.displaySellAmt = ((g.returnPcs || 0) > 0 || g.saleConfirmed === true) ? g.sellAmt : 0;
     });
 
     document.getElementById('displayTotalProfit').innerText = hasFilter ? `৳${totalProfit.toFixed(2)}` : `৳0`;
@@ -1282,9 +1291,13 @@
 
   /* =========================
      ✅ Delivery Table
-     ✅ CHANGE: Return 0 "double press" works:
-        - default 0 => no result
-        - if user presses 0 twice (while value remains 0), it counts as retTouched and result appears
+     ✅ CHANGE:
+       - শুধুমাত্র ৪টা ইনপুট (কেস/পিস x 4) থাকবে
+       - placeholder হবে "-" (মাইনাস)
+       - Sell Pcs ইনপুট বাদ => অটো সংখ্যা দেখাবে (কিছু না থাকলে 0)
+     ✅ FIX:
+       - ফেরত ইনপুটে 0 টাইপ করলেও saleConfirmed=true হবে
+         => রিপোর্টে সেল টাকা 0 থাকবে না
      ========================= */
   function getPkgSerial(p){
     const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
@@ -1309,7 +1322,7 @@
         returnKey: null,
         appliedSellPcs: 0,
 
-        outTouched: false,
+        // ✅ NEW: user touched return inputs (even typing 0)
         retTouched: false
       }))
       .sort((a,b) => {
@@ -1320,27 +1333,9 @@
       });
   }
 
-  function shouldShowRowResult(r){
+  function computeSellAndAmountAlways(r){
     const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
     const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-    if (currentEditingGroupKey) return true;
-    if (outTotal > 0) return true;
-    if (retTotal > 0) return true;
-
-    // ✅ only show if user confirmed (double-0 press triggers retTouched)
-    if (r.retTouched) return true;
-    if (r.outTouched) return true;
-
-    return false;
-  }
-
-  function computeSellAndAmount(r){
-    const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-    const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-
-    const ok = shouldShowRowResult(r);
-    if (!ok) return { sellPcs:"", amt:"" };
-
     const sellPcs = Math.max(0, outTotal - retTotal);
     const amtNum = sellPcs * (parseFloat(r.sellPrice)||0);
     return { sellPcs: String(sellPcs), amt: "৳"+amtNum.toFixed(2) };
@@ -1351,11 +1346,8 @@
     let totalMoney = 0;
 
     deliveryRows.forEach(r => {
-      if (!shouldShowRowResult(r)) return;
-
       const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
       const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-
       const sellPcs = Math.max(0, outTotal - retTotal);
       totalSell += sellPcs;
       totalMoney += sellPcs * (parseFloat(r.sellPrice)||0);
@@ -1370,7 +1362,12 @@
     tb.innerHTML = "";
 
     deliveryRows.forEach((r, idx) => {
-      const computed = computeSellAndAmount(r);
+      const computed = computeSellAndAmountAlways(r);
+
+      const outCaseVal = r.outCase > 0 ? r.outCase : "";
+      const outPcsVal  = r.outPcs  > 0 ? r.outPcs  : "";
+      const retCaseVal = r.retCase > 0 ? r.retCase : "";
+      const retPcsVal  = r.retPcs  > 0 ? r.retPcs  : "";
 
       tb.innerHTML += `
         <tr>
@@ -1380,14 +1377,17 @@
             <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
           </td>
 
-          <td><input class="qty-inp" type="number" min="0" value="${r.outCase}" data-idx="${idx}" data-field="outCase"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${r.outPcs}" data-idx="${idx}" data-field="outPcs"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${outCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="outCase"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${outPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="outPcs"></td>
 
-          <!-- ✅ keepzero so default 0 stays and user can press 0 twice -->
-          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase" data-keepzero="1" data-zeropress="0"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs" data-keepzero="1" data-zeropress="0"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${retCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retCase"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${retPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retPcs"></td>
 
-          <td class="sellpcs-cell" id="sellpcs-${idx}">${computed.sellPcs}</td>
+          <!-- ✅ Sell pcs অটো (কিছু না থাকলে 0) -->
+          <td class="sellpcs-cell">
+            <span id="sellpcs-${idx}" style="min-width:28px; display:inline-block;">${computed.sellPcs}</span>
+          </td>
+
           <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
         </tr>
       `;
@@ -1406,43 +1406,6 @@
     const tbody = document.getElementById('deliveryPkgTbody');
     if (!tbody) return;
 
-    // ✅ Detect "double 0 press" on return inputs even if value stays 0
-    tbody.addEventListener('keydown', (e) => {
-      const el = e.target;
-      if (!el || el.tagName !== "INPUT" || el.type !== "number") return;
-
-      const field = el.dataset.field || "";
-      if (!(field === "retCase" || field === "retPcs")) return;
-
-      if (e.key === "0") {
-        const idx = parseInt(el.dataset.idx, 10);
-        if (isNaN(idx) || !deliveryRows[idx]) return;
-
-        // only count presses when current value is "0" (default/unchanged)
-        const v = String(el.value ?? "").trim();
-        if (v === "0" || v === "") {
-          const prev = parseInt(el.dataset.zeroPress || "0", 10) || 0;
-          const next = prev + 1;
-          el.dataset.zeroPress = String(next);
-
-          // ✅ user wants: "আরেকটি 0" => 2 presses
-          if (next >= 2) {
-            deliveryRows[idx].retTouched = true;
-
-            // force refresh row + totals immediately
-            const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
-            const spEl = document.getElementById(`sellpcs-${idx}`);
-            const amEl = document.getElementById(`amt-${idx}`);
-            if (spEl) spEl.innerText = sellPcs;
-            if (amEl) amEl.innerText = amt;
-            updateTotalsLive();
-          }
-        } else {
-          el.dataset.zeroPress = "0";
-        }
-      }
-    });
-
     tbody.addEventListener('input', (e) => {
       const el = e.target;
       if (!el || el.tagName !== "INPUT") return;
@@ -1452,22 +1415,15 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
-      // reset "zero press" counter if value changes away from 0
-      const vv = String(el.value ?? "").trim();
-      if (vv !== "0") el.dataset.zeroPress = "0";
-
-      // touched rules (keep as before)
+      // ✅ if user touched return inputs (even typing 0), confirm
       if (field === "retCase" || field === "retPcs") {
-        // ✅ if user typed non-zero return, treat touched
-        if (safeNum(el.value) > 0) deliveryRows[idx].retTouched = true;
-      }
-      if (field === "outCase" || field === "outPcs") {
-        deliveryRows[idx].outTouched = true;
+        const v = String(el.value ?? "").trim();
+        if (v !== "") deliveryRows[idx].retTouched = true; // "0" counts
       }
 
       deliveryRows[idx][field] = safeNum(el.value);
 
-      const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
+      const { sellPcs, amt } = computeSellAndAmountAlways(deliveryRows[idx]);
       const spEl = document.getElementById(`sellpcs-${idx}`);
       const amEl = document.getElementById(`amt-${idx}`);
       if (spEl) spEl.innerText = sellPcs;
@@ -1522,8 +1478,16 @@
       if (existingGid) currentDeliveryGroupId = existingGid;
     }
 
-    const retMode = deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) || currentEditingGroupKey;
+    // ✅ FIX: saleConfirmed হবে যদি কোনো রোতে ফেরত ইনপুট touch হয় (0 দিলেও)
+    const saleConfirmed = deliveryRows.some(r => r.retTouched);
 
+    // ✅ retMode triggers stock update mode
+    const retMode =
+      saleConfirmed ||
+      deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) ||
+      currentEditingGroupKey;
+
+    // ✅ if NOT retMode => only Out save, no stock cut
     if (!retMode) {
       try{
         for (const r of deliveryRows) {
@@ -1541,7 +1505,9 @@
             amount: (outTotal * r.sellPrice).toFixed(2),
             cashReceived: currentCashData,
             dues: currentDuesData,
-            appliedSellPcs: r.appliedSellPcs || 0
+            appliedSellPcs: r.appliedSellPcs || 0,
+
+            saleConfirmed: false
           };
 
           if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), payload);
@@ -1560,6 +1526,7 @@
       return;
     }
 
+    // ✅ retMode OR saleConfirmed => stock update
     try{
       for (const r of deliveryRows) {
         const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
@@ -1579,7 +1546,10 @@
             amount: (outTotal * r.sellPrice).toFixed(2),
             cashReceived: currentCashData,
             dues: currentDuesData,
-            appliedSellPcs: r.appliedSellPcs || 0
+            appliedSellPcs: r.appliedSellPcs || 0,
+
+            // ✅ important
+            saleConfirmed: saleConfirmed
           };
           if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), outPayload);
           else {
@@ -1599,7 +1569,9 @@
             pkgSellPrice: r.sellPrice,
             amount: (retTotal * r.sellPrice).toFixed(2),
             cashReceived: currentCashData,
-            dues: currentDuesData
+            dues: currentDuesData,
+
+            saleConfirmed: saleConfirmed
           };
           if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
           else {
@@ -1632,12 +1604,12 @@
           r.stock = newStock;
         }
 
-        if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), { appliedSellPcs: netSell, groupId: currentDeliveryGroupId });
+        if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), { appliedSellPcs: netSell, groupId: currentDeliveryGroupId, saleConfirmed });
         r.appliedSellPcs = netSell;
       }
 
       applyFilters();
-      alert("✅ ফেরত সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
+      alert("✅ সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
       closeModal('deliveryMainModal');
     }catch(e){
       alert(e.message);
@@ -1661,6 +1633,8 @@
 
     buildDeliveryRowsFromPackages();
 
+    const savedSaleConfirmed = group.items.some(x => x.saleConfirmed === true);
+
     group.items.forEach(item => {
       const pKey = getPkgKeyByName(item.pkgName);
       if (!pKey) return;
@@ -1673,13 +1647,14 @@
         row.outCase = sp.c; row.outPcs = sp.p;
         row.outKey = item.key;
         row.appliedSellPcs = parseInt(item.appliedSellPcs || 0) || 0;
-        row.outTouched = true;
       } else {
         const sp = splitToCasePcs(tq, row.caseQty);
         row.retCase = sp.c; row.retPcs = sp.p;
         row.returnKey = item.key;
-        row.retTouched = true;
       }
+
+      // ✅ keep confirm state when reopened
+      row.retTouched = savedSaleConfirmed;
     });
 
     renderDeliveryTable();
@@ -1688,8 +1663,6 @@
 
   /* =========================================================
      ✅ FIX: Delete group => Stock back correctly
-     - Stock was reduced by appliedSellPcs (net sell), NOT by totalPcs
-     - So on delete: only restore for Out rows by +appliedSellPcs (fallback totalPcs for legacy)
      ========================================================= */
   window.deleteTransactionGroup = async (groupKey) => {
     if(!confirm("মুছে ফেলতে চান?")) return;
@@ -1700,15 +1673,12 @@
       if(pKey) {
         const pkg = packages[pKey];
 
-        // ✅ restore only what was actually applied to stock
         let adj = 0;
         if ((itm.type || "Out") === "Out") {
           const applied = parseInt(itm.appliedSellPcs || 0) || 0;
           const legacy = parseInt(itm.totalPcs || 0) || 0;
-          // if applied exists use it, else fallback legacy (older data)
           adj = (applied > 0) ? applied : legacy;
         } else {
-          // Return row does not directly change stock (net already stored in Out.appliedSellPcs)
           adj = 0;
         }
 
