@@ -261,6 +261,7 @@
       position: relative;
       z-index: 1;
       width:100%;
+      min-width: 0;
     }
 
     .card h3{
@@ -271,13 +272,21 @@
       opacity: .98;
     }
 
+    /* ✅ Amount responsive + large numbers fit nicely */
     .card p{
-      font-size: 25px;
       font-weight: 1000;
       margin: 0;
       letter-spacing: .2px;
       line-height: 1.05;
       text-shadow: 0 10px 26px rgba(0,0,0,.18);
+
+      font-size: clamp(22px, 2.6vw, 34px);
+
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     .card small{ display:none; }
@@ -345,7 +354,9 @@
       .sb-ic{ width:34px; height:34px; font-size:17px; }
       .sb-close{ width:42px; height:42px; font-size:20px; }
       .grid{ grid-template-columns: 1fr; }
-      .card p{ font-size: 32px; }
+
+      /* ✅ mobile এ আরেকটু বড় দেখাবে */
+      .card p{ font-size: clamp(26px, 7.5vw, 40px); }
       .card h3{ font-size: 16px; }
     }
   </style>
@@ -405,7 +416,7 @@
       <div class="card total">
         <div class="card-text">
           <h3>Total Balance</h3>
-          <p id="cardTotal">৳ 0</p>
+          <p id="cardTotal">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
@@ -414,7 +425,7 @@
       <div class="card stock">
         <div class="card-text">
           <h3>Stock Balance</h3>
-          <p id="cardStock">৳ 0</p>
+          <p id="cardStock">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -423,7 +434,7 @@
       <div class="card pending">
         <div class="card-text">
           <h3>Pending Amount</h3>
-          <p id="cardPending">৳ 0</p>
+          <p id="cardPending">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-hourglass-half"></i></div>
@@ -432,7 +443,7 @@
       <div class="card hand">
         <div class="card-text">
           <h3>Hand Cash</h3>
-          <p id="cardHandCash">৳ 0</p>
+          <p id="cardHandCash">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-money-bill-wave"></i></div>
@@ -441,7 +452,7 @@
       <div class="card sales">
         <div class="card-text">
           <h3>Today Sales</h3>
-          <p id="cardTodaySales">৳ 0</p>
+          <p id="cardTodaySales">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-cart-shopping"></i></div>
@@ -450,7 +461,7 @@
       <div class="card expense">
         <div class="card-text">
           <h3>Today Expense</h3>
-          <p id="cardTodayExpense">৳ 0</p>
+          <p id="cardTodayExpense">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-receipt"></i></div>
@@ -459,7 +470,7 @@
       <div class="card profit">
         <div class="card-text">
           <h3>Today Profit</h3>
-          <p id="cardTodayProfit">৳ 0</p>
+          <p id="cardTodayProfit">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-sack-dollar"></i></div>
@@ -468,7 +479,7 @@
       <div class="card baki">
         <div class="card-text">
           <h3>Total Due</h3>
-          <p id="cardBakiTotal">৳ 0</p>
+          <p id="cardBakiTotal">0.00৳</p>
           <small>hidden</small>
         </div>
         <div class="icon"><i class="fa-solid fa-user-clock"></i></div>
@@ -566,12 +577,21 @@
       return v ? String(v).slice(0,10) : "";
     }
 
+    /* ✅ FIX: paisa (2 decimal) + lakh/crore grouping + never NaN
+       ✅ Output: 120.50৳ / 10,00,000.50৳
+    */
     function toBDT(n){
-      const val = Number(n) || 0;
+      const val = Number(n);
+      const safe = Number.isFinite(val) ? val : 0;
+
       try{
-        return "৳ " + val.toLocaleString("en-US", { maximumFractionDigits: 0 });
+        const fmt = new Intl.NumberFormat("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        return fmt.format(safe) + "৳";
       }catch(e){
-        return "৳ " + Math.round(val).toLocaleString();
+        return (Math.round(safe * 100) / 100).toFixed(2) + "৳";
       }
     }
 
@@ -583,9 +603,9 @@
       shipments: [],
       cash: [],
       transactions: [],
-      bakiDueTotal: 0,        // ✅ শুধু পাওনা (Due)
-      collectionTotal: 0,     // ✅ today.html payment(cashReceived) মোট (ডাবল কাউন্ট ছাড়া)
-      bakiPaidTotal: 0        // ✅ NEW: baki.html collection (paidAmt total) -> Hand Cash এ যোগ হবে
+      bakiDueTotal: 0,
+      collectionTotal: 0,
+      bakiPaidTotal: 0
     };
 
     function num(x){ return Number(x) || 0; }
@@ -614,17 +634,6 @@
       return total;
     }
 
-    /* ✅ RULES:
-       cashTransactions:
-       - deposit  => Hand Cash +
-       - cashout  => Hand Cash -
-       - bank     => Hand Cash - AND Pending +   (bank transfer: hand -> pending)
-
-       ✅ CHANGE:
-       - Today Sales এর টাকা Hand Cash এ যোগ হবে না
-       - today.html payment (cashReceived) -> Hand Cash
-       - baki.html collection (paidAmt total) -> Hand Cash
-    */
     function computeCashAndPending(cashRows, shipmentRows, packagesMap, collectionTotal, bakiPaidTotal){
       let hand = 0;
       let pending = 0;
@@ -643,13 +652,9 @@
         }
       }
 
-      // ✅ today.html payment -> Hand Cash
       hand += num(collectionTotal);
-
-      // ✅ NEW: baki.html collection (paidAmt total) -> Hand Cash
       hand += num(bakiPaidTotal);
 
-      // shipments purchase => pending কমবে (ক্রয়মূল্য)
       let shipBuy = 0;
       for (const sh of (shipmentRows || [])){
         shipBuy += computeShipmentAmount(sh, packagesMap);
@@ -710,7 +715,6 @@
       return { sales, profit };
     }
 
-    /* ✅ Baki: শুধু Due card এ যাবে */
     function computeBakiDueOnly(transactionsRows){
       let dueTotal = 0;
 
@@ -729,9 +733,8 @@
       return dueTotal;
     }
 
-    /* ✅ today.html payment cashReceived কে group-wise (date+person) একবার করে যোগ (ডাবল কাউন্ট রোধ) */
     function computeCollectionTotalFromTransactions(transactionsRows){
-      const map = new Map(); // key: date_person -> cash
+      const map = new Map();
       for (const tr of (transactionsRows || [])){
         const person = String(tr.personName || "");
         const date = safeISODate(tr.date);
@@ -749,7 +752,6 @@
       return total;
     }
 
-    /* ✅ NEW: baki.html collection (paidAmt total) */
     function computeBakiPaidTotalFromTransactions(transactionsRows){
       let total = 0;
       for (const tr of (transactionsRows || [])){
@@ -840,7 +842,7 @@
       render();
     });
 
-    // 4) transactions (today sale/return + baki dues + payment cashReceived)
+    // 4) transactions
     pulse();
     onValue(ref(database, "transactions"), (snap) => {
       const arr = [];
@@ -862,13 +864,8 @@
 
       state.transactions = arr;
 
-      // ✅ Due card: শুধু due
       state.bakiDueTotal = computeBakiDueOnly(state.transactions);
-
-      // ✅ today.html payment (cashReceived)
       state.collectionTotal = computeCollectionTotalFromTransactions(state.transactions);
-
-      // ✅ NEW: baki.html collection (paidAmt total)
       state.bakiPaidTotal = computeBakiPaidTotalFromTransactions(state.transactions);
 
       markLoaded('transactions');
@@ -876,7 +873,6 @@
       render();
     });
 
-    // Initial render
     render();
   </script>
 
