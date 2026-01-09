@@ -732,6 +732,7 @@
   </div>
   <div class="nav-buttons">
     <button class="btn btn-person" onclick="openModal('personModal')"><i class="fas fa-user-plus"></i> Person</button>
+    <button class="btn btn-person" onclick="openModal('personListModal')"><i class="fas fa-list"></i> List</button>
     <button class="btn btn-delivery" onclick="openModal('deliverySelectModal')">🚚 Delivery</button>
   </div>
 </div>
@@ -894,11 +895,32 @@
 </div>
 
 <div id="personModal" class="modal">
-  <div class="modal-content">
-    <h3>নতুন লোক</h3>
+  <div class="modal-content" style="max-width: 520px;">
+    <h3 id="personModalTitle">নতুন লোক</h3>
+    <input type="hidden" id="personEditKey" value="">
+    <input type="hidden" id="personOldName" value="">
     <input type="text" id="personName" placeholder="নাম">
     <button class="save-btn" onclick="savePerson()">Save</button>
     <span class="close-link" onclick="closeModal('personModal')">বন্ধ</span>
+  </div>
+</div>
+
+<!-- ✅ NEW: Person List Modal (Edit + Hide) -->
+<div id="personListModal" class="modal">
+  <div class="modal-content" style="max-width: 620px;">
+    <h3>Person List</h3>
+
+    <div class="form-box" style="margin-bottom:10px;">
+      <div class="form-title">এড করা পারসোন</div>
+      <div id="personListContainer"></div>
+    </div>
+
+    <div class="form-box" style="margin-bottom:0; background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.18);">
+      <div class="form-title">Hide করা পারসোন (Restore)</div>
+      <div id="hiddenPersonListContainer"></div>
+    </div>
+
+    <span class="close-link" onclick="closeModal('personListModal')">বন্ধ করুন</span>
   </div>
 </div>
 
@@ -925,6 +947,9 @@
   let lastSortedKeys = [];
 
   let editingDueIndex = null;
+
+  /* ✅ NEW: persons cache with keys */
+  let personsCache = []; // [{key, name}]
 
   const formatDate = (dateStr) => {
     if(!dateStr) return "";
@@ -996,8 +1021,110 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeSidebarFromOverlay(); });
 
-  window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; };
+  window.openModal = (id) => {
+    document.getElementById(id).style.display = 'flex';
+    // ✅ ensure list refresh when opening
+    if (id === "personListModal") renderPersonListModal();
+  };
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+
+  /* =========================
+     ✅ Person Hide (only website) - LocalStorage
+     ========================= */
+  const LS_HIDDEN_PERSONS = "hisab_hidden_person_keys_v1";
+
+  function getHiddenPersonKeys(){
+    try{
+      const raw = localStorage.getItem(LS_HIDDEN_PERSONS);
+      const arr = JSON.parse(raw || "[]");
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){
+      return [];
+    }
+  }
+  function setHiddenPersonKeys(arr){
+    try{ localStorage.setItem(LS_HIDDEN_PERSONS, JSON.stringify(arr || [])); }catch(e){}
+  }
+  function isPersonHidden(key){
+    return getHiddenPersonKeys().includes(key);
+  }
+  function hidePersonKey(key){
+    const arr = getHiddenPersonKeys();
+    if (!arr.includes(key)) arr.push(key);
+    setHiddenPersonKeys(arr);
+  }
+  function restorePersonKey(key){
+    const arr = getHiddenPersonKeys().filter(k => k !== key);
+    setHiddenPersonKeys(arr);
+  }
+
+  function buildPersonOptions(){
+    const visible = personsCache.filter(p => p && p.key && !isPersonHidden(p.key));
+
+    let optionsMain = '<option value="">নাম বেছে নিন</option>';
+    visible.forEach(p => { optionsMain += `<option value="${p.name}">${p.name}</option>`; });
+
+    document.getElementById('mainPersonSelect').innerHTML = optionsMain;
+    document.getElementById('filterPerson').innerHTML = '<option value="">সকল ব্যক্তি</option>' + optionsMain;
+
+    // keep list modal synced
+    renderPersonListModal();
+  }
+
+  function renderPersonListModal(){
+    const cont = document.getElementById('personListContainer');
+    const hcont = document.getElementById('hiddenPersonListContainer');
+    if (!cont || !hcont) return;
+
+    const hiddenKeys = getHiddenPersonKeys();
+    const visible = personsCache.filter(p => p && p.key && !hiddenKeys.includes(p.key));
+    const hidden = personsCache.filter(p => p && p.key && hiddenKeys.includes(p.key));
+
+    const rowHtml = (p, hiddenMode=false) => `
+      <div class="due-item" style="cursor: default;">
+        <span style="font-weight:1000;">${p.name}</span>
+        <span style="display:flex; gap:8px; align-items:center;">
+          ${
+            hiddenMode
+              ? `<button class="action-btn btn-edit-row" style="padding:8px 10px;" onclick="restorePerson('${p.key}')"><i class="fas fa-rotate-left"></i> Restore</button>`
+              : `
+                <button class="action-btn btn-edit-row" style="padding:8px 10px;" onclick="openPersonEdit('${p.key}')"><i class="fas fa-pen"></i> Edit</button>
+                <button class="action-btn btn-del-row" style="padding:8px 10px;" onclick="hidePerson('${p.key}')"><i class="fas fa-eye-slash"></i> Hide</button>
+              `
+          }
+        </span>
+      </div>
+    `;
+
+    cont.innerHTML = visible.length ? visible.map(p => rowHtml(p,false)).join("") : `<div style="text-align:center; color: var(--muted); font-weight:900; padding: 10px 0;">কোনো Person নেই</div>`;
+    hcont.innerHTML = hidden.length ? hidden.map(p => rowHtml(p,true)).join("") : `<div style="text-align:center; color: var(--muted); font-weight:900; padding: 10px 0;">কেউ Hide করা নেই</div>`;
+  }
+
+  window.hidePerson = (key) => {
+    const p = personsCache.find(x => x.key === key);
+    if (!p) return;
+    if(!confirm(`"${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)`)) return;
+    hidePersonKey(key);
+    buildPersonOptions();
+  };
+
+  window.restorePerson = (key) => {
+    restorePersonKey(key);
+    buildPersonOptions();
+  };
+
+  window.openPersonEdit = (key) => {
+    const p = personsCache.find(x => x.key === key);
+    if (!p) return;
+
+    document.getElementById('personModalTitle').innerText = "Person Edit";
+    document.getElementById('personEditKey').value = p.key;
+    document.getElementById('personOldName').value = p.name || "";
+    document.getElementById('personName').value = p.name || "";
+
+    closeModal('personListModal');
+    openModal('personModal');
+  };
 
   /* =========================
      ✅ Input zero behavior
@@ -1052,10 +1179,15 @@
   // ✅ Persons
   let personsFirstLoad = true;
   onValue(ref(database, 'persons'), (snapshot) => {
-    let options = '<option value="">নাম বেছে নিন</option>';
-    snapshot.forEach(child => { options += `<option value="${child.val().name}">${child.val().name}</option>`; });
-    document.getElementById('mainPersonSelect').innerHTML = options;
-    document.getElementById('filterPerson').innerHTML = '<option value="">সকল ব্যক্তি</option>' + options;
+    personsCache = [];
+    snapshot.forEach(child => {
+      personsCache.push({ key: child.key, name: child.val()?.name || "" });
+    });
+
+    // keep stable order by name
+    personsCache.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
+
+    buildPersonOptions();
 
     if (personsFirstLoad) {
       personsFirstLoad = false;
@@ -1291,13 +1423,6 @@
 
   /* =========================
      ✅ Delivery Table
-     ✅ CHANGE:
-       - শুধুমাত্র ৪টা ইনপুট (কেস/পিস x 4) থাকবে
-       - placeholder হবে "-" (মাইনাস)
-       - Sell Pcs ইনপুট বাদ => অটো সংখ্যা দেখাবে (কিছু না থাকলে 0)
-     ✅ FIX:
-       - ফেরত ইনপুটে 0 টাইপ করলেও saleConfirmed=true হবে
-         => রিপোর্টে সেল টাকা 0 থাকবে না
      ========================= */
   function getPkgSerial(p){
     const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
@@ -1757,12 +1882,57 @@
     applyFilters();
   };
 
-  window.savePerson = () => {
-    const name = document.getElementById('personName').value.trim();
-    if(name) push(ref(database, 'persons'), { name }).then(() => {
-      document.getElementById('personName').value = "";
-      closeModal('personModal');
+  // ✅ NEW: Rename person everywhere in transactions (so old data stays usable)
+  async function renamePersonEverywhere(oldName, newName){
+    if (!oldName || !newName || oldName === newName) return;
+
+    const snap = await get(ref(database, 'transactions'));
+    if (!snap.exists()) return;
+
+    const updates = [];
+    snap.forEach(ch => {
+      const v = ch.val() || {};
+      if ((v.personName || "") === oldName) {
+        updates.push(update(ref(database, `transactions/${ch.key}`), { personName: newName }));
+      }
     });
+
+    if (updates.length) await Promise.all(updates);
+  }
+
+  window.savePerson = async () => {
+    const name = document.getElementById('personName').value.trim();
+    if(!name) return;
+
+    const editKey = (document.getElementById('personEditKey').value || "").trim();
+    const oldName = (document.getElementById('personOldName').value || "").trim();
+
+    // add
+    if(!editKey){
+      push(ref(database, 'persons'), { name }).then(() => {
+        document.getElementById('personName').value = "";
+        closeModal('personModal');
+      });
+      return;
+    }
+
+    // edit
+    try{
+      await update(ref(database, `persons/${editKey}`), { name });
+      await renamePersonEverywhere(oldName, name);
+
+      document.getElementById('personEditKey').value = "";
+      document.getElementById('personOldName').value = "";
+      document.getElementById('personName').value = "";
+      document.getElementById('personModalTitle').innerText = "নতুন লোক";
+
+      alert("✅ Person আপডেট হয়েছে!");
+      closeModal('personModal');
+      // list refresh
+      renderPersonListModal();
+    }catch(e){
+      alert(e.message);
+    }
   };
 
   setTimeout(attachZeroBehavior, 500);
