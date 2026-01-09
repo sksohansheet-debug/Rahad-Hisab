@@ -592,6 +592,74 @@
       font-weight: 1000;
       white-space: nowrap;
     }
+
+    /* ==================================================
+       ✅ NEW: Laptop size full-width + bigger form controls
+       (শুধু ল্যাপটপে কাজ করবে, অন্য কিছু বদলায় না)
+       ================================================== */
+    @media (min-width: 1024px){
+      /* ল্যাপটপে ডানে-বামে ফাকা কমাতে full width */
+      .main-container{
+        max-width: 100%;
+        padding-left: 28px;
+        padding-right: 28px;
+      }
+
+      /* Filter inputs বড় */
+      .filter-item input,
+      .filter-item select{
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+
+      /* Range toggle (readonly input) */
+      .range-toggle{
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+
+      /* Page size select বড় */
+      .page-size select{
+        padding: 12px 14px;
+        font-size: 15px;
+      }
+
+      /* Modal inputs বড় */
+      .modal-content{
+        max-width: 520px;
+      }
+      .modal-content input,
+      .modal-content select{
+        padding: 14px 16px;
+        font-size: 16px;
+      }
+
+      /* Buttons বড় */
+      .add-baki-btn{
+        padding: 12px 16px;
+        font-size: 15px;
+      }
+      .action-btn{
+        padding: 11px 14px;
+        font-size: 14px;
+      }
+      .save-btn,
+      .close-btn{
+        padding: 13px 16px;
+        font-size: 15px;
+      }
+
+      /* Table spacing আরামদায়ক */
+      table{ font-size: 15px; }
+      thead th{ padding: 14px 16px; }
+      tbody td{ padding: 14px 16px; }
+
+      /* Pagination buttons বড় */
+      .page-btn{
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 
