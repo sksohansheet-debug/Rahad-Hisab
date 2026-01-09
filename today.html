@@ -30,6 +30,9 @@
 
       --topbar-h: 106px;
       --sb-w: 295px;
+
+      /* ✅ Delivery header row height (for sticky 2nd row top) */
+      --del-head-row1: 40px;
     }
 
     *{ box-sizing:border-box; }
@@ -470,10 +473,6 @@
 
     /* =========================
        ✅ Delivery Table UI (FIXED)
-       - header text black + bold
-       - header sticky inside table scroll
-       - package name visible + wrap
-       - hover row darker
        ========================= */
     .delivery-headline{
       display:flex;
@@ -518,10 +517,9 @@
       font-weight: 900;
     }
 
-    /* ✅ important: make inner scroll so header stays sticky */
     .delivery-table-wrap{
       width: 100%;
-      max-height: 62vh;        /* ✅ scroll inside table */
+      max-height: 62vh;
       overflow: auto;
       border: 1px solid rgba(229,231,235,.9);
       border-radius: 14px;
@@ -549,26 +547,28 @@
       line-height: 1.1;
     }
 
-    /* ✅ header: black + bold */
+    /* ✅ header sticky lock (2 rows) + bigger/bolder */
     .delivery-table thead th{
       background: #ffffff !important;
       color:#0f172a !important;
       position: sticky;
-      top: 0;
-      z-index: 5;
-      font-size: 11px;
-      font-weight: 1000;
-      padding: 8px 6px;
+      z-index: 50; /* ✅ ensure always above body */
+      font-size: 12px;      /* ✅ bigger */
+      font-weight: 1000;    /* ✅ bolder */
+      padding: 10px 6px;    /* ✅ taller -> stable sticky */
       box-shadow: 0 2px 0 rgba(15,23,42,.08);
+      background-clip: padding-box;
+    }
+    .delivery-table thead tr:first-child th{
+      top: 0;
+      z-index: 60;
+      height: var(--del-head-row1);
     }
     .delivery-table thead tr:nth-child(2) th{
+      top: var(--del-head-row1);
       background: #f8fafc !important;
-      color:#0f172a !important;
-      z-index: 6;
-      font-size: 11px;
+      z-index: 55;
       letter-spacing:.2px;
-      padding: 8px 6px;
-      box-shadow: 0 2px 0 rgba(15,23,42,.08);
     }
 
     /* ✅ Column coloring (full height) */
@@ -666,10 +666,11 @@
     .delivery-table tfoot td{
       position: sticky;
       bottom: 0;
-      z-index: 4;
+      z-index: 40;
       background: #fff;
       font-weight: 1000;
       border-top: 2px solid rgba(15,23,42,.12);
+      background-clip: padding-box;
     }
     .totals-label{
       text-align:left !important;
@@ -788,7 +789,7 @@
             <th>তারিখ</th>
             <th>নাম</th>
             <th>বহির পণ্য (টাকা)</th>
-            <th>সেল পণ্য (টাকা)</th><!-- ✅ renamed -->
+            <th>সেল পণ্য (টাকা)</th>
             <th>জমা (টাকা)</th>
             <th>একশন</th>
           </tr>
@@ -918,6 +919,9 @@
   let currentCashData = 0;
   let currentDuesData = [];
   let currentEditingGroupKey = null;
+
+  /* ✅ NEW: delivery group id so same person+date can have multiple separate transactions */
+  let currentDeliveryGroupId = null;
 
   let currentPage = 1;
   let pageSize = 10;
@@ -1097,9 +1101,9 @@
 
   /* =========================================================
      ✅ Report rule (as you requested)
-     - "Sell product (pcs)" column REMOVED
      - "Sell money" shows ONLY when that group has any Return
        otherwise it will show 0
+     ✅ NEW: group by transaction.groupId (so same person+date multiple groups work)
      ========================================================= */
   window.applyFilters = () => {
     currentPage = 1;
@@ -1119,24 +1123,27 @@
     const hasFilter = startDate || endDate || filterPerson;
 
     filtered.forEach(t => {
-      const dateKey = `${t.date}_${t.personName}`;
-      if(!grouped[dateKey]) grouped[dateKey] = {
+      const gId = (t.groupId || "").trim() || `${t.date}_${t.personName}__legacy`;
+      const groupKey = gId;
+
+      if(!grouped[groupKey]) grouped[groupKey] = {
+        groupId: gId,
         date: t.date,
         name: t.personName,
 
         outPcs: 0,
         returnPcs: 0,
 
-        outAmt: 0,        // Out gross money
-        returnAmt: 0,     // Return gross money
-        sellAmt: 0,       // Net = out - return (but display rule applies)
+        outAmt: 0,
+        returnAmt: 0,
+        sellAmt: 0,
 
         cash: 0,
         items: [],
         lastKey: t.key || ""
       };
 
-      if ((t.key || "") > (grouped[dateKey].lastKey || "")) grouped[dateKey].lastKey = t.key || "";
+      if ((t.key || "") > (grouped[groupKey].lastKey || "")) grouped[groupKey].lastKey = t.key || "";
 
       const type = t.type || "Out";
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
@@ -1156,23 +1163,20 @@
       const amt = totalPcs * sellPrice;
 
       if(type === "Out"){
-        grouped[dateKey].outPcs += totalPcs;
-        grouped[dateKey].outAmt += amt;
+        grouped[groupKey].outPcs += totalPcs;
+        grouped[groupKey].outAmt += amt;
       }else{
-        grouped[dateKey].returnPcs += totalPcs;
-        grouped[dateKey].returnAmt += amt;
+        grouped[groupKey].returnPcs += totalPcs;
+        grouped[groupKey].returnAmt += amt;
       }
 
-      grouped[dateKey].cash = (parseFloat(t.cashReceived) || 0);
-      grouped[dateKey].items.push(t);
+      grouped[groupKey].cash = (parseFloat(t.cashReceived) || 0);
+      grouped[groupKey].items.push(t);
     });
 
-    // ✅ compute net sell money + apply display rule
     Object.keys(grouped).forEach(k => {
       const g = grouped[k];
       g.sellAmt = (g.outAmt || 0) - (g.returnAmt || 0);
-
-      // ✅ display sell money ONLY if return exists, else show 0
       g.displaySellAmt = ((g.returnPcs || 0) > 0) ? g.sellAmt : 0;
     });
 
@@ -1202,8 +1206,8 @@
 
     let count = startIdx + 1;
 
-    pageKeys.forEach(dateKey => {
-      const row = grouped[dateKey];
+    pageKeys.forEach(groupKey => {
+      const row = grouped[groupKey];
       tbody.innerHTML += `<tr>
         <td class="col-no">${count++}</td>
         <td class="col-date">${formatDate(row.date)}</td>
@@ -1214,9 +1218,9 @@
         <td class="col-cash">৳${(row.cash || 0).toFixed(2)}</td>
 
         <td>
-          <button class="action-btn btn-edit-row" onclick="reopenDeliveryForm('${dateKey}')"><i class="fas fa-file-invoice"></i> Form</button>
-          <button class="action-btn btn-pay-row" onclick="openPaymentForm('${dateKey}')"><i class="fas fa-money-bill-wave"></i> পেমেন্ট</button>
-          <button class="action-btn btn-del-row" onclick="deleteTransactionGroup('${dateKey}')"><i class="fas fa-trash"></i></button>
+          <button class="action-btn btn-edit-row" onclick="reopenDeliveryForm('${groupKey}')"><i class="fas fa-file-invoice"></i> Form</button>
+          <button class="action-btn btn-pay-row" onclick="openPaymentForm('${groupKey}')"><i class="fas fa-money-bill-wave"></i> পেমেন্ট</button>
+          <button class="action-btn btn-del-row" onclick="deleteTransactionGroup('${groupKey}')"><i class="fas fa-trash"></i></button>
         </td>
       </tr>`;
     });
@@ -1278,7 +1282,9 @@
   }
 
   /* =========================
-     ✅ Delivery Table (kept)
+     ✅ Delivery Table
+     - Sell pcs cell shows TOTAL pcs result live (out-ret) whenever you start typing out/return
+     - Return 0 typed manually will still show result (touched logic)
      ========================= */
   function getPkgSerial(p){
     const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
@@ -1301,7 +1307,11 @@
 
         outKey: null,
         returnKey: null,
-        appliedSellPcs: 0
+        appliedSellPcs: 0,
+
+        /* ✅ NEW: touch flags (so typing 0 still counts) */
+        outTouched: false,
+        retTouched: false
       }))
       .sort((a,b) => {
         const as = (a.serial == null) ? 999999 : a.serial;
@@ -1311,17 +1321,23 @@
       });
   }
 
-  function isReturnMode() {
-    if (currentEditingGroupKey) return true;
-    return deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0);
+  function shouldShowRowResult(r){
+    const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
+    const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
+    if (currentEditingGroupKey) return true;              // edit mode always show
+    if (outTotal > 0) return true;                        // out entered
+    if (retTotal > 0) return true;                        // return entered
+    if (r.retTouched) return true;                        // ✅ typed even if 0
+    if (r.outTouched) return true;                        // typed even if 0
+    return false;
   }
 
   function computeSellAndAmount(r){
     const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
     const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
 
-    const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
-    if (!shouldComputeForRow) return { sellPcs:"", amt:"" };
+    const ok = shouldShowRowResult(r);
+    if (!ok) return { sellPcs:"", amt:"" };
 
     const sellPcs = Math.max(0, outTotal - retTotal);
     const amtNum = sellPcs * (parseFloat(r.sellPrice)||0);
@@ -1332,16 +1348,11 @@
     let totalSell = 0;
     let totalMoney = 0;
 
-    const showSell = isReturnMode();
-
     deliveryRows.forEach(r => {
-      if (!showSell) return;
+      if (!shouldShowRowResult(r)) return;
 
       const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
       const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-
-      const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
-      if (!shouldComputeForRow) return;
 
       const sellPcs = Math.max(0, outTotal - retTotal);
       totalSell += sellPcs;
@@ -1356,10 +1367,8 @@
     const tb = document.getElementById('deliveryPkgTbody');
     tb.innerHTML = "";
 
-    const showSell = isReturnMode();
-
     deliveryRows.forEach((r, idx) => {
-      const computed = (showSell) ? computeSellAndAmount(r) : { sellPcs:"", amt:"" };
+      const computed = computeSellAndAmount(r);
 
       tb.innerHTML += `
         <tr>
@@ -1403,22 +1412,17 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
+      // ✅ mark touched (so typing 0 still counts)
+      if (field === "retCase" || field === "retPcs") deliveryRows[idx].retTouched = true;
+      if (field === "outCase" || field === "outPcs") deliveryRows[idx].outTouched = true;
+
       deliveryRows[idx][field] = safeNum(el.value);
 
-      const mustShow = isReturnMode();
-
-      if (mustShow) {
-        const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
-        const spEl = document.getElementById(`sellpcs-${idx}`);
-        const amEl = document.getElementById(`amt-${idx}`);
-        if (spEl) spEl.innerText = sellPcs;
-        if (amEl) amEl.innerText = amt;
-      } else {
-        const spEl = document.getElementById(`sellpcs-${idx}`);
-        const amEl = document.getElementById(`amt-${idx}`);
-        if (spEl) spEl.innerText = "";
-        if (amEl) amEl.innerText = "";
-      }
+      const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
+      const spEl = document.getElementById(`sellpcs-${idx}`);
+      const amEl = document.getElementById(`amt-${idx}`);
+      if (spEl) spEl.innerText = sellPcs;
+      if (amEl) amEl.innerText = amt;
 
       updateTotalsLive();
     });
@@ -1427,6 +1431,11 @@
   function getPkgKeyByName(name) {
     const k = Object.keys(packages).find(x => (packages[x]?.name || "") === name);
     return k || null;
+  }
+
+  function makeNewGroupId(person, date){
+    // ✅ unique per delivery (same person+date multiple times will be separate)
+    return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   }
 
   window.startDelivery = () => {
@@ -1444,6 +1453,10 @@
     currentDuesData = [];
 
     buildDeliveryRowsFromPackages();
+
+    // ✅ NEW group id created here (so new save won't merge with old)
+    currentDeliveryGroupId = makeNewGroupId(selectedPersonName, document.getElementById('deliveryDate').value || todayISO());
+
     renderDeliveryTable();
 
     closeModal('deliverySelectModal');
@@ -1454,7 +1467,18 @@
     const date = document.getElementById('deliveryDate').value || todayISO();
     if(!selectedPersonName) return;
 
-    const retMode = isReturnMode();
+    // ✅ keep group id stable for this session
+    if (!currentDeliveryGroupId) currentDeliveryGroupId = makeNewGroupId(selectedPersonName, date);
+
+    // ✅ if editing existing group, preserve its groupId
+    if (currentEditingGroupKey) {
+      const g = window.groupedData[currentEditingGroupKey];
+      const existingGid = (g?.groupId || g?.items?.[0]?.groupId || "").trim();
+      if (existingGid) currentDeliveryGroupId = existingGid;
+    }
+
+    // ✅ decide whether this save includes any Return (only for stock logic part)
+    const retMode = deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) || currentEditingGroupKey;
 
     if (!retMode) {
       try{
@@ -1463,6 +1487,7 @@
           if (outTotal <= 0) continue;
 
           const payload = {
+            groupId: currentDeliveryGroupId,
             personName: selectedPersonName,
             date,
             type: "Out",
@@ -1500,6 +1525,7 @@
 
         if (outTotal > 0) {
           const outPayload = {
+            groupId: currentDeliveryGroupId,
             personName: selectedPersonName,
             date,
             type: "Out",
@@ -1518,26 +1544,30 @@
           }
         }
 
-        if (retTotal > 0) {
-          const retPayload = {
-            personName: selectedPersonName,
-            date,
-            type: "Return",
-            pkgName: r.pkgName,
-            totalPcs: retTotal,
-            pkgSellPrice: r.sellPrice,
-            amount: (retTotal * r.sellPrice).toFixed(2),
-            cashReceived: currentCashData,
-            dues: currentDuesData
-          };
-          if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
-          else {
-            const pushed = await push(ref(database, 'transactions'), retPayload);
-            r.returnKey = pushed.key;
+        if (retTotal > 0 || r.retTouched) {
+          // ✅ if retTouched but 0, we should remove any existing returnKey (below) and still allow net calculation
+          if (retTotal > 0) {
+            const retPayload = {
+              groupId: currentDeliveryGroupId,
+              personName: selectedPersonName,
+              date,
+              type: "Return",
+              pkgName: r.pkgName,
+              totalPcs: retTotal,
+              pkgSellPrice: r.sellPrice,
+              amount: (retTotal * r.sellPrice).toFixed(2),
+              cashReceived: currentCashData,
+              dues: currentDuesData
+            };
+            if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
+            else {
+              const pushed = await push(ref(database, 'transactions'), retPayload);
+              r.returnKey = pushed.key;
+            }
+          } else if (r.returnKey) {
+            await remove(ref(database, `transactions/${r.returnKey}`));
+            r.returnKey = null;
           }
-        } else if (r.returnKey) {
-          await remove(ref(database, `transactions/${r.returnKey}`));
-          r.returnKey = null;
         }
 
         const netSell = Math.max(0, outTotal - retTotal);
@@ -1561,7 +1591,7 @@
           r.stock = newStock;
         }
 
-        if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), { appliedSellPcs: netSell });
+        if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), { appliedSellPcs: netSell, groupId: currentDeliveryGroupId });
         r.appliedSellPcs = netSell;
       }
 
@@ -1573,10 +1603,10 @@
     }
   };
 
-  window.reopenDeliveryForm = (dateKey) => {
-    const group = window.groupedData[dateKey];
+  window.reopenDeliveryForm = (groupKey) => {
+    const group = window.groupedData[groupKey];
     selectedPersonName = group.name;
-    currentEditingGroupKey = dateKey;
+    currentEditingGroupKey = groupKey;
 
     deliveryInputsBound = false;
 
@@ -1585,6 +1615,9 @@
 
     currentCashData = group.cash || 0;
     currentDuesData = group.items[0]?.dues || [];
+
+    // ✅ preserve groupId while editing
+    currentDeliveryGroupId = (group.groupId || group.items[0]?.groupId || "").trim() || makeNewGroupId(group.name, group.date);
 
     buildDeliveryRowsFromPackages();
 
@@ -1600,10 +1633,12 @@
         row.outCase = sp.c; row.outPcs = sp.p;
         row.outKey = item.key;
         row.appliedSellPcs = parseInt(item.appliedSellPcs || 0) || 0;
+        row.outTouched = true;
       } else {
         const sp = splitToCasePcs(tq, row.caseQty);
         row.retCase = sp.c; row.retPcs = sp.p;
         row.returnKey = item.key;
+        row.retTouched = true;
       }
     });
 
@@ -1611,9 +1646,9 @@
     openModal('deliveryMainModal');
   };
 
-  window.deleteTransactionGroup = async (dateKey) => {
+  window.deleteTransactionGroup = async (groupKey) => {
     if(!confirm("মুছে ফেলতে চান?")) return;
-    const items = window.groupedData[dateKey].items;
+    const items = window.groupedData[groupKey].items;
     for(let itm of items) {
       const pKey = getPkgKeyByName(itm.pkgName);
       if(pKey) {
@@ -1627,9 +1662,9 @@
     applyFilters();
   };
 
-  window.openPaymentForm = (dateKey) => {
-    activePaymentGroupKey = dateKey;
-    const group = window.groupedData[dateKey];
+  window.openPaymentForm = (groupKey) => {
+    activePaymentGroupKey = groupKey;
+    const group = window.groupedData[groupKey];
     document.getElementById('paymentTitle').innerText = group.name + " - কালেকশন";
     document.getElementById('cashReceivedInput').value = String(group.cash || 0);
     currentDues = group.items[0]?.dues || [];
