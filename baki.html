@@ -595,36 +595,30 @@
 
     /* ==================================================
        ✅ NEW: Laptop size full-width + bigger form controls
-       (শুধু ল্যাপটপে কাজ করবে, অন্য কিছু বদলায় না)
        ================================================== */
     @media (min-width: 1024px){
-      /* ল্যাপটপে ডানে-বামে ফাকা কমাতে full width */
       .main-container{
         max-width: 100%;
         padding-left: 28px;
         padding-right: 28px;
       }
 
-      /* Filter inputs বড় */
       .filter-item input,
       .filter-item select{
         padding: 14px 16px;
         font-size: 15px;
       }
 
-      /* Range toggle (readonly input) */
       .range-toggle{
         padding: 14px 16px;
         font-size: 15px;
       }
 
-      /* Page size select বড় */
       .page-size select{
         padding: 12px 14px;
         font-size: 15px;
       }
 
-      /* Modal inputs বড় */
       .modal-content{
         max-width: 520px;
       }
@@ -634,7 +628,6 @@
         font-size: 16px;
       }
 
-      /* Buttons বড় */
       .add-baki-btn{
         padding: 12px 16px;
         font-size: 15px;
@@ -649,12 +642,10 @@
         font-size: 15px;
       }
 
-      /* Table spacing আরামদায়ক */
       table{ font-size: 15px; }
       thead th{ padding: 14px 16px; }
       tbody td{ padding: 14px 16px; }
 
-      /* Pagination buttons বড় */
       .page-btn{
         padding: 10px 14px;
         font-size: 14px;
@@ -673,7 +664,7 @@
     <h1>বাকীর তালিকা</h1>
   </div>
 
-  <!-- Sidebar (Screenshot style) -->
+  <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
     <div class="sb-head">
       <div>
@@ -706,7 +697,7 @@
   <div class="main-container">
     <div class="table-card">
 
-      <!-- ✅ NEW: Loading Layer (data load হওয়া পর্যন্ত দেখাবে) -->
+      <!-- Loading Layer -->
       <div id="loadingLayer" class="loading-layer">
         <div class="loading-card">
           <div class="loading-top">
@@ -879,11 +870,16 @@
 
     // Store rows
     let renderedItems = [];
-    let filteredItems = [];   // ফিল্টারের পরে যে ডাটা থাকবে
-    let currentPage = 1;      // Pagination state
-    let pageSize = 10;        // Default 10
+    let filteredItems = [];
+    let currentPage = 1;
+    let pageSize = 10;
 
-    // ✅ NEW: Loading show/hide helpers (only UI)
+    // ✅ FIX: persons list store (Firebase persons path)
+    let personsMaster = [];           // persons node থেকে আসা person list
+    let personsLoaded = false;        // loading flag
+    let transactionsLoaded = false;   // loading flag
+
+    // Loading show/hide
     function showLoading(){
       const el = document.getElementById('loadingLayer');
       if (el) el.style.display = 'flex';
@@ -892,11 +888,14 @@
       const el = document.getElementById('loadingLayer');
       if (el) el.style.display = 'none';
     }
+    function tryHideLoading(){
+      if (personsLoaded && transactionsLoaded) hideLoading();
+    }
 
     // প্রথমে লোডিং দেখাই
     showLoading();
 
-    // ✅ Sidebar Toggle (UI only)
+    // Sidebar Toggle
     window.toggleSidebar = (e) => {
       e.stopPropagation();
       const sb = document.getElementById('sidebar');
@@ -929,21 +928,60 @@
       document.getElementById('rangePanel').classList.toggle('open');
     };
 
-    // Load Baki Data
+    /* =========================================
+       ✅ FIX: Load Persons from `persons` node
+       - আপনার "Person Add" যেখানেই সেভ করেন, সেটা সাধারণত persons এ থাকে
+       - persons না থাকলে fallback -> transactions থেকে
+       ========================================= */
+    const personsRef = ref(database, 'persons');
+    onValue(personsRef, (snapshot) => {
+      const set = new Set();
+
+      snapshot.forEach((ch) => {
+        const v = ch.val();
+
+        // Support: "name" field OR plain string
+        let name = "";
+        if (typeof v === "string") name = v;
+        else if (v && typeof v === "object") {
+          name = v.name || v.personName || v.person || v.title || "";
+        }
+
+        name = String(name || "").trim();
+        if (name) set.add(name);
+      });
+
+      personsMaster = [...set].sort();
+      fillPersonDropdown(personsMaster);
+      fillFilterPersonDropdown(personsMaster);
+
+      personsLoaded = true;
+      tryHideLoading();
+    });
+
+    // Load Baki Data (transactions)
     const bakiRef = ref(database, 'transactions');
     onValue(bakiRef, (snapshot) => {
-      const personSet = new Set();
+      // ✅ fallback set (যদি personsMaster খালি থাকে)
+      const personFallbackSet = new Set();
 
       const transList = [];
       snapshot.forEach((childSnapshot) => {
         const v = childSnapshot.val();
         transList.push({ key: childSnapshot.key, val: v });
-        if (v && v.personName) personSet.add(String(v.personName));
+
+        if (v && v.personName) {
+          const nm = String(v.personName).trim();
+          if (nm) personFallbackSet.add(nm);
+        }
       });
 
-      const persons = [...personSet].sort();
-      fillPersonDropdown(persons);
-      fillFilterPersonDropdown(persons);
+      // ✅ If persons node empty, use transactions derived person list
+      if (!personsMaster || personsMaster.length === 0) {
+        const personsFallback = [...personFallbackSet].sort();
+        fillPersonDropdown(personsFallback);
+        fillFilterPersonDropdown(personsFallback);
+      }
 
       // Latest first
       transList.reverse();
@@ -990,8 +1028,8 @@
 
       applyFilters(true);
 
-      // ✅ NEW: ডাটা রেডি হলে লোডিং বন্ধ
-      hideLoading();
+      transactionsLoaded = true;
+      tryHideLoading();
     });
 
     function fillPersonDropdown(persons) {
@@ -1022,7 +1060,7 @@
       if (persons.includes(current)) sel.value = current;
     }
 
-    // Apply filters -> build filteredItems -> render page
+    // Apply filters
     window.applyFilters = (resetPage = false) => {
       if (resetPage) currentPage = 1;
 
@@ -1031,7 +1069,6 @@
       const filterPerson = document.getElementById('filterPerson').value;
       const filterStatus = document.getElementById('filterStatus').value;
 
-      // Update range toggle text
       const rangeToggle = document.getElementById('rangeToggle');
       if (startDate || endDate) {
         const s = startDate ? formatDate(startDate) : "--";
@@ -1041,7 +1078,6 @@
         rangeToggle.value = "তারিখ রেঞ্জ সিলেক্ট করুন";
       }
 
-      // Make filtered list
       filteredItems = [];
       let totalDueSum = 0;
 
@@ -1107,11 +1143,9 @@
 
       const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
-      // << (prev)
       const prevBtn = makeBtn("<<", () => gotoPage(currentPage - 1), currentPage === 1);
       pager.appendChild(prevBtn);
 
-      // Pages like: 1 2 3 4 5 ... last
       const maxShow = 5;
       const showUntil = Math.min(maxShow, totalPages);
 
@@ -1130,7 +1164,6 @@
         pager.appendChild(makePageBtn(totalPages));
       }
 
-      // >> (next)
       const nextBtn = makeBtn(">>", () => gotoPage(currentPage + 1), currentPage === totalPages);
       pager.appendChild(nextBtn);
     }
