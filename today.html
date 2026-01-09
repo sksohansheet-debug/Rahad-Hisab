@@ -195,7 +195,16 @@
       flex: 0 0 auto;
     }
 
-    .main-container{ padding: 10px; max-width: 1100px; margin: 0 auto; }
+    /* ✅ FULL WIDTH ON LAPTOP (no empty left/right) */
+    .main-container{
+      width: 100%;
+      max-width: none;     /* ✅ remove fixed max */
+      margin: 0;           /* ✅ no center gap */
+      padding: 12px 18px;  /* ✅ nice side padding */
+    }
+    @media (min-width:1200px){
+      .main-container{ padding: 14px 22px; }
+    }
 
     .filter-wrapper{
       background: rgba(255,255,255,.88);
@@ -204,6 +213,7 @@
       padding: 14px;
       border-radius: var(--r18);
       margin-bottom: 14px;
+      width: 100%;
     }
     .filter-grid{
       display:grid;
@@ -254,6 +264,7 @@
       box-shadow: var(--shadow);
       margin-top: 14px;
       overflow: hidden;
+      width: 100%;
     }
     .history-card h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
 
@@ -293,7 +304,6 @@
     .col-date{ background-color: #fff7ed; }
     .col-name{ background-color: #eff6ff; font-weight: 900; }
 
-    /* ✅ updated meaning */
     .col-outpcs{ background-color:#ffffff; color:#0f172a; font-weight:1000; }
     .col-sellpcs{ background-color:#ffffff; color:#087f5b; font-weight:1000; }
     .col-sellamt{ background-color:#ffffff; color:#d9480f; font-weight:1000; }
@@ -513,22 +523,22 @@
       background: #fff;
     }
 
-    /* ✅ laptop delivery modal wider */
+    /* ✅ laptop delivery modal wider (kept) */
     #deliveryMainModal .modal-content{
-      max-width: 1400px; /* ✅ bigger on laptop */
+      max-width: 1400px;
       padding: 18px;
     }
 
     .delivery-table{
       width: 100%;
       border-collapse: collapse;
-      min-width: 1250px; /* ✅ content wider */
+      min-width: 1250px;
       font-size: 13px;
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 12px 10px; /* ✅ a bit bigger */
+      padding: 12px 10px;
       text-align: center;
       vertical-align: middle;
       font-weight: 900;
@@ -553,7 +563,7 @@
       text-align:left !important;
       font-weight: 1000;
       background: #f8fafc;
-      min-width: 340px; /* ✅ more space */
+      min-width: 340px;
     }
     .pkg-sub{
       display:block;
@@ -563,7 +573,7 @@
       margin-top: 2px;
     }
 
-    /* ✅ input 0 faint */
+    /* ✅ number inputs */
     .qty-inp{
       width: 96px;
       padding: 11px 10px;
@@ -576,7 +586,7 @@
       color: rgba(15,23,42,.92);
     }
     .qty-inp.is-zero{
-      color: rgba(15,23,42,.22); /* ✅ opacity কম */
+      color: rgba(15,23,42,.18); /* ✅ more faint */
     }
     .qty-inp:focus{
       border-color: rgba(37,99,235,.55);
@@ -605,6 +615,7 @@
       .navbar{ padding: 10px 12px; }
       #deliveryMainModal .modal-content{ max-width: 1100px; padding:16px; }
       .delivery-table{ min-width: 1100px; }
+      .main-container{ padding: 10px 10px; }
     }
 </style>
 </head>
@@ -884,7 +895,11 @@
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
   /* =========================
-     ✅ Input zero behavior (NO SELECT + faint 0)
+     ✅ Input zero behavior (FIXED typing)
+     - 0 faint
+     - focus করলে 0 সিলেক্ট হবে না
+     - focus এ value যদি 0 হয় => খালি করে দিবে (typing smooth)
+     - blur এ খালি থাকলে 0 বসাবে
      ========================= */
   function setZeroClass(inp){
     const isZero = String(inp.value).trim() === "0";
@@ -892,48 +907,45 @@
   }
 
   function bindZeroInput(inp){
+    if (!inp) return;
     if (inp.dataset.zeroBound === "1") return;
     inp.dataset.zeroBound = "1";
 
     if (inp.value === "" || inp.value == null) inp.value = "0";
     setZeroClass(inp);
 
-    // ✅ focus: no select, just caret end
     inp.addEventListener('focus', () => {
-      setZeroClass(inp);
-      const len = inp.value.length;
-      try { inp.setSelectionRange(len, len); } catch(e){}
-    });
-
-    // ✅ if value is 0 and user presses digit => replace 0
-    inp.addEventListener('keydown', (e) => {
-      const v = String(inp.value).trim();
-      if (v === "0" && /^[0-9]$/.test(e.key)) {
-        inp.value = e.key;    // replace
-        e.preventDefault();
-        setZeroClass(inp);
-        try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch(e){}
+      // ✅ no select
+      if (String(inp.value).trim() === "0") {
+        inp.value = "";          // ✅ typing smooth (problem fixed)
+        inp.classList.remove('is-zero');
       }
+      // caret end
+      try {
+        const len = inp.value.length;
+        inp.setSelectionRange(len, len);
+      } catch(e){}
     });
 
     inp.addEventListener('input', () => {
-      if (inp.value === "") return;
+      // user typing
+      if (inp.value === "" || inp.value == null) {
+        inp.classList.remove('is-zero');
+        return;
+      }
       setZeroClass(inp);
     });
 
-    // ✅ blur: empty হলে 0
     inp.addEventListener('blur', () => {
+      // ✅ empty -> 0
       if (inp.value === "" || inp.value == null) inp.value = "0";
       setZeroClass(inp);
     });
   }
 
   function attachZeroBehavior(){
-    const nodes = document.querySelectorAll('input.qty-inp, #cashReceivedInput, #dueAmount');
-    nodes.forEach(bindZeroInput);
-
-    // delivery inputs (generated)
-    document.querySelectorAll('#deliveryMainModal input.qty-inp').forEach(bindZeroInput);
+    // ✅ all number inputs only (safe)
+    document.querySelectorAll('input[type="number"]').forEach(bindZeroInput);
   }
 
   // ✅ Persons
@@ -1019,7 +1031,7 @@
         lastKey: t.key || ""
       };
 
-      // ✅ track latest push key for sorting
+      // ✅ track latest push key for sorting (new save goes on top)
       if ((t.key || "") > (grouped[dateKey].lastKey || "")) grouped[dateKey].lastKey = t.key || "";
 
       const type = t.type || "Out";
@@ -1048,7 +1060,6 @@
       grouped[dateKey].items.push(t);
     });
 
-    // compute sell pcs
     Object.keys(grouped).forEach(k => {
       grouped[k].sellPcs = Math.max(0, (grouped[k].outPcs || 0) - (grouped[k].returnPcs || 0));
     });
@@ -1180,9 +1191,6 @@
   }
 
   function isReturnMode() {
-    // ✅ show calculation mode when:
-    // - reopened edit
-    // - OR any return entered
     if (currentEditingGroupKey) return true;
     return deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0);
   }
@@ -1197,9 +1205,7 @@
       const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
       const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
 
-      // ✅ IMPORTANT CHANGE:
-      // Out লিখলে কোনো হিসাব দেখাবে না।
-      // শুধু Return এ কিছু লিখলেই (বা reopen করলে) হিসাব দেখাবে।
+      // ✅ Out লিখলে হিসাব না, শুধু Return এ কিছু লিখলে (বা reopen হলে) হিসাব
       const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
 
       const sellPcs = (showSell && shouldComputeForRow) ? Math.max(0, outTotal - retTotal) : "";
@@ -1212,19 +1218,11 @@
             <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
           </td>
 
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.outCase}" onchange="onOutCaseChange(${idx}, this.value)">
-          </td>
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.outPcs}" onchange="onOutPcsChange(${idx}, this.value)">
-          </td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.outCase}" onchange="onOutCaseChange(${idx}, this.value)"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.outPcs}" onchange="onOutPcsChange(${idx}, this.value)"></td>
 
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.retCase}" onchange="onRetCaseChange(${idx}, this.value)">
-          </td>
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.retPcs}" onchange="onRetPcsChange(${idx}, this.value)">
-          </td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" onchange="onRetCaseChange(${idx}, this.value)"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" onchange="onRetPcsChange(${idx}, this.value)"></td>
 
           <td class="sellpcs-cell">${sellPcs}</td>
           <td class="money-cell">${amt === "" ? "" : "৳"+amt}</td>
@@ -1232,7 +1230,7 @@
       `;
     });
 
-    // ✅ bind faint/zero behavior (no select)
+    // ✅ fix: typing & faint 0
     attachZeroBehavior();
   }
 
@@ -1296,6 +1294,10 @@
             r.outKey = pushed.key;
           }
         }
+
+        // ✅ FIX: instantly refresh table (even if realtime delay)
+        applyFilters();
+
         alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
         closeModal('deliveryMainModal');
       }catch(e){
@@ -1378,6 +1380,9 @@
         r.appliedSellPcs = netSell;
       }
 
+      // ✅ FIX: instantly refresh table
+      applyFilters();
+
       alert("✅ ফেরত সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
       closeModal('deliveryMainModal');
     }catch(e){
@@ -1434,6 +1439,7 @@
       await remove(ref(database, `transactions/${itm.key}`));
     }
     alert("মুছে ফেলা হয়েছে");
+    applyFilters();
   };
 
   window.openPaymentForm = (dateKey) => {
@@ -1495,6 +1501,7 @@
     }
     alert("পেমেন্ট আপডেট হয়েছে!");
     closeModal('paymentModal');
+    applyFilters();
   };
 
   window.savePerson = () => {
