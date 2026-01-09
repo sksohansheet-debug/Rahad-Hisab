@@ -279,13 +279,14 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 13px;
+      font-size: 14px;              /* ✅ bigger text */
       white-space: nowrap;
     }
     table th, table td{
       border-bottom: 1px solid rgba(229,231,235,.8);
-      padding: 12px 10px;
+      padding: 12px 10px;           /* ✅ keep line size same */
       text-align: center;
+      font-weight: 1000;            /* ✅ bolder */
     }
     table th{
       background: linear-gradient(180deg, #0f172a, #111827);
@@ -293,15 +294,15 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      font-size: 12px;
+      font-size: 13px;              /* ✅ bigger */
       font-weight: 1000;
       border-bottom: 1px solid rgba(0,0,0,.2);
     }
-    tbody tr:hover{ background: rgba(37,99,235,.05); }
+    tbody tr:hover{ background: rgba(37,99,235,.06); }
 
     .col-no{ background-color: #f1f5f9; font-weight: 1000; }
     .col-date{ background-color: #fff7ed; }
-    .col-name{ background-color: #eff6ff; font-weight: 900; }
+    .col-name{ background-color: #eff6ff; font-weight: 1000; }
 
     .col-outpcs{ background-color:#ffffff; color:#0f172a; font-weight:1000; }
     .col-sellpcs{ background-color:#ffffff; color:#087f5b; font-weight:1000; }
@@ -311,7 +312,7 @@
     .action-btn{
       padding: 8px 10px; border: none; border-radius: 12px;
       cursor:pointer; color:#fff; margin:2px;
-      font-weight: 900; font-size: 12px;
+      font-weight: 1000; font-size: 12px;
       box-shadow: var(--shadow2);
       transition:.15s;
     }
@@ -469,7 +470,10 @@
     .due-item:hover{ background: rgba(37,99,235,.04); }
 
     /* =========================
-       ✅ Delivery Table UI (UPDATED as requested)
+       ✅ Delivery Table UI (FIXED)
+       - package name visible (color + wrap)
+       - hover row darker
+       - package column width reduced
        ========================= */
     .delivery-headline{
       display:flex;
@@ -524,19 +528,19 @@
 
     #deliveryMainModal .modal-content{
       max-width: 1400px;
-      padding: 12px; /* ✅ smaller */
+      padding: 12px;
     }
 
     .delivery-table{
       width: 100%;
       border-collapse: collapse;
-      min-width: 1180px;
-      font-size: 11px;       /* ✅ smaller text */
+      min-width: 1120px;
+      font-size: 11px;
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 6px 6px;      /* ✅ tight spacing */
+      padding: 6px 6px;
       text-align: center;
       vertical-align: middle;
       font-weight: 900;
@@ -549,16 +553,16 @@
       position: sticky;
       top: 0;
       z-index: 3;
-      font-size: 10px;       /* ✅ smaller */
+      font-size: 10px;
       font-weight: 1000;
-      padding: 6px 6px;      /* ✅ no extra box feel */
+      padding: 6px 6px;
     }
     .delivery-table thead tr:nth-child(2) th{
       background: linear-gradient(180deg, #111827, #0f172a);
       z-index: 4;
       font-size: 10px;
       letter-spacing:.2px;
-      padding: 6px 6px;      /* ✅ remove big inner look */
+      padding: 6px 6px;
     }
 
     /* ✅ Column coloring (full height) */
@@ -580,16 +584,27 @@
       background: rgba(34,197,94,.10); /* Return col */
     }
 
+    /* ✅ Hover row: darker + clear line */
     .delivery-table tbody tr:hover td{
-      background: rgba(99,102,241,.06);
+      background: rgba(99,102,241,.14) !important;
+    }
+    .delivery-table tbody tr:hover{
+      outline: 2px solid rgba(99,102,241,.28);
+      outline-offset: -2px;
     }
 
+    /* ✅ package cell: visible + reduce width + allow wrap */
     .pkg-cell{
       text-align:left !important;
       font-weight: 1000;
+      color: #0f172a;               /* ✅ ensure visible */
       background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
-      min-width: 340px;
+      min-width: 260px;             /* ✅ reduced */
+      max-width: 360px;             /* ✅ reduce empty space */
+      white-space: normal;          /* ✅ allow wrap */
+      word-break: break-word;
     }
+    .pkg-cell *{ color: inherit; }  /* ✅ ensure child color */
     .pkg-sub{
       display:block;
       font-size: 10px;
@@ -612,7 +627,6 @@
       margin-right: 8px;
     }
 
-    /* ✅ inputs: smaller + no extra "boxy" feel */
     .qty-inp{
       width: 72px;
       padding: 6px 6px;
@@ -624,7 +638,7 @@
       text-align: center;
       color: rgba(15,23,42,.92);
       background: rgba(255,255,255,.96);
-      box-shadow: none; /* ✅ remove inner box feel */
+      box-shadow: none;
     }
     .qty-inp.is-zero{
       color: rgba(15,23,42,.18);
@@ -645,7 +659,6 @@
       background: rgba(239,68,68,.08);
     }
 
-    /* ✅ Totals row (under Sell pcs & Money) */
     .delivery-table tfoot td{
       position: sticky;
       bottom: 0;
@@ -688,9 +701,10 @@
       .nav-buttons .btn{ flex:1; justify-content:center; }
       .navbar{ padding: 10px 12px; }
       #deliveryMainModal .modal-content{ max-width: 1100px; padding:10px; }
-      .delivery-table{ min-width: 1100px; }
+      .delivery-table{ min-width: 1060px; }
       .main-container{ padding: 10px 10px; }
       .form-box{ padding: 10px; }
+      .pkg-cell{ max-width: 320px; }
     }
 </style>
 </head>
@@ -768,8 +782,8 @@
             <th>নম্বর</th>
             <th>তারিখ</th>
             <th>নাম</th>
-            <th>বহির পণ্য (পিস)</th>
-            <th>সেল পণ্য (পিস)</th>
+            <th>বহির পণ্য (টাকা)</th><!-- ✅ changed -->
+            <th>সেল পণ্য (পিস)</th><!-- ✅ logic changed -->
             <th>সেল (টাকা)</th>
             <th>জমা (টাকা)</th>
             <th>একশন</th>
@@ -1099,10 +1113,14 @@
       if(!grouped[dateKey]) grouped[dateKey] = {
         date: t.date,
         name: t.personName,
+
         outPcs: 0,
         returnPcs: 0,
-        sellPcs: 0,
-        sellAmt: 0,
+
+        outAmt: 0,     // ✅ NEW: Out gross money
+        sellPcs: 0,    // ✅ will be conditional
+        sellAmt: 0,    // net sell money (out - return)
+
         cash: 0,
         items: [],
         lastKey: t.key || ""
@@ -1114,6 +1132,7 @@
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
       const totalPcs = parseInt(t.totalPcs) || 0;
 
+      // profit calc (same)
       if(hasFilter) {
         const pkgInfo = Object.values(packages).find(p => p.name === t.pkgName);
         if(pkgInfo) {
@@ -1124,19 +1143,26 @@
         }
       }
 
-      if(type === "Out") grouped[dateKey].outPcs += totalPcs;
-      else grouped[dateKey].returnPcs += totalPcs;
-
       const amt = totalPcs * sellPrice;
-      if(type === "Out") grouped[dateKey].sellAmt += amt;
-      else grouped[dateKey].sellAmt -= amt;
+
+      if(type === "Out"){
+        grouped[dateKey].outPcs += totalPcs;
+        grouped[dateKey].outAmt += amt;       // ✅ Out column money
+        grouped[dateKey].sellAmt += amt;      // net sell money add
+      }else{
+        grouped[dateKey].returnPcs += totalPcs;
+        grouped[dateKey].sellAmt -= amt;      // net sell money subtract
+      }
 
       grouped[dateKey].cash = (parseFloat(t.cashReceived) || 0);
       grouped[dateKey].items.push(t);
     });
 
+    // ✅ Sell pcs: only show after any Return exists, otherwise 0
     Object.keys(grouped).forEach(k => {
-      grouped[k].sellPcs = Math.max(0, (grouped[k].outPcs || 0) - (grouped[k].returnPcs || 0));
+      const g = grouped[k];
+      if ((g.returnPcs || 0) > 0) g.sellPcs = Math.max(0, (g.outPcs || 0) - (g.returnPcs || 0));
+      else g.sellPcs = 0;
     });
 
     document.getElementById('displayTotalProfit').innerText = hasFilter ? `৳${totalProfit.toFixed(2)}` : `৳0`;
@@ -1172,8 +1198,8 @@
         <td class="col-date">${formatDate(row.date)}</td>
         <td class="col-name">${row.name}</td>
 
-        <td class="col-outpcs">${row.outPcs}</td>
-        <td class="col-sellpcs">${row.sellPcs}</td>
+        <td class="col-outpcs">৳${(row.outAmt || 0).toFixed(2)}</td>
+        <td class="col-sellpcs">${row.sellPcs || 0}</td>
         <td class="col-sellamt">৳${(row.sellAmt || 0).toFixed(2)}</td>
         <td class="col-cash">৳${(row.cash || 0).toFixed(2)}</td>
 
@@ -1243,13 +1269,12 @@
 
   /* =========================
      ✅ Delivery Table (UPDATED)
-     - serial অনুযায়ী sort (packages.serial / packages.sl / packages.no)
-     - return লিখলেই live sell pcs + money update
-     - totals under sell pcs & money
+     - serial sort
+     - live update sell pcs + money
+     - totals row
      ========================= */
 
   function getPkgSerial(p){
-    // ✅ supports different field names (আপনার stock page যেটা রাখবেন)
     const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
     const n = parseInt(v, 10);
     return isNaN(n) ? null : n;
@@ -1263,7 +1288,7 @@
         caseQty: parseInt(p.caseQty) || 1,
         sellPrice: parseFloat(p.sellPrice) || 0,
         stock: parseInt(p.stock) || 0,
-        serial: getPkgSerial(p),   // ✅
+        serial: getPkgSerial(p),
 
         outCase: 0, outPcs: 0,
         retCase: 0, retPcs: 0,
@@ -1273,7 +1298,6 @@
         appliedSellPcs: 0
       }))
       .sort((a,b) => {
-        // ✅ serial first, then name
         const as = (a.serial == null) ? 999999 : a.serial;
         const bs = (b.serial == null) ? 999999 : b.serial;
         if (as !== bs) return as - bs;
@@ -1290,7 +1314,6 @@
     const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
     const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
 
-    // ✅ Return লিখলেই show; Out-only এ blank (আপনার আগের মতো)
     const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
     if (!shouldComputeForRow) return { sellPcs:"", amt:"" };
 
@@ -1336,23 +1359,15 @@
         <tr>
           <td class="pkg-cell">
             ${r.serial != null ? `<span class="serial-badge">${r.serial}</span>` : ``}
-            ${r.pkgName}
+            ${r.pkgName || ""}
             <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
           </td>
 
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.outCase}" data-idx="${idx}" data-field="outCase">
-          </td>
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.outPcs}" data-idx="${idx}" data-field="outPcs">
-          </td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.outCase}" data-idx="${idx}" data-field="outCase"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.outPcs}" data-idx="${idx}" data-field="outPcs"></td>
 
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase">
-          </td>
-          <td>
-            <input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs">
-          </td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs"></td>
 
           <td class="sellpcs-cell" id="sellpcs-${idx}">${computed.sellPcs}</td>
           <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
@@ -1360,14 +1375,11 @@
       `;
     });
 
-    // ✅ typing smooth (kept) + live update
     attachZeroBehavior();
     bindLiveDeliveryInputs();
-
     updateTotalsLive();
   }
 
-  // ✅ Live input without extra boxes / without waiting onchange
   let deliveryInputsBound = false;
   function bindLiveDeliveryInputs(){
     if (deliveryInputsBound) return;
@@ -1387,18 +1399,15 @@
 
       deliveryRows[idx][field] = safeNum(el.value);
 
-      // ✅ if return becomes >0, table should switch to "return mode" instantly
       const mustShow = isReturnMode();
 
       if (mustShow) {
-        // update this row result
         const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
         const spEl = document.getElementById(`sellpcs-${idx}`);
         const amEl = document.getElementById(`amt-${idx}`);
         if (spEl) spEl.innerText = sellPcs;
         if (amEl) amEl.innerText = amt;
       } else {
-        // out-only: keep blank
         const spEl = document.getElementById(`sellpcs-${idx}`);
         const amEl = document.getElementById(`amt-${idx}`);
         if (spEl) spEl.innerText = "";
@@ -1420,7 +1429,6 @@
     selectedPersonName = s.value;
     currentEditingGroupKey = null;
 
-    // ✅ reset bind state for each open (safe)
     deliveryInputsBound = false;
 
     document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + selectedPersonName;
@@ -1469,7 +1477,6 @@
         }
 
         applyFilters();
-
         alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
         closeModal('deliveryMainModal');
       }catch(e){
@@ -1553,7 +1560,6 @@
       }
 
       applyFilters();
-
       alert("✅ ফেরত সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
       closeModal('deliveryMainModal');
     }catch(e){
@@ -1566,7 +1572,6 @@
     selectedPersonName = group.name;
     currentEditingGroupKey = dateKey;
 
-    // ✅ reset bind state for reopen
     deliveryInputsBound = false;
 
     document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + group.name;
@@ -1686,7 +1691,6 @@
     });
   };
 
-  // initial bind
   setTimeout(attachZeroBehavior, 500);
 </script>
 </body>
