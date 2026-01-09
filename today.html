@@ -195,12 +195,11 @@
       flex: 0 0 auto;
     }
 
-    /* ✅ FULL WIDTH ON LAPTOP (no empty left/right) */
     .main-container{
       width: 100%;
-      max-width: none;     /* ✅ remove fixed max */
-      margin: 0;           /* ✅ no center gap */
-      padding: 12px 18px;  /* ✅ nice side padding */
+      max-width: none;
+      margin: 0;
+      padding: 12px 18px;
     }
     @media (min-width:1200px){
       .main-container{ padding: 14px 22px; }
@@ -470,24 +469,24 @@
     .due-item:hover{ background: rgba(37,99,235,.04); }
 
     /* =========================
-       ✅ Delivery Table UI
+       ✅ Delivery Table UI (UPDATED as requested)
        ========================= */
     .delivery-headline{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .delivery-person{
       font-weight: 1000;
       color: #2563eb;
-      font-size: 16px;
+      font-size: 14px;
     }
     .delivery-meta{
       display:flex;
-      gap: 10px;
+      gap: 8px;
       align-items:center;
       flex-wrap: wrap;
     }
@@ -495,23 +494,23 @@
       display:flex;
       gap: 8px;
       align-items:center;
-      padding: 8px 10px;
+      padding: 6px 8px;
       background:#fff;
       border:1px solid rgba(229,231,235,.9);
-      border-radius: 14px;
+      border-radius: 12px;
       font-weight: 900;
     }
     .meta-box label{
       margin:0;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 1000;
       color: var(--muted);
     }
     .meta-box input{
-      width: 180px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      font-size: 12px;
+      width: 170px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 11px;
       font-weight: 900;
     }
 
@@ -519,91 +518,166 @@
       width: 100%;
       overflow: auto;
       border: 1px solid rgba(229,231,235,.9);
-      border-radius: 16px;
+      border-radius: 14px;
       background: #fff;
     }
 
-    /* ✅ laptop delivery modal wider (kept) */
     #deliveryMainModal .modal-content{
       max-width: 1400px;
-      padding: 18px;
+      padding: 12px; /* ✅ smaller */
     }
 
     .delivery-table{
       width: 100%;
       border-collapse: collapse;
-      min-width: 1250px;
-      font-size: 13px;
+      min-width: 1180px;
+      font-size: 11px;       /* ✅ smaller text */
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 12px 10px;
+      padding: 6px 6px;      /* ✅ tight spacing */
       text-align: center;
       vertical-align: middle;
       font-weight: 900;
+      line-height: 1.1;
     }
+
     .delivery-table thead th{
       background: linear-gradient(180deg, #0f172a, #111827);
       color:#fff;
       position: sticky;
       top: 0;
       z-index: 3;
-      font-size: 12px;
+      font-size: 10px;       /* ✅ smaller */
       font-weight: 1000;
+      padding: 6px 6px;      /* ✅ no extra box feel */
     }
     .delivery-table thead tr:nth-child(2) th{
       background: linear-gradient(180deg, #111827, #0f172a);
       z-index: 4;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing:.2px;
+      padding: 6px 6px;      /* ✅ remove big inner look */
+    }
+
+    /* ✅ Column coloring (full height) */
+    .delivery-table thead th:nth-child(2),
+    .delivery-table thead th:nth-child(3),
+    .delivery-table tbody td:nth-child(2),
+    .delivery-table tbody td:nth-child(3),
+    .delivery-table tfoot td:nth-child(2),
+    .delivery-table tfoot td:nth-child(3){
+      background: rgba(59,130,246,.10); /* Out col */
+    }
+
+    .delivery-table thead th:nth-child(4),
+    .delivery-table thead th:nth-child(5),
+    .delivery-table tbody td:nth-child(4),
+    .delivery-table tbody td:nth-child(5),
+    .delivery-table tfoot td:nth-child(4),
+    .delivery-table tfoot td:nth-child(5){
+      background: rgba(34,197,94,.10); /* Return col */
+    }
+
+    .delivery-table tbody tr:hover td{
+      background: rgba(99,102,241,.06);
     }
 
     .pkg-cell{
       text-align:left !important;
       font-weight: 1000;
-      background: #f8fafc;
+      background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
       min-width: 340px;
     }
     .pkg-sub{
       display:block;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 900;
-      color: rgba(15,23,42,.65);
+      color: rgba(15,23,42,.62);
       margin-top: 2px;
     }
+    .serial-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 26px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(37,99,235,.12);
+      border: 1px solid rgba(37,99,235,.22);
+      color: #1d4ed8;
+      font-size: 10px;
+      font-weight: 1000;
+      margin-right: 8px;
+    }
 
-    /* ✅ number inputs */
+    /* ✅ inputs: smaller + no extra "boxy" feel */
     .qty-inp{
-      width: 96px;
-      padding: 11px 10px;
-      border-radius: 12px;
+      width: 72px;
+      padding: 6px 6px;
+      border-radius: 10px;
       border: 1px solid rgba(229,231,235,.95);
       font-weight: 1000;
-      font-size: 13px;
+      font-size: 11px;
       outline: none;
       text-align: center;
       color: rgba(15,23,42,.92);
+      background: rgba(255,255,255,.96);
+      box-shadow: none; /* ✅ remove inner box feel */
     }
     .qty-inp.is-zero{
-      color: rgba(15,23,42,.18); /* ✅ more faint */
+      color: rgba(15,23,42,.18);
     }
     .qty-inp:focus{
       border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.10);
     }
 
-    .sellpcs-cell{ font-weight: 1000; color:#0f172a; }
-    .money-cell{ font-weight: 1000; color:#ef4444; }
+    .sellpcs-cell{
+      font-weight: 1000;
+      color:#065f46;
+      background: rgba(16,185,129,.08);
+    }
+    .money-cell{
+      font-weight: 1000;
+      color:#b42318;
+      background: rgba(239,68,68,.08);
+    }
+
+    /* ✅ Totals row (under Sell pcs & Money) */
+    .delivery-table tfoot td{
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      background: #fff;
+      font-weight: 1000;
+      border-top: 2px solid rgba(15,23,42,.12);
+    }
+    .totals-label{
+      text-align:left !important;
+      background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
+      font-size: 11px;
+    }
+    .tot-sellpcs{
+      background: rgba(16,185,129,.12);
+      color:#065f46;
+      font-size: 11px;
+    }
+    .tot-money{
+      background: rgba(239,68,68,.12);
+      color:#b42318;
+      font-size: 11px;
+    }
 
     .save-delivery-btn{
-      margin-top: 12px;
+      margin-top: 10px;
       width: 100%;
       background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
       color:#fff;
       border:none;
-      padding: 12px 12px;
-      border-radius: 16px;
+      padding: 11px 12px;
+      border-radius: 14px;
       font-weight: 1000;
       cursor:pointer;
       box-shadow: var(--shadow2);
@@ -613,9 +687,10 @@
     @media (max-width:520px){
       .nav-buttons .btn{ flex:1; justify-content:center; }
       .navbar{ padding: 10px 12px; }
-      #deliveryMainModal .modal-content{ max-width: 1100px; padding:16px; }
+      #deliveryMainModal .modal-content{ max-width: 1100px; padding:10px; }
       .delivery-table{ min-width: 1100px; }
       .main-container{ padding: 10px 10px; }
+      .form-box{ padding: 10px; }
     }
 </style>
 </head>
@@ -739,8 +814,8 @@
       </div>
     </div>
 
-    <div class="form-box">
-      <div class="form-title">ডেলিভারি / ফেরত (টেবিল)</div>
+    <div class="form-box" style="margin-bottom:10px;">
+      <div class="form-title" style="margin-bottom:8px;">ডেলিভারি / ফেরত (টেবিল)</div>
 
       <div class="delivery-table-wrap">
         <table class="delivery-table">
@@ -760,6 +835,17 @@
             </tr>
           </thead>
           <tbody id="deliveryPkgTbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="totals-label">মোট</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td class="tot-sellpcs" id="totalSellPcsCell">0</td>
+              <td class="tot-money" id="totalMoneyCell">৳0.00</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
@@ -895,11 +981,7 @@
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
   /* =========================
-     ✅ Input zero behavior (FIXED typing)
-     - 0 faint
-     - focus করলে 0 সিলেক্ট হবে না
-     - focus এ value যদি 0 হয় => খালি করে দিবে (typing smooth)
-     - blur এ খালি থাকলে 0 বসাবে
+     ✅ Input zero behavior (kept)
      ========================= */
   function setZeroClass(inp){
     const isZero = String(inp.value).trim() === "0";
@@ -915,12 +997,10 @@
     setZeroClass(inp);
 
     inp.addEventListener('focus', () => {
-      // ✅ no select
       if (String(inp.value).trim() === "0") {
-        inp.value = "";          // ✅ typing smooth (problem fixed)
+        inp.value = "";
         inp.classList.remove('is-zero');
       }
-      // caret end
       try {
         const len = inp.value.length;
         inp.setSelectionRange(len, len);
@@ -928,7 +1008,6 @@
     });
 
     inp.addEventListener('input', () => {
-      // user typing
       if (inp.value === "" || inp.value == null) {
         inp.classList.remove('is-zero');
         return;
@@ -937,14 +1016,12 @@
     });
 
     inp.addEventListener('blur', () => {
-      // ✅ empty -> 0
       if (inp.value === "" || inp.value == null) inp.value = "0";
       setZeroClass(inp);
     });
   }
 
   function attachZeroBehavior(){
-    // ✅ all number inputs only (safe)
     document.querySelectorAll('input[type="number"]').forEach(bindZeroInput);
   }
 
@@ -1031,7 +1108,6 @@
         lastKey: t.key || ""
       };
 
-      // ✅ track latest push key for sorting (new save goes on top)
       if ((t.key || "") > (grouped[dateKey].lastKey || "")) grouped[dateKey].lastKey = t.key || "";
 
       const type = t.type || "Out";
@@ -1051,7 +1127,6 @@
       if(type === "Out") grouped[dateKey].outPcs += totalPcs;
       else grouped[dateKey].returnPcs += totalPcs;
 
-      // ✅ sell amount net
       const amt = totalPcs * sellPrice;
       if(type === "Out") grouped[dateKey].sellAmt += amt;
       else grouped[dateKey].sellAmt -= amt;
@@ -1072,7 +1147,6 @@
     const tbody = document.getElementById('historyTableBody');
     tbody.innerHTML = "";
 
-    // ✅ newest group first by date + latest push key
     const sortedKeys = Object.keys(grouped).sort((a, b) => {
       const A = grouped[a], B = grouped[b];
       if (A.date !== B.date) return (B.date || "").localeCompare(A.date || "");
@@ -1168,8 +1242,18 @@
   }
 
   /* =========================
-     ✅ Delivery Table
+     ✅ Delivery Table (UPDATED)
+     - serial অনুযায়ী sort (packages.serial / packages.sl / packages.no)
+     - return লিখলেই live sell pcs + money update
+     - totals under sell pcs & money
      ========================= */
+
+  function getPkgSerial(p){
+    // ✅ supports different field names (আপনার stock page যেটা রাখবেন)
+    const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
+    const n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
 
   function buildDeliveryRowsFromPackages() {
     deliveryRows = Object.values(packages)
@@ -1179,6 +1263,7 @@
         caseQty: parseInt(p.caseQty) || 1,
         sellPrice: parseFloat(p.sellPrice) || 0,
         stock: parseInt(p.stock) || 0,
+        serial: getPkgSerial(p),   // ✅
 
         outCase: 0, outPcs: 0,
         retCase: 0, retPcs: 0,
@@ -1187,12 +1272,55 @@
         returnKey: null,
         appliedSellPcs: 0
       }))
-      .sort((a,b) => (a.pkgName || "").localeCompare(b.pkgName || ""));
+      .sort((a,b) => {
+        // ✅ serial first, then name
+        const as = (a.serial == null) ? 999999 : a.serial;
+        const bs = (b.serial == null) ? 999999 : b.serial;
+        if (as !== bs) return as - bs;
+        return (a.pkgName || "").localeCompare(b.pkgName || "");
+      });
   }
 
   function isReturnMode() {
     if (currentEditingGroupKey) return true;
     return deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0);
+  }
+
+  function computeSellAndAmount(r){
+    const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
+    const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
+
+    // ✅ Return লিখলেই show; Out-only এ blank (আপনার আগের মতো)
+    const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
+    if (!shouldComputeForRow) return { sellPcs:"", amt:"" };
+
+    const sellPcs = Math.max(0, outTotal - retTotal);
+    const amtNum = sellPcs * (parseFloat(r.sellPrice)||0);
+    return { sellPcs: String(sellPcs), amt: "৳"+amtNum.toFixed(2) };
+  }
+
+  function updateTotalsLive(){
+    let totalSell = 0;
+    let totalMoney = 0;
+
+    const showSell = isReturnMode();
+
+    deliveryRows.forEach(r => {
+      if (!showSell) return;
+
+      const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
+      const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
+
+      const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
+      if (!shouldComputeForRow) return;
+
+      const sellPcs = Math.max(0, outTotal - retTotal);
+      totalSell += sellPcs;
+      totalMoney += sellPcs * (parseFloat(r.sellPrice)||0);
+    });
+
+    document.getElementById('totalSellPcsCell').innerText = String(totalSell);
+    document.getElementById('totalMoneyCell').innerText = "৳" + totalMoney.toFixed(2);
   }
 
   function renderDeliveryTable() {
@@ -1202,42 +1330,84 @@
     const showSell = isReturnMode();
 
     deliveryRows.forEach((r, idx) => {
-      const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-      const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-
-      // ✅ Out লিখলে হিসাব না, শুধু Return এ কিছু লিখলে (বা reopen হলে) হিসাব
-      const shouldComputeForRow = currentEditingGroupKey || (retTotal > 0);
-
-      const sellPcs = (showSell && shouldComputeForRow) ? Math.max(0, outTotal - retTotal) : "";
-      const amt = (showSell && shouldComputeForRow) ? (Math.max(0, outTotal - retTotal) * (parseFloat(r.sellPrice)||0)).toFixed(2) : "";
+      const computed = (showSell) ? computeSellAndAmount(r) : { sellPcs:"", amt:"" };
 
       tb.innerHTML += `
         <tr>
           <td class="pkg-cell">
+            ${r.serial != null ? `<span class="serial-badge">${r.serial}</span>` : ``}
             ${r.pkgName}
             <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
           </td>
 
-          <td><input class="qty-inp" type="number" min="0" value="${r.outCase}" onchange="onOutCaseChange(${idx}, this.value)"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${r.outPcs}" onchange="onOutPcsChange(${idx}, this.value)"></td>
+          <td>
+            <input class="qty-inp" type="number" min="0" value="${r.outCase}" data-idx="${idx}" data-field="outCase">
+          </td>
+          <td>
+            <input class="qty-inp" type="number" min="0" value="${r.outPcs}" data-idx="${idx}" data-field="outPcs">
+          </td>
 
-          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" onchange="onRetCaseChange(${idx}, this.value)"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" onchange="onRetPcsChange(${idx}, this.value)"></td>
+          <td>
+            <input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase">
+          </td>
+          <td>
+            <input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs">
+          </td>
 
-          <td class="sellpcs-cell">${sellPcs}</td>
-          <td class="money-cell">${amt === "" ? "" : "৳"+amt}</td>
+          <td class="sellpcs-cell" id="sellpcs-${idx}">${computed.sellPcs}</td>
+          <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
         </tr>
       `;
     });
 
-    // ✅ fix: typing & faint 0
+    // ✅ typing smooth (kept) + live update
     attachZeroBehavior();
+    bindLiveDeliveryInputs();
+
+    updateTotalsLive();
   }
 
-  window.onOutCaseChange = (idx, v) => { deliveryRows[idx].outCase = safeNum(v); renderDeliveryTable(); };
-  window.onOutPcsChange  = (idx, v) => { deliveryRows[idx].outPcs  = safeNum(v); renderDeliveryTable(); };
-  window.onRetCaseChange = (idx, v) => { deliveryRows[idx].retCase = safeNum(v); renderDeliveryTable(); };
-  window.onRetPcsChange  = (idx, v) => { deliveryRows[idx].retPcs  = safeNum(v); renderDeliveryTable(); };
+  // ✅ Live input without extra boxes / without waiting onchange
+  let deliveryInputsBound = false;
+  function bindLiveDeliveryInputs(){
+    if (deliveryInputsBound) return;
+    deliveryInputsBound = true;
+
+    const tbody = document.getElementById('deliveryPkgTbody');
+    if (!tbody) return;
+
+    tbody.addEventListener('input', (e) => {
+      const el = e.target;
+      if (!el || el.tagName !== "INPUT") return;
+      if (el.type !== "number") return;
+
+      const idx = parseInt(el.dataset.idx, 10);
+      const field = el.dataset.field;
+      if (isNaN(idx) || !field || !deliveryRows[idx]) return;
+
+      deliveryRows[idx][field] = safeNum(el.value);
+
+      // ✅ if return becomes >0, table should switch to "return mode" instantly
+      const mustShow = isReturnMode();
+
+      if (mustShow) {
+        // update this row result
+        const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
+        const spEl = document.getElementById(`sellpcs-${idx}`);
+        const amEl = document.getElementById(`amt-${idx}`);
+        if (spEl) spEl.innerText = sellPcs;
+        if (amEl) amEl.innerText = amt;
+      } else {
+        // out-only: keep blank
+        const spEl = document.getElementById(`sellpcs-${idx}`);
+        const amEl = document.getElementById(`amt-${idx}`);
+        if (spEl) spEl.innerText = "";
+        if (amEl) amEl.innerText = "";
+      }
+
+      updateTotalsLive();
+    });
+  }
 
   function getPkgKeyByName(name) {
     const k = Object.keys(packages).find(x => (packages[x]?.name || "") === name);
@@ -1249,6 +1419,9 @@
     if(!s.value) return alert("লোক সিলেক্ট করুন");
     selectedPersonName = s.value;
     currentEditingGroupKey = null;
+
+    // ✅ reset bind state for each open (safe)
+    deliveryInputsBound = false;
 
     document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + selectedPersonName;
     document.getElementById('deliveryDate').value = todayISO();
@@ -1295,7 +1468,6 @@
           }
         }
 
-        // ✅ FIX: instantly refresh table (even if realtime delay)
         applyFilters();
 
         alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
@@ -1380,7 +1552,6 @@
         r.appliedSellPcs = netSell;
       }
 
-      // ✅ FIX: instantly refresh table
       applyFilters();
 
       alert("✅ ফেরত সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
@@ -1394,6 +1565,9 @@
     const group = window.groupedData[dateKey];
     selectedPersonName = group.name;
     currentEditingGroupKey = dateKey;
+
+    // ✅ reset bind state for reopen
+    deliveryInputsBound = false;
 
     document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + group.name;
     document.getElementById('deliveryDate').value = group.date;
