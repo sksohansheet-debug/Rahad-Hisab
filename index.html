@@ -346,6 +346,44 @@
     @media (max-width: 920px){
       .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
+
+    /* =========================================================
+       ✅ NEW: Laptop/Desktop FIX (full width + amount full show)
+       - ল্যাপটপে পুরো স্ক্রিন জুড়ে কার্ড হবে
+       - বড় নাম্বার আর কাটবে না (wrap allow)
+       ========================================================= */
+    @media (min-width: 921px){
+      .main-content{
+        max-width: 100%;
+        padding-left: 28px;
+        padding-right: 28px;
+      }
+
+      .grid{
+        gap: 18px;
+      }
+
+      .card{
+        min-height: 125px;
+        padding: 20px 18px;
+      }
+
+      .card p{
+        /* ✅ ellipsis off */
+        overflow: visible;
+        text-overflow: unset;
+
+        /* ✅ wrap allow যাতে পুরো নাম্বার দেখা যায় */
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+
+        /* ✅ desktop এ একটু smart font যাতে ফিট হয় */
+        font-size: clamp(18px, 1.8vw, 32px);
+        line-height: 1.15;
+      }
+    }
+
     @media (max-width: 520px){
       .main-content{ padding: 14px; }
       :root{ --sb-w: 250px; }
