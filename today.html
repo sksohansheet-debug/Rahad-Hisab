@@ -552,10 +552,10 @@
       background: #ffffff !important;
       color:#0f172a !important;
       position: sticky;
-      z-index: 50; /* ✅ ensure always above body */
-      font-size: 12px;      /* ✅ bigger */
-      font-weight: 1000;    /* ✅ bolder */
-      padding: 10px 6px;    /* ✅ taller -> stable sticky */
+      z-index: 50;
+      font-size: 12px;
+      font-weight: 1000;
+      padding: 10px 6px;
       box-shadow: 0 2px 0 rgba(15,23,42,.08);
       background-clip: padding-box;
     }
@@ -580,7 +580,6 @@
     .delivery-table tfoot td:nth-child(3){
       background: rgba(59,130,246,.10);
     }
-
     .delivery-table thead th:nth-child(4),
     .delivery-table thead th:nth-child(5),
     .delivery-table tbody td:nth-child(4),
@@ -644,9 +643,7 @@
       background: rgba(255,255,255,.96);
       box-shadow: none;
     }
-    .qty-inp.is-zero{
-      color: rgba(15,23,42,.18);
-    }
+    .qty-inp.is-zero{ color: rgba(15,23,42,.18); }
     .qty-inp:focus{
       border-color: rgba(37,99,235,.55);
       box-shadow: 0 0 0 3px rgba(37,99,235,.10);
@@ -920,7 +917,7 @@
   let currentDuesData = [];
   let currentEditingGroupKey = null;
 
-  /* ✅ NEW: delivery group id so same person+date can have multiple separate transactions */
+  /* ✅ delivery group id so same person+date can have multiple separate transactions */
   let currentDeliveryGroupId = null;
 
   let currentPage = 1;
@@ -1003,7 +1000,8 @@
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
   /* =========================
-     ✅ Input zero behavior (kept)
+     ✅ Input zero behavior
+     ✅ CHANGE: if input has data-keepzero="1" then DO NOT clear on focus
      ========================= */
   function setZeroClass(inp){
     const isZero = String(inp.value).trim() === "0";
@@ -1019,14 +1017,14 @@
     setZeroClass(inp);
 
     inp.addEventListener('focus', () => {
-      if (String(inp.value).trim() === "0") {
+      const keepZero = inp.dataset.keepzero === "1";
+      if (!keepZero && String(inp.value).trim() === "0") {
         inp.value = "";
         inp.classList.remove('is-zero');
+      } else {
+        // keepZero => select all for easy overwrite
+        try { inp.setSelectionRange(0, inp.value.length); } catch(e){}
       }
-      try {
-        const len = inp.value.length;
-        inp.setSelectionRange(len, len);
-      } catch(e){}
     });
 
     inp.addEventListener('input', () => {
@@ -1040,6 +1038,8 @@
     inp.addEventListener('blur', () => {
       if (inp.value === "" || inp.value == null) inp.value = "0";
       setZeroClass(inp);
+      // reset helper counter for "00" detection
+      inp.dataset.zeroPress = "0";
     });
   }
 
@@ -1100,10 +1100,10 @@
   });
 
   /* =========================================================
-     ✅ Report rule (as you requested)
+     ✅ Report rule
      - "Sell money" shows ONLY when that group has any Return
        otherwise it will show 0
-     ✅ NEW: group by transaction.groupId (so same person+date multiple groups work)
+     ✅ group by transaction.groupId
      ========================================================= */
   window.applyFilters = () => {
     currentPage = 1;
@@ -1149,7 +1149,6 @@
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
       const totalPcs = parseInt(t.totalPcs) || 0;
 
-      // profit calc (same)
       if(hasFilter) {
         const pkgInfo = Object.values(packages).find(p => p.name === t.pkgName);
         if(pkgInfo) {
@@ -1283,8 +1282,9 @@
 
   /* =========================
      ✅ Delivery Table
-     - Sell pcs cell shows TOTAL pcs result live (out-ret) whenever you start typing out/return
-     - Return 0 typed manually will still show result (touched logic)
+     ✅ CHANGE: Return 0 "double press" works:
+        - default 0 => no result
+        - if user presses 0 twice (while value remains 0), it counts as retTouched and result appears
      ========================= */
   function getPkgSerial(p){
     const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
@@ -1309,7 +1309,6 @@
         returnKey: null,
         appliedSellPcs: 0,
 
-        /* ✅ NEW: touch flags (so typing 0 still counts) */
         outTouched: false,
         retTouched: false
       }))
@@ -1324,11 +1323,14 @@
   function shouldShowRowResult(r){
     const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
     const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-    if (currentEditingGroupKey) return true;              // edit mode always show
-    if (outTotal > 0) return true;                        // out entered
-    if (retTotal > 0) return true;                        // return entered
-    if (r.retTouched) return true;                        // ✅ typed even if 0
-    if (r.outTouched) return true;                        // typed even if 0
+    if (currentEditingGroupKey) return true;
+    if (outTotal > 0) return true;
+    if (retTotal > 0) return true;
+
+    // ✅ only show if user confirmed (double-0 press triggers retTouched)
+    if (r.retTouched) return true;
+    if (r.outTouched) return true;
+
     return false;
   }
 
@@ -1381,8 +1383,9 @@
           <td><input class="qty-inp" type="number" min="0" value="${r.outCase}" data-idx="${idx}" data-field="outCase"></td>
           <td><input class="qty-inp" type="number" min="0" value="${r.outPcs}" data-idx="${idx}" data-field="outPcs"></td>
 
-          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs"></td>
+          <!-- ✅ keepzero so default 0 stays and user can press 0 twice -->
+          <td><input class="qty-inp" type="number" min="0" value="${r.retCase}" data-idx="${idx}" data-field="retCase" data-keepzero="1" data-zeropress="0"></td>
+          <td><input class="qty-inp" type="number" min="0" value="${r.retPcs}" data-idx="${idx}" data-field="retPcs" data-keepzero="1" data-zeropress="0"></td>
 
           <td class="sellpcs-cell" id="sellpcs-${idx}">${computed.sellPcs}</td>
           <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
@@ -1403,6 +1406,43 @@
     const tbody = document.getElementById('deliveryPkgTbody');
     if (!tbody) return;
 
+    // ✅ Detect "double 0 press" on return inputs even if value stays 0
+    tbody.addEventListener('keydown', (e) => {
+      const el = e.target;
+      if (!el || el.tagName !== "INPUT" || el.type !== "number") return;
+
+      const field = el.dataset.field || "";
+      if (!(field === "retCase" || field === "retPcs")) return;
+
+      if (e.key === "0") {
+        const idx = parseInt(el.dataset.idx, 10);
+        if (isNaN(idx) || !deliveryRows[idx]) return;
+
+        // only count presses when current value is "0" (default/unchanged)
+        const v = String(el.value ?? "").trim();
+        if (v === "0" || v === "") {
+          const prev = parseInt(el.dataset.zeroPress || "0", 10) || 0;
+          const next = prev + 1;
+          el.dataset.zeroPress = String(next);
+
+          // ✅ user wants: "আরেকটি 0" => 2 presses
+          if (next >= 2) {
+            deliveryRows[idx].retTouched = true;
+
+            // force refresh row + totals immediately
+            const { sellPcs, amt } = computeSellAndAmount(deliveryRows[idx]);
+            const spEl = document.getElementById(`sellpcs-${idx}`);
+            const amEl = document.getElementById(`amt-${idx}`);
+            if (spEl) spEl.innerText = sellPcs;
+            if (amEl) amEl.innerText = amt;
+            updateTotalsLive();
+          }
+        } else {
+          el.dataset.zeroPress = "0";
+        }
+      }
+    });
+
     tbody.addEventListener('input', (e) => {
       const el = e.target;
       if (!el || el.tagName !== "INPUT") return;
@@ -1412,9 +1452,18 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
-      // ✅ mark touched (so typing 0 still counts)
-      if (field === "retCase" || field === "retPcs") deliveryRows[idx].retTouched = true;
-      if (field === "outCase" || field === "outPcs") deliveryRows[idx].outTouched = true;
+      // reset "zero press" counter if value changes away from 0
+      const vv = String(el.value ?? "").trim();
+      if (vv !== "0") el.dataset.zeroPress = "0";
+
+      // touched rules (keep as before)
+      if (field === "retCase" || field === "retPcs") {
+        // ✅ if user typed non-zero return, treat touched
+        if (safeNum(el.value) > 0) deliveryRows[idx].retTouched = true;
+      }
+      if (field === "outCase" || field === "outPcs") {
+        deliveryRows[idx].outTouched = true;
+      }
 
       deliveryRows[idx][field] = safeNum(el.value);
 
@@ -1434,7 +1483,6 @@
   }
 
   function makeNewGroupId(person, date){
-    // ✅ unique per delivery (same person+date multiple times will be separate)
     return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   }
 
@@ -1454,7 +1502,6 @@
 
     buildDeliveryRowsFromPackages();
 
-    // ✅ NEW group id created here (so new save won't merge with old)
     currentDeliveryGroupId = makeNewGroupId(selectedPersonName, document.getElementById('deliveryDate').value || todayISO());
 
     renderDeliveryTable();
@@ -1467,17 +1514,14 @@
     const date = document.getElementById('deliveryDate').value || todayISO();
     if(!selectedPersonName) return;
 
-    // ✅ keep group id stable for this session
     if (!currentDeliveryGroupId) currentDeliveryGroupId = makeNewGroupId(selectedPersonName, date);
 
-    // ✅ if editing existing group, preserve its groupId
     if (currentEditingGroupKey) {
       const g = window.groupedData[currentEditingGroupKey];
       const existingGid = (g?.groupId || g?.items?.[0]?.groupId || "").trim();
       if (existingGid) currentDeliveryGroupId = existingGid;
     }
 
-    // ✅ decide whether this save includes any Return (only for stock logic part)
     const retMode = deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) || currentEditingGroupKey;
 
     if (!retMode) {
@@ -1544,30 +1588,27 @@
           }
         }
 
-        if (retTotal > 0 || r.retTouched) {
-          // ✅ if retTouched but 0, we should remove any existing returnKey (below) and still allow net calculation
-          if (retTotal > 0) {
-            const retPayload = {
-              groupId: currentDeliveryGroupId,
-              personName: selectedPersonName,
-              date,
-              type: "Return",
-              pkgName: r.pkgName,
-              totalPcs: retTotal,
-              pkgSellPrice: r.sellPrice,
-              amount: (retTotal * r.sellPrice).toFixed(2),
-              cashReceived: currentCashData,
-              dues: currentDuesData
-            };
-            if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
-            else {
-              const pushed = await push(ref(database, 'transactions'), retPayload);
-              r.returnKey = pushed.key;
-            }
-          } else if (r.returnKey) {
-            await remove(ref(database, `transactions/${r.returnKey}`));
-            r.returnKey = null;
+        if (retTotal > 0) {
+          const retPayload = {
+            groupId: currentDeliveryGroupId,
+            personName: selectedPersonName,
+            date,
+            type: "Return",
+            pkgName: r.pkgName,
+            totalPcs: retTotal,
+            pkgSellPrice: r.sellPrice,
+            amount: (retTotal * r.sellPrice).toFixed(2),
+            cashReceived: currentCashData,
+            dues: currentDuesData
+          };
+          if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
+          else {
+            const pushed = await push(ref(database, 'transactions'), retPayload);
+            r.returnKey = pushed.key;
           }
+        } else if (r.returnKey) {
+          await remove(ref(database, `transactions/${r.returnKey}`));
+          r.returnKey = null;
         }
 
         const netSell = Math.max(0, outTotal - retTotal);
@@ -1616,7 +1657,6 @@
     currentCashData = group.cash || 0;
     currentDuesData = group.items[0]?.dues || [];
 
-    // ✅ preserve groupId while editing
     currentDeliveryGroupId = (group.groupId || group.items[0]?.groupId || "").trim() || makeNewGroupId(group.name, group.date);
 
     buildDeliveryRowsFromPackages();
@@ -1646,18 +1686,41 @@
     openModal('deliveryMainModal');
   };
 
+  /* =========================================================
+     ✅ FIX: Delete group => Stock back correctly
+     - Stock was reduced by appliedSellPcs (net sell), NOT by totalPcs
+     - So on delete: only restore for Out rows by +appliedSellPcs (fallback totalPcs for legacy)
+     ========================================================= */
   window.deleteTransactionGroup = async (groupKey) => {
     if(!confirm("মুছে ফেলতে চান?")) return;
     const items = window.groupedData[groupKey].items;
+
     for(let itm of items) {
       const pKey = getPkgKeyByName(itm.pkgName);
       if(pKey) {
         const pkg = packages[pKey];
-        let adj = itm.type === "Out" ? parseInt(itm.totalPcs) : -parseInt(itm.totalPcs);
-        await update(ref(database, `packages/${pKey}`), { stock: (parseInt(pkg.stock) || 0) + adj });
+
+        // ✅ restore only what was actually applied to stock
+        let adj = 0;
+        if ((itm.type || "Out") === "Out") {
+          const applied = parseInt(itm.appliedSellPcs || 0) || 0;
+          const legacy = parseInt(itm.totalPcs || 0) || 0;
+          // if applied exists use it, else fallback legacy (older data)
+          adj = (applied > 0) ? applied : legacy;
+        } else {
+          // Return row does not directly change stock (net already stored in Out.appliedSellPcs)
+          adj = 0;
+        }
+
+        if (adj !== 0) {
+          await update(ref(database, `packages/${pKey}`), { stock: (parseInt(pkg.stock) || 0) + adj });
+          packages[pKey].stock = (parseInt(pkg.stock) || 0) + adj;
+        }
       }
+
       await remove(ref(database, `transactions/${itm.key}`));
     }
+
     alert("মুছে ফেলা হয়েছে");
     applyFilters();
   };
