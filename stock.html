@@ -147,7 +147,8 @@
       white-space: nowrap;
     }
     .btn:active{ transform: scale(.99); }
-    .btn-cat{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+
+    /* ✅ only 2 buttons now */
     .btn-pkg{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
     .btn-stock{ background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1)); color:#111827; }
 
@@ -166,7 +167,7 @@
       pointer-events:auto;
     }
 
-    /* ✅ Sidebar (UPDATED to match screenshot) */
+    /* ✅ Sidebar */
     .sidebar{
       position: fixed;
       top: 0;
@@ -185,7 +186,6 @@
     }
     .sidebar.open{ transform: translateX(0); }
 
-    /* header like screenshot: Taka Hisab + মেনু + X */
     .sb-head{
       display:flex;
       align-items:flex-start;
@@ -261,20 +261,22 @@
       font-size: 16px;
     }
 
-    /* ===== Category + Cards ===== */
-    .category-section{
+    /* =========================
+       ✅ NEW: Package Grid (no horizontal scroll)
+    ========================== */
+    .packages-wrap{
       margin: 12px 10px 18px 10px;
       background: rgba(255,255,255,.90);
       border: 1px solid rgba(229,231,235,.9);
       border-radius: 18px;
       box-shadow: var(--shadow);
-      padding: 12px 0 6px 0;
+      padding: 12px 12px 14px 12px;
       overflow:hidden;
     }
-    .category-title{
+    .packages-title{
       font-size: 15px;
       font-weight: 1000;
-      margin: 0 14px 10px 14px;
+      margin: 0 2px 12px 2px;
       color: #0f172a;
       border-left: 5px solid var(--brand);
       padding-left: 10px;
@@ -283,19 +285,14 @@
       gap:8px;
     }
 
-    .package-scroll-container{
-      display:flex;
-      overflow-x:auto;
-      white-space:nowrap;
-      padding: 6px 14px 14px 14px;
+    /* grid auto-wrap */
+    .package-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
-      scrollbar-width:none;
     }
-    .package-scroll-container::-webkit-scrollbar{ display:none; }
 
     .package-card{
-      min-width: 150px;
-      max-width: 150px;
       background: #fff;
       border-radius: 16px;
       border: 1px solid rgba(229,231,235,.9);
@@ -346,7 +343,7 @@
       color: #0f172a;
       margin: 0;
       white-space: normal;
-      height: 38px;
+      min-height: 38px;
       display:-webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -386,14 +383,13 @@
       padding: 16px;
     }
 
-    /* ✅ UPDATED: modal width bigger + elements centered */
     .modal-content{
       background: rgba(255,255,255,.95);
       border: 1px solid rgba(229,231,235,.9);
       padding: 18px;
       border-radius: 18px;
       width: 92%;
-      max-width: 520px; /* ✅ bigger */
+      max-width: 520px;
       overflow-y:auto;
       max-height: 90vh;
       box-shadow: 0 40px 120px rgba(0,0,0,.25);
@@ -427,7 +423,7 @@
       font-weight: 800;
       outline:none;
       background:#fff;
-      text-align:center; /* ✅ elements middle */
+      text-align:center;
     }
     input:focus, select:focus{
       border-color: rgba(37,99,235,.55);
@@ -435,25 +431,23 @@
     }
     select:disabled{ background:#f0f0f0; cursor:not-allowed; }
 
-    /* ✅ NEW: Colorful boxes */
+    /* ✅ colorful inputs */
     #shipDate{
       background: linear-gradient(135deg, rgba(219,234,254,1), rgba(239,246,255,1));
       border-color: rgba(37,99,235,.20);
     }
-    #stockCatSelect{
-      background: linear-gradient(135deg, rgba(220,252,231,1), rgba(236,253,245,1));
-      border-color: rgba(22,163,74,.22);
-    }
-    #stockPkgSelect{
-      background: linear-gradient(135deg, rgba(237,233,254,1), rgba(245,243,255,1));
-      border-color: rgba(124,58,237,.22);
-    }
-    /* ✅ shipPerson box now used as filter (colorful) */
     #shipPerson{
       background: linear-gradient(135deg, rgba(255,237,213,1), rgba(255,247,237,1));
       border-color: rgba(245,158,11,.25);
     }
-    #catName, #pkgName, #pkgCaseQty, #pkgBuyPrice, #pkgSellPrice,
+
+    /* ✅ NEW: serial input */
+    #pkgSerial, #editPkgSerial{
+      background: linear-gradient(135deg, rgba(237,233,254,1), rgba(245,243,255,1));
+      border-color: rgba(124,58,237,.22);
+    }
+
+    #pkgName, #pkgCaseQty, #pkgBuyPrice, #pkgSellPrice,
     #editPkgName, #editPkgCaseQty, #editPkgBuyPrice, #editPkgSellPrice{
       background: linear-gradient(135deg, rgba(241,245,249,1), rgba(255,255,255,1));
       border-color: rgba(148,163,184,.35);
@@ -566,6 +560,47 @@
       white-space: nowrap;
       box-shadow: var(--shadow2);
     }
+
+    /* =========================
+       ✅ Laptop: bigger + colorful modals
+    ========================== */
+    @media (min-width: 900px){
+      body{ padding-top: 120px; }
+
+      .navbar h1{ font-size: 20px; }
+
+      .btn{
+        padding: 12px 14px;
+        font-size: 13px;
+        border-radius: 16px;
+      }
+
+      .modal-content{
+        max-width: 780px;
+        padding: 22px;
+        border-radius: 22px;
+        background:
+          radial-gradient(800px 300px at 10% 0%, rgba(37,99,235,.08), transparent 55%),
+          radial-gradient(700px 320px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+          rgba(255,255,255,.96);
+      }
+
+      .modal-content h2{
+        font-size: 18px;
+      }
+
+      input, select{
+        padding: 14px;
+        font-size: 14px;
+        border-radius: 16px;
+      }
+
+      .save-btn, .delete-btn{
+        padding: 14px;
+        border-radius: 18px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 
@@ -589,14 +624,14 @@
     <div style="width: 42px;"></div>
   </div>
 
+  <!-- ✅ ONLY 2 BUTTONS -->
   <div class="nav-buttons">
-    <button class="btn btn-cat" onclick="openModal('catModal')">+ Category</button>
     <button class="btn btn-pkg" onclick="openModal('pkgModal')">+ Package</button>
     <button class="btn btn-stock" onclick="openModal('stockAddModal')">+ Add Stock</button>
   </div>
 </div>
 
-<!-- ✅ Sidebar (updated HTML like screenshot) -->
+<!-- ✅ Sidebar -->
 <div id="sidebar" class="sidebar">
   <div class="sb-head">
     <div>
@@ -616,58 +651,64 @@
   </div>
 </div>
 
-<div id="displayArea"></div>
-
-<div id="catModal" class="modal">
-  <div class="modal-content">
-    <h2>নতুন ক্যাটাগরি</h2>
-    <input type="text" id="catName" placeholder="ক্যাটাগরির নাম">
-    <button class="save-btn" id="saveCategory">Save Category</button>
-    <span class="close-link" onclick="closeModal('catModal')">বন্ধ করুন</span>
-  </div>
+<!-- ✅ Packages Area (no category sections) -->
+<div class="packages-wrap">
+  <div class="packages-title">Packages</div>
+  <div id="packageGrid" class="package-grid"></div>
 </div>
 
+<!-- ✅ Package Modal (Category removed, Serial added) -->
 <div id="pkgModal" class="modal">
   <div class="modal-content">
     <h2>নতুন প্যাকেজ</h2>
-    <select id="pkgCategory"><option value="">ক্যাটাগরি সিলেক্ট করুন</option></select>
+
+    <input type="number" id="pkgSerial" placeholder="সিরিয়াল (যেমন: 1,2,3...)" min="1">
     <input type="text" id="pkgName" placeholder="প্যাকেজের নাম">
     <input type="number" id="pkgCaseQty" placeholder="এক কেসে কত পিছ (যেমন: ১২)">
     <input type="number" id="pkgBuyPrice" placeholder="কেনা মূল্য (Buy Price)">
     <input type="number" id="pkgSellPrice" placeholder="বিক্রয় মূল্য (Sell Price)">
     <input type="file" id="pkgImgInput" accept="image/*">
+
     <img id="imgPreview" style="width:90px; height:90px; object-fit:cover; display:none; margin:10px auto; border-radius:16px; border:1px solid rgba(229,231,235,.95);">
+
     <button class="save-btn" id="savePackage">Save Package</button>
     <span class="close-link" onclick="closeModal('pkgModal')">বন্ধ করুন</span>
   </div>
 </div>
 
+<!-- ✅ Edit Modal (Category removed, Serial added) -->
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h2 style="text-align:center;">প্যাকেজ ডিটেইলস</h2>
     <img id="editImgPreview" class="edit-img-preview" src="">
     <input type="hidden" id="editPkgKey">
-    <label>ক্যাটাগরি:</label>
-    <select id="editPkgCategory"></select>
+
+    <label>সিরিয়াল:</label>
+    <input type="number" id="editPkgSerial" min="1">
+
     <label>প্যাকেজ নাম:</label>
     <input type="text" id="editPkgName">
+
     <label>কেস হিসাব (Qty per Case):</label>
     <input type="number" id="editPkgCaseQty">
+
     <label>কেনা মূল্য (Buy Price):</label>
     <input type="number" id="editPkgBuyPrice">
+
     <label>বিক্রয় মূল্য (Sell Price):</label>
     <input type="number" id="editPkgSellPrice">
+
     <button class="save-btn" id="updatePackage">Update Details</button>
     <button class="delete-btn" id="deletePackage">Delete Package</button>
     <span class="close-link" onclick="closeModal('editModal')">বন্ধ করুন</span>
   </div>
 </div>
 
+<!-- ✅ Add Stock Modal (Category removed) -->
 <div id="stockAddModal" class="modal">
   <div class="modal-content">
     <h2>স্টক অ্যাড করুন</h2>
 
-    <!-- ✅ UPDATED: Date box + Shipment/Normal filter right side -->
     <div style="display:flex; gap: 10px;">
       <div style="flex:1;">
         <label>তারিখ:</label>
@@ -675,7 +716,6 @@
       </div>
       <div style="flex:1;">
         <label>ফিল্টার:</label>
-        <!-- ✅ ONLY Shipment + Normal, default Shipment -->
         <select id="shipPerson">
           <option value="Shipment" selected>সিপমেন্ট</option>
           <option value="Normal">নরমাল</option>
@@ -683,11 +723,10 @@
       </div>
     </div>
 
-    <label>ক্যাটাগরি সিলেক্ট করুন:</label>
-    <select id="stockCatSelect"></select>
-
     <label>প্যাকেজ সিলেক্ট করুন:</label>
-    <select id="stockPkgSelect" disabled><option value="">আগে ক্যাটাগরি বেছে নিন</option></select>
+    <select id="stockPkgSelect">
+      <option value="">প্যাকেজ বেছে নিন</option>
+    </select>
 
     <div style="display:flex; gap: 10px;">
       <div style="flex:1;">
@@ -721,15 +760,13 @@
 
   const IMGBB_API_KEY = "B5c56ef8aba99aac2f560c6848a658f1";
   let allPackages = {};
-
   let shipmentItems = [];
 
   /* ✅ loader control */
   const pageLoader = document.getElementById('pageLoader');
-  let catLoaded = false;
   let pkgLoaded = false;
   function tryHideLoader(){
-    if(catLoaded && pkgLoaded){
+    if(pkgLoaded){
       pageLoader.style.display = 'none';
     }
   }
@@ -806,14 +843,8 @@
   }
 
   function resetModalFields(id) {
-    if (id === 'catModal') {
-      const catName = document.getElementById('catName');
-      if (catName) catName.value = '';
-      return;
-    }
-
     if (id === 'pkgModal') {
-      const pkgCategory = document.getElementById('pkgCategory');
+      const pkgSerial = document.getElementById('pkgSerial');
       const pkgName = document.getElementById('pkgName');
       const pkgCaseQty = document.getElementById('pkgCaseQty');
       const pkgBuyPrice = document.getElementById('pkgBuyPrice');
@@ -821,7 +852,7 @@
       const pkgImgInput = document.getElementById('pkgImgInput');
       const imgPreview = document.getElementById('imgPreview');
 
-      if (pkgCategory) pkgCategory.value = '';
+      if (pkgSerial) pkgSerial.value = '';
       if (pkgName) pkgName.value = '';
       if (pkgCaseQty) pkgCaseQty.value = '';
       if (pkgBuyPrice) pkgBuyPrice.value = '';
@@ -835,21 +866,14 @@
       shipmentItems = [];
       const shipDate = document.getElementById('shipDate');
       const shipPerson = document.getElementById('shipPerson');
-      const stockCatSelect = document.getElementById('stockCatSelect');
       const stockPkgSelect = document.getElementById('stockPkgSelect');
       const inputCases = document.getElementById('inputCases');
       const inputPcs = document.getElementById('inputPcs');
 
       if (shipDate) shipDate.value = todayISO();
-
-      /* ✅ default Shipment selected */
       if (shipPerson) shipPerson.value = "Shipment";
 
-      if (stockCatSelect) stockCatSelect.value = '';
-      if (stockPkgSelect) {
-        stockPkgSelect.disabled = true;
-        stockPkgSelect.innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
-      }
+      if (stockPkgSelect) stockPkgSelect.value = '';
       if (inputCases) inputCases.value = 0;
       if (inputPcs) inputPcs.value = 0;
 
@@ -864,9 +888,7 @@
     document.getElementById(id).style.display = 'flex';
 
     if(id === 'stockAddModal') {
-      populateStockCategories();
-      document.getElementById('stockPkgSelect').disabled = true;
-      document.getElementById('stockPkgSelect').innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
+      populateStockPackages();
       renderShipmentList();
       updateTotalPieces();
     }
@@ -874,7 +896,7 @@
 
   window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-  /* ✅ Sidebar toggle + overlay (logic unchanged) */
+  /* ✅ Sidebar toggle + overlay */
   window.toggleSidebar = (e) => {
     e.stopPropagation();
     const sb = document.getElementById('sidebar');
@@ -899,113 +921,64 @@
     if (e.key === 'Escape') window.closeSidebarFromOverlay();
   });
 
-  // ১. ক্যাটাগরি ও প্যাকেজ লোড
-  onValue(ref(database, 'categories'), (catSnapshot) => {
-    const pkgCatSelect = document.getElementById('pkgCategory');
-    const editPkgCatSelect = document.getElementById('editPkgCategory');
-    const displayArea = document.getElementById('displayArea');
+  /* =========================
+     ✅ LOAD PACKAGES ONLY (Category removed)
+     ✅ show packages sorted by serial
+  ========================== */
+  const packageGrid = document.getElementById('packageGrid');
 
-    let options = '<option value="">ক্যাটাগরি সিলেক্ট করুন</option>';
-    displayArea.innerHTML = '';
+  onValue(ref(database, 'packages'), (pkgSnapshot) => {
+    allPackages = {};
+    const list = [];
 
-    catSnapshot.forEach((catChild) => {
-      const catName = catChild.val().name;
-      options += `<option value="${catName}">${catName}</option>`;
+    pkgSnapshot.forEach((pkgChild) => {
+      const pkg = pkgChild.val();
+      const pkgKey = pkgChild.key;
 
-      const section = document.createElement('div');
-      section.className = 'category-section';
-      section.innerHTML = `
-        <div class="category-title">${catName}</div>
-        <div class="package-scroll-container" id="scroll-${catName.replace(/\\s+/g, '')}"></div>
+      if (pkg.hidden === true) return;
+
+      const serial = parseInt(pkg.serial) || 999999;
+
+      allPackages[pkgKey] = { ...pkg, key: pkgKey, serial };
+      list.push({ ...pkg, key: pkgKey, serial });
+    });
+
+    // ✅ sort by serial
+    list.sort((a,b) => (a.serial || 999999) - (b.serial || 999999));
+
+    // ✅ render grid (no scroll)
+    packageGrid.innerHTML = list.map(pkg => {
+      return `
+        <div class="package-card">
+          <div class="pkg-img-wrapper">
+            <img src="${pkg.img}">
+            <div class="info-icon" onclick="openEditModal('${pkg.key}')"><i class="fas fa-info"></i></div>
+          </div>
+          <div class="pkg-details">
+            <p class="pkg-name">${pkg.name}</p>
+            <p class="pkg-price">${pkg.sellPrice}</p>
+            <div class="display-stock">Stock: ${pkg.stock || 0}</div>
+          </div>
+        </div>
       `;
-      displayArea.appendChild(section);
-    });
+    }).join('');
 
-    pkgCatSelect.innerHTML = options;
-    editPkgCatSelect.innerHTML = options;
-
-    catLoaded = true;
+    pkgLoaded = true;
     tryHideLoader();
-
-    onValue(ref(database, 'packages'), (pkgSnapshot) => {
-      document.querySelectorAll('.package-scroll-container').forEach(el => el.innerHTML = '');
-      allPackages = {};
-
-      pkgSnapshot.forEach((pkgChild) => {
-        const pkg = pkgChild.val();
-        const pkgKey = pkgChild.key;
-
-        if (pkg.hidden === true) return;
-
-        allPackages[pkgKey] = { ...pkg, key: pkgKey };
-
-        const targetId = `scroll-${pkg.category.replace(/\\s+/g, '')}`;
-        const targetScroll = document.getElementById(targetId);
-
-        if(targetScroll) {
-          const card = document.createElement('div');
-          card.className = 'package-card';
-          card.innerHTML = `
-            <div class="pkg-img-wrapper">
-              <img src="${pkg.img}">
-              <div class="info-icon" onclick="openEditModal('${pkgKey}')"><i class="fas fa-info"></i></div>
-            </div>
-            <div class="pkg-details">
-              <p class="pkg-name">${pkg.name}</p>
-              <p class="pkg-price">${pkg.sellPrice}</p>
-              <div class="display-stock">Stock: ${pkg.stock || 0}</div>
-            </div>
-          `;
-          targetScroll.appendChild(card);
-        }
-      });
-
-      pkgLoaded = true;
-      tryHideLoader();
-    });
   });
 
-  // ২. স্টক অ্যাড ফাংশনালিটি
-  function populateStockCategories() {
-    const stockCatSelect = document.getElementById('stockCatSelect');
-    onValue(ref(database, 'categories'), (snapshot) => {
-      let options = '<option value="">ক্যাটাগরি বেছে নিন</option>';
-      snapshot.forEach(child => {
-        options += `<option value="${child.val().name}">${child.val().name}</option>`;
-      });
-      stockCatSelect.innerHTML = options;
-    }, { onlyOnce: true });
-  }
-
-  document.getElementById('stockCatSelect').onchange = (e) => {
-    const selectedCat = e.target.value;
+  /* ✅ Stock modal: populate packages (sorted by serial) */
+  function populateStockPackages(){
     const stockPkgSelect = document.getElementById('stockPkgSelect');
-
-    if (selectedCat === "") {
-      stockPkgSelect.disabled = true;
-      stockPkgSelect.innerHTML = '<option value="">আগে ক্যাটাগরি বেছে নিন</option>';
-      updateTotalPieces();
-      return;
-    }
-
     let options = '<option value="">প্যাকেজ বেছে নিন</option>';
-    let found = false;
-    Object.values(allPackages).forEach(pkg => {
-      if(pkg.category === selectedCat) {
-        options += `<option value="${pkg.key}">${pkg.name}</option>`;
-        found = true;
-      }
+
+    const arr = Object.values(allPackages).slice().sort((a,b)=> (a.serial||999999)-(b.serial||999999));
+    arr.forEach(pkg => {
+      options += `<option value="${pkg.key}">${pkg.serial ? (pkg.serial + " - ") : ""}${pkg.name}</option>`;
     });
 
-    if(found) {
-      stockPkgSelect.disabled = false;
-      stockPkgSelect.innerHTML = options;
-    } else {
-      stockPkgSelect.disabled = true;
-      stockPkgSelect.innerHTML = '<option value="">এই ক্যাটাগরিতে কোনো প্যাকেজ নেই</option>';
-    }
-    updateTotalPieces();
-  };
+    stockPkgSelect.innerHTML = options;
+  }
 
   document.getElementById('stockPkgSelect').addEventListener('change', updateTotalPieces);
   document.getElementById('inputCases').addEventListener('input', updateTotalPieces);
@@ -1014,8 +987,6 @@
   document.getElementById('addToListBtn').onclick = () => {
     const date = document.getElementById('shipDate').value;
     const pkgKey = document.getElementById('stockPkgSelect').value;
-
-    // ✅ person now: Shipment or Normal
     const person = (document.getElementById('shipPerson').value || "Shipment").trim();
 
     const cases = parseInt(document.getElementById('inputCases').value) || 0;
@@ -1081,33 +1052,28 @@
     }
   };
 
-  document.getElementById('saveCategory').onclick = () => {
-    const name = document.getElementById('catName').value.trim();
-    if(name) push(ref(database, 'categories'), { name }).then(() => {
-      alert("ক্যাটাগরি সেভ হয়েছে!");
-      closeModal('catModal');
-      document.getElementById('catName').value = '';
-    });
-  };
-
+  /* ✅ Save Package (Serial added) */
   document.getElementById('savePackage').onclick = async () => {
     const btn = document.getElementById('savePackage');
-    const cat = document.getElementById('pkgCategory').value;
+
+    const serial = parseInt(document.getElementById('pkgSerial').value) || 0;
     const name = document.getElementById('pkgName').value;
     const caseQty = document.getElementById('pkgCaseQty').value;
     const buyPrice = document.getElementById('pkgBuyPrice').value;
     const sellPrice = document.getElementById('pkgSellPrice').value;
     const file = document.getElementById('pkgImgInput').files[0];
 
-    if(cat && name && sellPrice && file) {
+    if(serial && name && sellPrice && file) {
       btn.innerText = "Uploading..."; btn.disabled = true;
       const formData = new FormData(); formData.append("image", file);
+
       try {
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
         const result = await res.json();
+
         if(result.success) {
           await push(ref(database, 'packages'), {
-            category: cat,
+            serial: serial,
             name: name,
             caseQty: parseInt(caseQty) || 0,
             buyPrice: buyPrice,
@@ -1119,31 +1085,37 @@
           alert("প্যাকেজ সেভ হয়েছে!");
           closeModal('pkgModal');
         }
-      } catch (e) { alert("Error uploading image!"); }
-      finally { btn.innerText = "Save Package"; btn.disabled = false; }
+      } catch (e) {
+        alert("Error uploading image!");
+      } finally {
+        btn.innerText = "Save Package"; btn.disabled = false;
+      }
     } else alert("সব তথ্য দিন!");
   };
 
   window.openEditModal = (key) => {
     const data = allPackages[key];
+
     document.getElementById('editPkgKey').value = key;
+    document.getElementById('editPkgSerial').value = data.serial || '';
     document.getElementById('editPkgName').value = data.name;
     document.getElementById('editPkgCaseQty').value = data.caseQty || '';
     document.getElementById('editPkgBuyPrice').value = data.buyPrice || '';
     document.getElementById('editPkgSellPrice').value = data.sellPrice;
-    document.getElementById('editPkgCategory').value = data.category;
     document.getElementById('editImgPreview').src = data.img;
+
     openModal('editModal');
   };
 
   document.getElementById('updatePackage').onclick = () => {
     const key = document.getElementById('editPkgKey').value;
+
     update(ref(database, `packages/${key}`), {
+      serial: parseInt(document.getElementById('editPkgSerial').value) || 0,
       name: document.getElementById('editPkgName').value,
       caseQty: parseInt(document.getElementById('editPkgCaseQty').value) || 0,
       buyPrice: document.getElementById('editPkgBuyPrice').value,
-      sellPrice: document.getElementById('editPkgSellPrice').value,
-      category: document.getElementById('editPkgCategory').value
+      sellPrice: document.getElementById('editPkgSellPrice').value
     }).then(() => { alert("আপডেট হয়েছে!"); closeModal('editModal'); });
   };
 
