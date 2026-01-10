@@ -6,776 +6,477 @@
   <title>Buy & Sell - Hisab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- ✅ PDF: html2pdf (fast download with filename) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <style>
-    :root{
-      --bg:#f5f7fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e5e7eb;
+  /* আপনার দেয়া CSS - অপরিবর্তিত */
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e5e7eb;
 
-      --brand:#2563eb;
-      --brand2:#60a5fa;
+    --brand:#2563eb;
+    --brand2:#60a5fa;
 
-      --good:#16a34a;
-      --bad:#ef4444;
-      --warn:#f59e0b;
+    --good:#16a34a;
+    --bad:#ef4444;
+    --warn:#f59e0b;
 
-      --shadow: 0 10px 30px rgba(15,23,42,.08);
-      --shadow2: 0 2px 10px rgba(15,23,42,.08);
+    --shadow: 0 10px 30px rgba(15,23,42,.08);
+    --shadow2: 0 2px 10px rgba(15,23,42,.08);
 
-      --r12:12px;
-      --r16:16px;
-      --r18:18px;
+    --r12:12px;
+    --r16:16px;
+    --r18:18px;
 
-      --topbar-h: 106px;
-      --sb-w: 295px;
+    --topbar-h: 106px;
+    --sb-w: 295px;
 
-      /* ✅ Delivery header row height (for sticky 2nd row top) */
-      --del-head-row1: 32px;
-    }
+    --del-head-row1: 40px;
+  }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
-        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
-        var(--bg);
-      padding-top: var(--topbar-h);
-      color: var(--text);
-    }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+      radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+      var(--bg);
+    padding-top: var(--topbar-h);
+    color: var(--text);
+  }
 
-    .page-loader{
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      transition: .22s ease;
-    }
-    .page-loader.hide{ opacity:0; pointer-events:none; }
-    .loader-card{
-      width: min(420px, 92vw);
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 18px;
-      box-shadow: 0 30px 120px rgba(15,23,42,.18);
-      padding: 18px 16px;
-      text-align: center;
-    }
-    .loader-title{ font-weight: 1000; font-size: 15px; color:#0f172a; margin: 10px 0 4px 0; }
-    .loader-sub{ font-weight: 900; font-size: 12px; color: var(--muted); margin: 0; }
-    .spinner{
-      width: 54px; height: 54px; border-radius: 999px;
-      border: 6px solid rgba(37,99,235,.18);
-      border-top-color: rgba(37,99,235,1);
-      margin: 4px auto 10px auto;
-      animation: spin .9s linear infinite;
-    }
-    @keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  .page-loader{
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    transition: .22s ease;
+  }
+  .page-loader.hide{ opacity:0; pointer-events:none; }
+  .loader-card{
+    width: min(420px, 92vw);
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 18px;
+    box-shadow: 0 30px 120px rgba(15,23,42,.18);
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .loader-title{ font-weight: 1000; font-size: 15px; color:#0f172a; margin: 10px 0 4px 0; }
+  .loader-sub{ font-weight: 900; font-size: 12px; color: var(--muted); margin: 0; }
+  .spinner{
+    width: 54px; height: 54px; border-radius: 999px;
+    border: 6px solid rgba(37,99,235,.18);
+    border-top-color: rgba(37,99,235,1);
+    margin: 4px auto 10px auto;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
-    .navbar{
-      background: rgba(255,255,255,.86);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      box-shadow: 0 8px 30px rgba(15,23,42,.06);
-      padding: 10px 14px;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 10;
-    }
-    .nav-top{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom: 10px; gap: 10px;
-    }
-    .menu-icon{
-      width:42px; height:42px;
-      display:grid; place-items:center;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
-      color: var(--brand);
-      font-size: 20px;
-      cursor:pointer;
-      box-shadow: var(--shadow2);
-      user-select:none;
-    }
-    .navbar h1{
-      font-size: 18px; margin:0; font-weight: 900;
-      flex-grow:1; text-align:center; letter-spacing: .2px; color:#0f172a;
-    }
-    .nav-buttons{ display:flex; gap:10px; justify-content:center; }
-    .btn{
-      padding: 10px 14px;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 900;
-      color: white;
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      box-shadow: var(--shadow2);
-      transition: .15s;
-      white-space: nowrap;
-    }
-    .btn:active{ transform: scale(.99); }
-    .btn-person{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
-    .btn-delivery{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
+  .navbar{
+    background: rgba(255,255,255,.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(229,231,235,.9);
+    box-shadow: 0 8px 30px rgba(15,23,42,.06);
+    padding: 10px 14px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+  }
+  .nav-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 10px; gap: 10px;
+  }
+  .menu-icon{
+    width:42px; height:42px;
+    display:grid; place-items:center;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+    color: var(--brand);
+    font-size: 20px;
+    cursor:pointer;
+    box-shadow: var(--shadow2);
+    user-select:none;
+  }
+  .navbar h1{
+    font-size: 18px; margin:0; font-weight: 900;
+    flex-grow:1; text-align:center; letter-spacing: .2px; color:#0f172a;
+  }
+  .nav-buttons{ display:flex; gap:10px; justify-content:center; }
+  .btn{
+    padding: 10px 14px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 900;
+    color: white;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    box-shadow: var(--shadow2);
+    transition: .15s;
+    white-space: nowrap;
+  }
+  .btn:active{ transform: scale(.99); }
+  .btn-person{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+  .btn-delivery{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
 
-    .sidebar-overlay{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.35);
-      z-index: 80;
-      opacity:0; pointer-events:none;
-      transition:.2s;
-    }
-    .sidebar-overlay.show{ opacity:1; pointer-events:auto; }
+  .sidebar-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,.35);
+    z-index: 80;
+    opacity:0; pointer-events:none;
+    transition:.2s;
+  }
+  .sidebar-overlay.show{ opacity:1; pointer-events:auto; }
 
-    .sidebar{
-      position: fixed; top: 0; left: 0;
-      width: var(--sb-w); height: 100%;
-      transform: translateX(-110%);
-      transition: .28s ease;
-      z-index: 90;
-      background: linear-gradient(180deg, #0b1224 0%, #0f172a 45%, #0b1224 100%);
-      box-shadow: 0 30px 80px rgba(0,0,0,.28);
-      padding: 14px 14px 18px 14px;
-      overflow: auto;
-    }
-    .sidebar.open{ transform: translateX(0); }
+  .sidebar{
+    position: fixed; top: 0; left: 0;
+    width: var(--sb-w); height: 100%;
+    transform: translateX(-110%);
+    transition: .28s ease;
+    z-index: 90;
+    background: linear-gradient(180deg, #0b1224 0%, #0f172a 45%, #0b1224 100%);
+    box-shadow: 0 30px 80px rgba(0,0,0,.28);
+    padding: 14px 14px 18px 14px;
+    overflow: auto;
+  }
+  .sidebar.open{ transform: translateX(0); }
 
-    .sb-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding: 8px 4px 12px 4px; }
-    .sb-title{ color:#fff; font-weight:1000; font-size:20px; line-height:1.1; margin:2px 0 0 0; }
-    .sb-sub{ color:rgba(255,255,255,.65); font-weight:800; font-size:12px; margin-top:4px; }
-    .sb-close{
-      width:44px; height:44px;
-      border:none; border-radius: 16px;
-      cursor:pointer;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.12);
-      color:#fff;
-      display:grid; place-items:center;
-      font-size:18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-    }
-    .sb-close:active{ transform: scale(.98); }
-    .sb-divider{ height:1px; background: rgba(255,255,255,.08); margin: 10px 0 14px 0; }
-    .sb-links{ display:flex; flex-direction:column; gap:12px; }
-    .sidebar a{
-      display:flex; align-items:center; gap:12px;
-      padding: 14px 14px;
-      border-radius: 16px;
-      color: rgba(255,255,255,.92);
-      text-decoration:none;
-      font-weight: 1000;
-      font-size: 15px;
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-      transition:.18s;
-      margin:0;
-    }
-    .sidebar a:hover{
-      background: rgba(255,255,255,.10);
-      border-color: rgba(255,255,255,.16);
-      transform: translateY(-1px);
-    }
-    .sb-ic{
-      width:34px; height:34px;
-      border-radius: 12px;
-      display:grid; place-items:center;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.10);
-      font-size: 16px;
-      flex: 0 0 auto;
-    }
+  .sb-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding: 8px 4px 12px 4px; }
+  .sb-title{ color:#fff; font-weight:1000; font-size:20px; line-height:1.1; margin:2px 0 0 0; }
+  .sb-sub{ color:rgba(255,255,255,.65); font-weight:800; font-size:12px; margin-top:4px; }
+  .sb-close{
+    width:44px; height:44px;
+    border:none; border-radius: 16px;
+    cursor:pointer;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.12);
+    color:#fff;
+    display:grid; place-items:center;
+    font-size:18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  }
+  .sb-close:active{ transform: scale(.98); }
+  .sb-divider{ height:1px; background: rgba(255,255,255,.08); margin: 10px 0 14px 0; }
+  .sb-links{ display:flex; flex-direction:column; gap:12px; }
+  .sidebar a{
+    display:flex; align-items:center; gap:12px;
+    padding: 14px 14px;
+    border-radius: 16px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    font-weight: 1000;
+    font-size: 15px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    transition:.18s;
+    margin:0;
+  }
+  .sidebar a:hover{
+    background: rgba(255,255,255,.10);
+    border-color: rgba(255,255,255,.16);
+    transform: translateY(-1px);
+  }
+  .sb-ic{
+    width:34px; height:34px;
+    border-radius: 12px;
+    display:grid; place-items:center;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.10);
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
 
-    .main-container{
-      width: 100%;
-      max-width: none;
-      margin: 0;
-      padding: 12px 18px;
-    }
-    @media (min-width:1200px){
-      .main-container{ padding: 14px 22px; }
-    }
+  .main-container{
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 12px 18px;
+  }
+  @media (min-width:1200px){
+    .main-container{ padding: 14px 22px; }
+  }
 
-    .filter-wrapper{
-      background: rgba(255,255,255,.88);
-      border: 1px solid rgba(229,231,235,.9);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      border-radius: var(--r18);
-      margin-bottom: 14px;
-      width: 100%;
-    }
-    .filter-grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      align-items: end;
-    }
+  .filter-wrapper{
+    background: rgba(255,255,255,.88);
+    border: 1px solid rgba(229,231,235,.9);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    border-radius: var(--r18);
+    margin-bottom: 14px;
+    width: 100%;
+  }
+  .filter-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    align-items: end;
+  }
 
-    label{ font-size: 12px; font-weight: 900; color: var(--muted); display:block; margin-bottom: 6px; }
-    input, select{
-      width: 100%;
-      padding: 10px 12px;
-      margin: 0;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      outline:none;
-      box-shadow: 0 1px 0 rgba(0,0,0,.02);
-    }
-    input:focus, select:focus{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
-    }
+  label{ font-size: 12px; font-weight: 900; color: var(--muted); display:block; margin-bottom: 6px; }
+  input, select{
+    width: 100%;
+    padding: 10px 12px;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    outline:none;
+    box-shadow: 0 1px 0 rgba(0,0,0,.02);
+  }
+  input:focus, select:focus{
+    border-color: rgba(37,99,235,.55);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+  }
 
-    .date-range-box{
-      display:flex; gap:8px;
-      background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(37,99,235,.02));
-      padding:10px; border-radius: 16px;
-      border: 1px solid rgba(37,99,235,.18);
-    }
-    .date-range-box input{ border: 1px solid rgba(229,231,235,.9); border-radius: 14px; padding: 10px 10px; font-size:12px; }
+  .date-range-box{
+    display:flex; gap:8px;
+    background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(37,99,235,.02));
+    padding:10px; border-radius: 16px;
+    border: 1px solid rgba(37,99,235,.18);
+  }
+  .date-range-box input{ border: 1px solid rgba(229,231,235,.9); border-radius: 14px; padding: 10px 10px; font-size:12px; }
 
-    .profit-box{
-      background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1));
-      color:#fff; padding:12px; border-radius: 18px;
-      text-align:center; font-weight: 1000;
-      box-shadow: var(--shadow2);
-    }
-    #displayTotalProfit{ font-size:16px; }
+  .profit-box{
+    background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1));
+    color:#fff; padding:12px; border-radius: 18px;
+    text-align:center; font-weight: 1000;
+    box-shadow: var(--shadow2);
+  }
+  #displayTotalProfit{ font-size:16px; }
 
-    .history-card{
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(229,231,235,.9);
-      padding: 14px;
-      border-radius: var(--r18);
-      box-shadow: var(--shadow);
-      margin-top: 14px;
-      overflow: hidden;
-      width: 100%;
-    }
-    .history-card h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
+  .history-card{
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 14px;
+    border-radius: var(--r18);
+    box-shadow: var(--shadow);
+    margin-top: 14px;
+    overflow: hidden;
+    width: 100%;
+  }
+  .history-card h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
 
-    .table-container{
-      width: 100%;
-      overflow-x: auto;
-      margin-top: 10px;
-      background: #fff;
-      border-radius: 16px;
-      border: 1px solid rgba(229,231,235,.9);
-    }
-    table{
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-    table th, table td{
-      border-bottom: 1px solid rgba(229,231,235,.8);
-      padding: 12px 10px;
-      text-align: center;
-      font-weight: 1000;
-    }
-    table th{
-      background: linear-gradient(180deg, #0f172a, #111827);
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      font-size: 13px;
-      font-weight: 1000;
-      border-bottom: 1px solid rgba(0,0,0,.2);
-    }
-    tbody tr:hover{ background: rgba(37,99,235,.06); }
+  .table-container{
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(229,231,235,.9);
+  }
+  table{
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  table th, table td{
+    border-bottom: 1px solid rgba(229,231,235,.8);
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 1000;
+  }
+  table th{
+    background: linear-gradient(180deg, #0f172a, #111827);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 13px;
+    font-weight: 1000;
+    border-bottom: 1px solid rgba(0,0,0,.2);
+  }
+  tbody tr:hover{ background: rgba(37,99,235,.06); }
 
-    .col-no{ background-color: #f1f5f9; font-weight: 1000; }
-    .col-date{ background-color: #fff7ed; }
-    .col-name{ background-color: #eff6ff; font-weight: 1000; }
+  .col-no{ background-color: #f1f5f9; font-weight: 1000; }
+  .col-date{ background-color: #fff7ed; }
+  .col-name{ background-color: #eff6ff; font-weight: 1000; }
 
-    .col-outamt{ background-color:#ffffff; color:#0f172a; font-weight:1000; }
-    .col-sellamt{ background-color:#ffffff; color:#d9480f; font-weight:1000; }
-    .col-cash{ background-color: #f0fdf4; color: #166534; font-weight: 1000; }
+  .col-outamt{ background-color:#ffffff; color:#0f172a; font-weight:1000; }
+  .col-sellamt{ background-color:#ffffff; color:#d9480f; font-weight:1000; }
+  .col-cash{ background-color: #f0fdf4; color: #166534; font-weight: 1000; }
 
-    .action-btn{
-      padding: 8px 10px; border: none; border-radius: 12px;
-      cursor:pointer; color:#fff; margin:2px;
-      font-weight: 1000; font-size: 12px;
-      box-shadow: var(--shadow2);
-      transition:.15s;
-    }
-    .action-btn:active{ transform: scale(.99); }
-    .btn-edit-row{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
-    .btn-pay-row{ background: linear-gradient(135deg, rgba(124,58,237,1), rgba(168,85,247,1)); }
-    .btn-del-row{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); }
+  .action-btn{
+    padding: 8px 10px; border: none; border-radius: 12px;
+    cursor:pointer; color:#fff; margin:2px;
+    font-weight: 1000; font-size: 12px;
+    box-shadow: var(--shadow2);
+    transition:.15s;
+  }
+  .action-btn:active{ transform: scale(.99); }
+  .btn-edit-row{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+  .btn-pay-row{ background: linear-gradient(135deg, rgba(124,58,237,1), rgba(168,85,247,1)); }
+  .btn-del-row{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); }
 
-    .modal{
-      display:none;
-      position: fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background: rgba(0,0,0,.60);
-      z-index: 100;
-      justify-content:center;
-      align-items:center;
-      padding: 16px;
-    }
-    .modal-content{
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(229,231,235,.9);
-      padding: 16px;
-      border-radius: 18px;
-      width: 98%;
-      max-width: 1100px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 40px 120px rgba(0,0,0,.25);
-    }
-    .modal-content h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
+  .modal{
+    display:none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,.60);
+    z-index: 100;
+    justify-content:center;
+    align-items:center;
+    padding: 16px;
+  }
+  .modal-content{
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 16px;
+    border-radius: 18px;
+    width: 98%;
+    max-width: 1100px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 120px rgba(0,0,0,.25);
+  }
+  .modal-content h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
 
-    .form-box{
-      background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.01));
-      border: 1px solid rgba(229,231,235,.9);
-      padding: 14px;
-      border-radius: 16px;
-      margin-bottom: 14px;
-    }
-    .form-title{
-      font-size: 13px; font-weight:1000;
-      color:#0f172a;
-      margin-bottom: 10px;
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      padding-bottom: 8px;
-    }
+  .form-box{
+    background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.01));
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 14px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+  .form-title{
+    font-size: 13px; font-weight:1000;
+    color:#0f172a;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(229,231,235,.9);
+    padding-bottom: 8px;
+  }
 
-    #mainPersonSelect option:nth-child(even){ background-color: #f2f2f2; }
-    #mainPersonSelect option:nth-child(odd){ background-color: #ffffff; }
+  #mainPersonSelect option:nth-child(even){ background-color: #f2f2f2; }
+  #mainPersonSelect option:nth-child(odd){ background-color: #ffffff; }
 
-    .save-btn{
-      background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
-      color: white;
-      border:none;
-      padding: 12px;
-      width: 100%;
-      border-radius: 16px;
-      font-weight: 1000;
-      cursor:pointer;
-      margin-top: 16px;
-      box-shadow: var(--shadow2);
-    }
-    .cancel-btn{
-      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
-      color: white;
-      border:none;
-      padding: 12px;
-      width: 100%;
-      border-radius: 16px;
-      font-weight: 1000;
-      cursor:pointer;
-      margin-top: 10px;
-      box-shadow: var(--shadow2);
-    }
-    .ok-btn{
-      background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1));
-      color: #111827;
-      border:none;
-      padding: 12px;
-      width: 100%;
-      border-radius: 16px;
-      font-weight: 1000;
-      cursor:pointer;
-      margin-top: 10px;
-      box-shadow: var(--shadow2);
-    }
-    .close-link{
-      display:block;
-      text-align:center;
-      margin-top: 12px;
-      color: var(--muted);
-      cursor:pointer;
-      text-decoration: underline;
-      font-size: 13px;
-      font-weight: 800;
-    }
+  .save-btn{
+    background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
+    color: white;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 16px;
+    box-shadow: var(--shadow2);
+  }
+  .cancel-btn{
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+    color: white;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 10px;
+    box-shadow: var(--shadow2);
+  }
+  .ok-btn{
+    background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1));
+    color: #111827;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 10px;
+    box-shadow: var(--shadow2);
+  }
+  .close-link{
+    display:block;
+    text-align:center;
+    margin-top: 12px;
+    color: var(--muted);
+    cursor:pointer;
+    text-decoration: underline;
+    font-size: 13px;
+    font-weight: 800;
+  }
 
-    .pagination-bar{
-      padding: 12px 10px;
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 16px;
-      margin-top: 10px;
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      box-shadow: 0 2px 10px rgba(15,23,42,.06);
-    }
-    .pager{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .page-btn{
-      border: 1px solid rgba(229,231,235,.9);
-      background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
-      color: #0f172a;
-      padding: 8px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight: 1000;
-      min-width: 42px;
-      text-align:center;
-      transition:.15s;
-      user-select:none;
-    }
-    .page-btn:hover{ transform: translateY(-1px); }
-    .page-btn.active{
-      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
-      border-color: rgba(37,99,235,.6);
-      color:#fff;
-    }
-    .page-btn.disabled{ opacity:.5; cursor:not-allowed; transform:none; }
-    .page-ellipsis{ padding: 8px 6px; color: var(--muted); font-weight: 1000; }
-    .page-size{ margin-left:auto; display:flex; align-items:center; gap: 8px; }
-    .page-size select{
-      padding: 8px 10px;
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 14px;
-      font-size: 13px;
-      background: #fff;
-      font-weight: 900;
-      width: 90px;
-    }
+  .pagination-bar{
+    padding: 12px 10px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 16px;
+    margin-top: 10px;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(15,23,42,.06);
+  }
+  .pager{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .page-btn{
+    border: 1px solid rgba(229,231,235,.9);
+    background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
+    color: #0f172a;
+    padding: 8px 12px;
+    border-radius: 14px;
+    cursor:pointer;
+    font-weight: 1000;
+    min-width: 42px;
+    text-align:center;
+    transition:.15s;
+    user-select:none;
+  }
+  .page-btn:hover{ transform: translateY(-1px); }
+  .page-btn.active{
+    background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
+    border-color: rgba(37,99,235,.6);
+    color:#fff;
+  }
+  .page-btn.disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+  .page-ellipsis{ padding: 8px 6px; color: var(--muted); font-weight: 1000; }
+  .page-size{ margin-left:auto; display:flex; align-items:center; gap: 8px; }
+  .page-size select{
+    padding: 8px 10px;
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 14px;
+    font-size: 13px;
+    background: #fff;
+    font-weight: 900;
+    width: 90px;
+  }
 
-    .due-item{
-      background:#fff;
-      padding:10px 10px;
-      border:1px solid rgba(229,231,235,.9);
-      margin-top:8px;
-      display:flex;
-      justify-content:space-between;
-      cursor:pointer;
-      border-radius: 14px;
-      font-weight: 900;
-      color:#0f172a;
-      box-shadow: 0 2px 10px rgba(15,23,42,.04);
-    }
-    .due-item:hover{ background: rgba(37,99,235,.04); }
+  .due-item{
+    background:#fff;
+    padding:10px 10px;
+    border:1px solid rgba(229,231,235,.9);
+    margin-top:8px;
+    display:flex;
+    justify-content:space-between;
+    cursor:pointer;
+    border-radius: 14px;
+    font-weight: 900;
+    color:#0f172a;
+    box-shadow: 0 2px 10px rgba(15,23,42,.04);
+  }
+  .due-item:hover{ background: rgba(37,99,235,.04); }
 
-    /* =========================
-       ✅ Delivery (FULL PAGE SYSTEM) - SMALLER UI
-       ========================= */
-    .delivery-page{
-      display:none;
-      position: fixed;
-      inset: 0;
-      z-index: 120;
-      background:
-        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
-        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
-        var(--bg);
-      padding-top: var(--topbar-h);
-      overflow: auto;
-    }
-    .delivery-page-inner{
-      padding: 10px 12px;
-      width: 100%;
-      max-width: none;
-      margin: 0;
-    }
-    @media (min-width:1200px){
-      .delivery-page-inner{ padding: 12px 18px; }
-    }
-
-    .delivery-headline{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-      background: rgba(255,255,255,.88);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 16px;
-      padding: 10px 10px;
-      box-shadow: var(--shadow2);
-    }
-    .delivery-person{
-      font-weight: 1000;
-      color: #2563eb;
-      font-size: 13px;
-    }
-    .delivery-meta{
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      flex-wrap: wrap;
-    }
-    .meta-box{
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      padding: 6px 8px;
-      background:#fff;
-      border:1px solid rgba(229,231,235,.9);
-      border-radius: 12px;
-      font-weight: 900;
-    }
-    .meta-box label{
-      margin:0;
-      font-size: 10px;
-      font-weight: 1000;
-      color: var(--muted);
-    }
-    .meta-box input{
-      width: 150px;
-      padding: 5px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 900;
-    }
-
-    .delivery-actions{
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      margin-left:auto;
-    }
-    .mini-btn{
-      border:none;
-      cursor:pointer;
-      font-weight:1000;
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-size: 12px;
-      box-shadow: var(--shadow2);
-      display:flex;
-      align-items:center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-    .mini-btn:active{ transform: scale(.99); }
-    .mini-save{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); color:#fff; }
-    .mini-pdf{ background: linear-gradient(135deg, rgba(16,185,129,1), rgba(34,197,94,1)); color:#fff; }
-
-    .delivery-card{
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 10px;
-      overflow: hidden;
-    }
-
-    .delivery-table-wrap{
-      width: 100%;
-      max-height: 72vh;
-      overflow: auto;
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 14px;
-      background: #fff;
-    }
-
-    .delivery-table{
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1120px;
-      font-size: 10px;          /* ✅ smaller */
-      white-space: nowrap;
-    }
-    .delivery-table th, .delivery-table td{
-      border: 1px solid rgba(229,231,235,.95);
-      padding: 4px 4px;         /* ✅ smaller */
-      text-align: center;
-      vertical-align: middle;
-      font-weight: 1000;
-      line-height: 1.05;
-    }
-
-    .delivery-table thead th{
-      background: #ffffff !important;
-      color:#0f172a !important;
-      position: sticky;
-      z-index: 50;
-      font-size: 10px;          /* ✅ smaller */
-      font-weight: 1000;
-      padding: 7px 4px;         /* ✅ smaller */
-      box-shadow: 0 2px 0 rgba(15,23,42,.08);
-      background-clip: padding-box;
-    }
-    .delivery-table thead tr:first-child th{
-      top: 0;
-      z-index: 60;
-      height: var(--del-head-row1);
-    }
-    .delivery-table thead tr:nth-child(2) th{
-      top: var(--del-head-row1);
-      background: #f8fafc !important;
-      z-index: 55;
-      letter-spacing:.2px;
-    }
-
-    .delivery-table thead th:nth-child(2),
-    .delivery-table thead th:nth-child(3),
-    .delivery-table tbody td:nth-child(2),
-    .delivery-table tbody td:nth-child(3),
-    .delivery-table tfoot td:nth-child(2),
-    .delivery-table tfoot td:nth-child(3){
-      background: rgba(59,130,246,.10);
-    }
-    .delivery-table thead th:nth-child(4),
-    .delivery-table thead th:nth-child(5),
-    .delivery-table tbody td:nth-child(4),
-    .delivery-table tbody td:nth-child(5),
-    .delivery-table tfoot td:nth-child(4),
-    .delivery-table tfoot td:nth-child(5){
-      background: rgba(34,197,94,.10);
-    }
-
-    .delivery-table tbody tr:hover td{
-      background: rgba(99,102,241,.14) !important;
-    }
-    .delivery-table tbody tr:hover{
-      outline: 2px solid rgba(99,102,241,.28);
-      outline-offset: -2px;
-    }
-
-    .pkg-cell{
-      text-align:left !important;
-      font-weight: 1000;
-      color: #0f172a;
-      background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
-      min-width: 240px;         /* ✅ smaller */
-      max-width: 330px;
-      white-space: normal;
-      word-break: break-word;
-    }
-    .pkg-cell *{ color: inherit; }
-    .pkg-sub{
-      display:block;
-      font-size: 9px;
-      font-weight: 900;
-      color: rgba(15,23,42,.62);
-      margin-top: 2px;
-    }
-    .serial-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width: 24px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(37,99,235,.12);
-      border: 1px solid rgba(37,99,235,.22);
-      color: #1d4ed8;
-      font-size: 9px;           /* ✅ smaller */
-      font-weight: 1000;
-      margin-right: 6px;
-    }
-
-    .qty-inp{
-      width: 62px;              /* ✅ smaller */
-      padding: 5px 5px;
-      border-radius: 10px;
-      border: 1px solid rgba(229,231,235,.95);
-      font-weight: 1000;
-      font-size: 10px;          /* ✅ smaller */
-      outline: none;
-      text-align: center;
-      color: rgba(15,23,42,.92);
-      background: rgba(255,255,255,.96);
-      box-shadow: none;
-    }
-    .qty-inp.is-zero{ color: rgba(15,23,42,.18); }
-    .qty-inp:focus{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.10);
-    }
-
-    .sellpcs-cell{
-      font-weight: 1000;
-      color:#065f46;
-      background: rgba(16,185,129,.08);
-      font-size: 10px;
-    }
-    .money-cell{
-      font-weight: 1000;
-      color:#b42318;
-      background: rgba(239,68,68,.08);
-      font-size: 10px;
-    }
-
-    .delivery-table tfoot td{
-      position: sticky;
-      bottom: 0;
-      z-index: 40;
-      background: #fff;
-      font-weight: 1000;
-      border-top: 2px solid rgba(15,23,42,.12);
-      background-clip: padding-box;
-    }
-    .totals-label{
-      text-align:left !important;
-      background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
-      font-size: 10px;
-    }
-    .tot-sellpcs{
-      background: rgba(16,185,129,.12);
-      color:#065f46;
-      font-size: 10px;
-    }
-    .tot-money{
-      background: rgba(239,68,68,.12);
-      color:#b42318;
-      font-size: 10px;
-    }
-
-    .delivery-close-wrap{
-      margin-top: 10px;
-      display:flex;
-      justify-content:center;
-    }
-    .close-small{
-      border:none;
-      cursor:pointer;
-      font-weight:1000;
-      border-radius: 14px;
-      padding: 9px 14px;
-      font-size: 12px;
-      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
-      color:#fff;
-      box-shadow: var(--shadow2);
-      min-width: 160px;
-      text-align:center;
-    }
-    .close-small:active{ transform: scale(.99); }
-
-    @media (max-width:520px){
-      .nav-buttons .btn{ flex:1; justify-content:center; }
-      .navbar{ padding: 10px 12px; }
-      .main-container{ padding: 10px 10px; }
-      .form-box{ padding: 10px; }
-      .delivery-page-inner{ padding: 10px 10px; }
-      .delivery-table{ min-width: 1060px; }
-      .delivery-table-wrap{ max-height: 70vh; }
-      .qty-inp{ width: 56px; }
-      .pkg-cell{ max-width: 300px; min-width: 220px; }
-    }
-
-    /* ✅ PDF: only hide buttons (keep everything else same) */
-    .pdf-hide{ display:block; }
+  @media (max-width:520px){
+    .nav-buttons .btn{ flex:1; justify-content:center; }
+    .navbar{ padding: 10px 12px; }
+    .main-container{ padding: 10px 10px; }
+    .form-box{ padding: 10px; }
+  }
 </style>
 </head>
 
@@ -823,135 +524,75 @@
   </div>
 </div>
 
-<!-- ✅ HOME WRAP -->
-<div id="appHome">
-  <div class="main-container">
-    <div class="filter-wrapper">
-      <div class="filter-grid">
-        <div>
-          <label><i class="fas fa-calendar-alt"></i> তারিখ ফিল্টার (শুরু - শেষ):</label>
-          <div class="date-range-box">
-            <input type="date" id="filterStartDate" onchange="applyFilters()">
-            <input type="date" id="filterEndDate" onchange="applyFilters()">
-          </div>
+<div class="main-container">
+  <div class="filter-wrapper">
+    <div class="filter-grid">
+      <div>
+        <label><i class="fas fa-calendar-alt"></i> তারিখ ফিল্টার (শুরু - শেষ):</label>
+        <div class="date-range-box">
+          <input type="date" id="filterStartDate" onchange="applyFilters()">
+          <input type="date" id="filterEndDate" onchange="applyFilters()">
         </div>
-        <div>
-          <label><i class="fas fa-user"></i> ব্যক্তির নাম:</label>
-          <select id="filterPerson" onchange="applyFilters()"></select>
-        </div>
-        <div class="profit-box">
-          <div style="font-size: 12px; opacity: 0.9;">মোট লাভ</div>
-          <span id="displayTotalProfit">৳0</span>
-        </div>
+      </div>
+      <div>
+        <label><i class="fas fa-user"></i> ব্যক্তির নাম:</label>
+        <select id="filterPerson" onchange="applyFilters()"></select>
+      </div>
+      <div class="profit-box">
+        <div style="font-size: 12px; opacity: 0.9;">মোট লাভ</div>
+        <span id="displayTotalProfit">৳0</span>
       </div>
     </div>
+  </div>
 
-    <div class="history-card">
-      <h3>লেনদেন রিপোর্ট</h3>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>নম্বর</th>
-              <th>তারিখ</th>
-              <th>নাম</th>
-              <th>বহির পণ্য (টাকা)</th>
-              <th>সেল পণ্য (টাকা)</th>
-              <th>জমা (টাকা)</th>
-              <th>একশন</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody"></tbody>
-        </table>
-      </div>
+  <div class="history-card">
+    <h3>লেনদেন রিপোর্ট</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>নম্বর</th>
+            <th>তারিখ</th>
+            <th>নাম</th>
+            <th>বহির পণ্য (টাকা)</th>
+            <th>সেল পণ্য (টাকা)</th>
+            <th>জমা (টাকা)</th>
+            <th>একশন</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody"></tbody>
+      </table>
+    </div>
 
-      <div class="pagination-bar">
-        <div class="pager" id="pager"></div>
-        <div class="page-size">
-          <select id="pageSizeSelect" onchange="changePageSize()">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-          </select>
-        </div>
+    <div class="pagination-bar">
+      <div class="pager" id="pager"></div>
+      <div class="page-size">
+        <select id="pageSizeSelect" onchange="changePageSize()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ✅ DELIVERY FULL PAGE -->
-<div id="deliveryPage" class="delivery-page" aria-hidden="true">
-  <div class="delivery-page-inner">
-    <!-- ✅ Print/PDF area (buttons are outside / hidden in pdf) -->
-    <div id="deliveryPrintArea" class="delivery-card">
-      <div class="delivery-headline">
-        <div id="displaySelectedPerson" class="delivery-person"></div>
-
-        <div class="delivery-meta">
-          <div class="meta-box">
-            <label>তারিখ</label>
-            <input type="date" id="deliveryDate">
-          </div>
-        </div>
-
-        <!-- ✅ Save + PDF one line (small) -->
-        <div class="delivery-actions pdf-hide">
-          <button class="mini-btn mini-save" onclick="saveDeliverySmart()"><i class="fas fa-save"></i> Save</button>
-          <button class="mini-btn mini-pdf" onclick="downloadDeliveryPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-        </div>
-      </div>
-
-      <div class="form-box" style="margin-bottom:0;">
-        <div class="form-title" style="margin-bottom:8px;">ডেলিভারি / ফেরত (টেবিল)</div>
-
-        <div class="delivery-table-wrap">
-          <table class="delivery-table">
-            <thead>
-              <tr>
-                <th rowspan="2" style="text-align:left;">প্যাকেজের নাম</th>
-                <th colspan="2">বহির পণ্য</th>
-                <th colspan="2">ফেরত পণ্য</th>
-                <th rowspan="2">সেল পিস</th>
-                <th rowspan="2">টাকা</th>
-              </tr>
-              <tr>
-                <th>কেস</th>
-                <th>পিস</th>
-                <th>কেস</th>
-                <th>পিস</th>
-              </tr>
-            </thead>
-            <tbody id="deliveryPkgTbody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="totals-label">মোট</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="tot-sellpcs" id="totalSellPcsCell">0</td>
-                <td class="tot-money" id="totalMoneyCell">৳0.00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ✅ Close button centered bottom (small) -->
-    <div class="delivery-close-wrap pdf-hide">
-      <button class="close-small" onclick="closeDeliveryPage()">বন্ধ করুন</button>
-    </div>
-  </div>
-</div>
-
+<!-- Delivery Select Modal (থাকবে) -->
 <div id="deliverySelectModal" class="modal">
   <div class="modal-content" style="max-width: 400px;">
     <h3>ডেলিভারি গ্রহীতা</h3>
     <select id="mainPersonSelect"></select>
     <button class="save-btn" onclick="startDelivery()">পরবর্তী</button>
     <button class="cancel-btn" onclick="closeModal('deliverySelectModal')">বাতিল করুন</button>
+  </div>
+</div>
+
+<!-- আগের deliveryMainModal রেখে দিলাম (এখন আর ব্যবহার হবে না) -->
+<div id="deliveryMainModal" class="modal">
+  <div class="modal-content">
+    <h3>এই মোডাল আর ব্যবহার হবে না</h3>
+    <span class="close-link" onclick="closeModal('deliveryMainModal')">বন্ধ</span>
   </div>
 </div>
 
@@ -987,7 +628,6 @@
   </div>
 </div>
 
-<!-- ✅ NEW: Person List Modal (Edit + Hide) -->
 <div id="personListModal" class="modal">
   <div class="modal-content" style="max-width: 620px;">
     <h3>Person List</h3>
@@ -1016,13 +656,9 @@
   let activePaymentGroupKey = null;
   let allTransactions = [];
 
-  let deliveryRows = [];
   let currentCashData = 0;
   let currentDuesData = [];
   let currentEditingGroupKey = null;
-
-  /* ✅ delivery group id so same person+date can have multiple separate transactions */
-  let currentDeliveryGroupId = null;
 
   let currentPage = 1;
   let pageSize = 10;
@@ -1030,7 +666,6 @@
 
   let editingDueIndex = null;
 
-  /* ✅ NEW: persons cache with keys */
   let personsCache = []; // [{key, name}]
 
   const formatDate = (dateStr) => {
@@ -1045,24 +680,6 @@
     const m = String(d.getMonth()+1).padStart(2,'0');
     const da = String(d.getDate()).padStart(2,'0');
     return `${y}-${m}-${da}`;
-  };
-
-  const safeNum = (v) => {
-    const n = parseInt(v, 10);
-    return isNaN(n) ? 0 : n;
-  };
-
-  const pcsFromCasePcs = (cases, pcs, caseQty) => {
-    const cq = parseInt(caseQty) || 1;
-    return (safeNum(cases) * cq) + safeNum(pcs);
-  };
-
-  const splitToCasePcs = (totalPcs, caseQty) => {
-    const cq = parseInt(caseQty) || 1;
-    const t = safeNum(totalPcs);
-    const c = cq ? Math.floor(t / cq) : 0;
-    const p = cq ? (t % cq) : t;
-    return { c, p };
   };
 
   /* =========================
@@ -1105,35 +722,14 @@
 
   window.openModal = (id) => {
     document.getElementById(id).style.display = 'flex';
-    // ✅ ensure list refresh when opening
     if (id === "personListModal") renderPersonListModal();
   };
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
   /* =========================
-     ✅ Delivery Full Page open/close
-     ========================= */
-  function openDeliveryPage(){
-    document.getElementById('appHome').style.display = 'none';
-    const dp = document.getElementById('deliveryPage');
-    dp.style.display = 'block';
-    dp.setAttribute('aria-hidden', 'false');
-    // scroll to top
-    try{ dp.scrollTop = 0; }catch(e){}
-    try{ window.scrollTo(0,0); }catch(e){}
-  }
-  window.closeDeliveryPage = () => {
-    const dp = document.getElementById('deliveryPage');
-    dp.style.display = 'none';
-    dp.setAttribute('aria-hidden', 'true');
-    document.getElementById('appHome').style.display = 'block';
-  };
-
-  /* =========================
      ✅ Person Hide (only website) - LocalStorage
      ========================= */
   const LS_HIDDEN_PERSONS = "hisab_hidden_person_keys_v1";
-
   function getHiddenPersonKeys(){
     try{
       const raw = localStorage.getItem(LS_HIDDEN_PERSONS);
@@ -1168,7 +764,6 @@
     document.getElementById('mainPersonSelect').innerHTML = optionsMain;
     document.getElementById('filterPerson').innerHTML = '<option value="">সকল ব্যক্তি</option>' + optionsMain;
 
-    // keep list modal synced
     renderPersonListModal();
   }
 
@@ -1227,56 +822,6 @@
     openModal('personModal');
   };
 
-  /* =========================
-     ✅ Input zero behavior
-     ✅ delivery table inputs use placeholder (no forced 0)
-     ========================= */
-  function setZeroClass(inp){
-    const isZero = String(inp.value).trim() === "0";
-    inp.classList.toggle('is-zero', isZero);
-  }
-
-  function bindZeroInput(inp){
-    if (!inp) return;
-
-    // ✅ skip auto-zero when data-skipzero="1"
-    if (inp.dataset.skipzero === "1") return;
-
-    if (inp.dataset.zeroBound === "1") return;
-    inp.dataset.zeroBound = "1";
-
-    if (inp.value === "" || inp.value == null) inp.value = "0";
-    setZeroClass(inp);
-
-    inp.addEventListener('focus', () => {
-      const keepZero = inp.dataset.keepzero === "1";
-      if (!keepZero && String(inp.value).trim() === "0") {
-        inp.value = "";
-        inp.classList.remove('is-zero');
-      } else {
-        try { inp.setSelectionRange(0, inp.value.length); } catch(e){}
-      }
-    });
-
-    inp.addEventListener('input', () => {
-      if (inp.value === "" || inp.value == null) {
-        inp.classList.remove('is-zero');
-        return;
-      }
-      setZeroClass(inp);
-    });
-
-    inp.addEventListener('blur', () => {
-      if (inp.value === "" || inp.value == null) inp.value = "0";
-      setZeroClass(inp);
-      inp.dataset.zeroPress = "0";
-    });
-  }
-
-  function attachZeroBehavior(){
-    document.querySelectorAll('input[type="number"]').forEach(bindZeroInput);
-  }
-
   // ✅ Persons
   let personsFirstLoad = true;
   onValue(ref(database, 'persons'), (snapshot) => {
@@ -1284,10 +829,7 @@
     snapshot.forEach(child => {
       personsCache.push({ key: child.key, name: child.val()?.name || "" });
     });
-
-    // keep stable order by name
     personsCache.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
-
     buildPersonOptions();
 
     if (personsFirstLoad) {
@@ -1335,11 +877,34 @@
   });
 
   /* =========================================================
-     ✅ Report rule (FIXED)
-     - "Sell money" shows when:
-        ✅ group has any Return
-        OR ✅ group has saleConfirmed (user confirmed even with Return=0)
+     ✅ NEW: Delivery opens in new window (full page)
      ========================================================= */
+  function makeNewGroupId(person, date){
+    return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
+
+  function openDeliveryWindow({ personName, date, groupId }){
+    const q = new URLSearchParams();
+    q.set("person", personName || "");
+    q.set("date", date || "");
+    q.set("groupId", groupId || "");
+    const url = `delivery-form.html?${q.toString()}`;
+    window.open(url, "_blank");
+  }
+
+  // ✅ Delivery start after person select
+  window.startDelivery = () => {
+    const s = document.getElementById('mainPersonSelect');
+    if(!s.value) return alert("লোক সিলেক্ট করুন");
+    const person = s.value;
+    const date = todayISO();
+    const gid = makeNewGroupId(person, date);
+
+    closeModal('deliverySelectModal');
+    openDeliveryWindow({ personName: person, date, groupId: gid });
+  };
+
+  // ✅ Report rule (FIXED) - আপনারই আগের মতো
   window.applyFilters = () => {
     currentPage = 1;
 
@@ -1386,7 +951,6 @@
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
       const totalPcs = parseInt(t.totalPcs) || 0;
 
-      // ✅ collect group confirm flag
       if (t.saleConfirmed === true) grouped[groupKey].saleConfirmed = true;
 
       if(hasFilter) {
@@ -1416,8 +980,6 @@
     Object.keys(grouped).forEach(k => {
       const g = grouped[k];
       g.sellAmt = (g.outAmt || 0) - (g.returnAmt || 0);
-
-      // ✅ FIXED RULE:
       g.displaySellAmt = ((g.returnPcs || 0) > 0 || g.saleConfirmed === true) ? g.sellAmt : 0;
     });
 
@@ -1459,7 +1021,8 @@
         <td class="col-cash">৳${(row.cash || 0).toFixed(2)}</td>
 
         <td>
-          <button class="action-btn btn-edit-row" onclick="reopenDeliveryForm('${groupKey}')"><i class="fas fa-file-invoice"></i> Form</button>
+          <!-- ✅ Changed: form opens new page -->
+          <button class="action-btn btn-edit-row" onclick="openDeliveryFormPage('${row.groupId}', '${row.name}', '${row.date}')"><i class="fas fa-file-invoice"></i> Form</button>
           <button class="action-btn btn-pay-row" onclick="openPaymentForm('${groupKey}')"><i class="fas fa-money-bill-wave"></i> পেমেন্ট</button>
           <button class="action-btn btn-del-row" onclick="deleteTransactionGroup('${groupKey}')"><i class="fas fa-trash"></i></button>
         </td>
@@ -1469,6 +1032,11 @@
     window.groupedData = grouped;
     renderPager(totalPages);
   }
+
+  // ✅ NEW: open existing group in full page
+  window.openDeliveryFormPage = (groupId, name, date) => {
+    openDeliveryWindow({ personName: name, date, groupId });
+  };
 
   window.changePageSize = () => {
     pageSize = parseInt(document.getElementById('pageSizeSelect').value, 10) || 10;
@@ -1523,369 +1091,72 @@
   }
 
   /* =========================
-     ✅ Delivery Table
+     ✅ Payment, Delete, Person Edit
      ========================= */
-  function getPkgSerial(p){
-    const v = p?.serial ?? p?.sl ?? p?.no ?? p?.order ?? p?.id;
-    const n = parseInt(v, 10);
-    return isNaN(n) ? null : n;
-  }
+  window.openPaymentForm = (groupKey) => {
+    activePaymentGroupKey = groupKey;
+    const group = window.groupedData[groupKey];
+    document.getElementById('paymentTitle').innerText = group.name + " - কালেকশন";
+    document.getElementById('cashReceivedInput').value = String(group.cash || 0);
+    currentDues = group.items[0]?.dues || [];
+    editingDueIndex = null;
+    renderDuesList();
+    openModal('paymentModal');
+  };
 
-  function buildDeliveryRowsFromPackages() {
-    deliveryRows = Object.values(packages)
-      .map(p => ({
-        pkgKey: p.key,
-        pkgName: p.name || "",
-        caseQty: parseInt(p.caseQty) || 1,
-        sellPrice: parseFloat(p.sellPrice) || 0,
-        stock: parseInt(p.stock) || 0,
-        serial: getPkgSerial(p),
+  window.addDueToList = () => {
+    const shop = document.getElementById('dueShopName').value.trim();
+    const amt = parseFloat(document.getElementById('dueAmount').value) || 0;
+    if(!shop || amt <= 0) return;
 
-        outCase: 0, outPcs: 0,
-        retCase: 0, retPcs: 0,
+    if (editingDueIndex !== null && currentDues[editingDueIndex]) {
+      currentDues[editingDueIndex] = { shop, amt };
+      editingDueIndex = null;
+    } else {
+      currentDues.push({ shop, amt });
+    }
 
-        outKey: null,
-        returnKey: null,
-        appliedSellPcs: 0,
+    document.getElementById('dueShopName').value = "";
+    document.getElementById('dueAmount').value = "0";
+    renderDuesList();
+  };
 
-        // ✅ NEW: user touched return inputs (even typing 0)
-        retTouched: false
-      }))
-      .sort((a,b) => {
-        const as = (a.serial == null) ? 999999 : a.serial;
-        const bs = (b.serial == null) ? 999999 : b.serial;
-        if (as !== bs) return as - bs;
-        return (a.pkgName || "").localeCompare(b.pkgName || "");
-      });
-  }
+  window.editDueItem = (idx) => {
+    if (!currentDues[idx]) return;
+    editingDueIndex = idx;
+    document.getElementById('dueShopName').value = currentDues[idx].shop || "";
+    document.getElementById('dueAmount').value = String(currentDues[idx].amt || 0);
+  };
 
-  function computeSellAndAmountAlways(r){
-    const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-    const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-    const sellPcs = Math.max(0, outTotal - retTotal);
-    const amtNum = sellPcs * (parseFloat(r.sellPrice)||0);
-    return { sellPcs: String(sellPcs), amt: "৳"+amtNum.toFixed(2) };
-  }
-
-  function updateTotalsLive(){
-    let totalSell = 0;
-    let totalMoney = 0;
-
-    deliveryRows.forEach(r => {
-      const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-      const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-      const sellPcs = Math.max(0, outTotal - retTotal);
-      totalSell += sellPcs;
-      totalMoney += sellPcs * (parseFloat(r.sellPrice)||0);
-    });
-
-    document.getElementById('totalSellPcsCell').innerText = String(totalSell);
-    document.getElementById('totalMoneyCell').innerText = "৳" + totalMoney.toFixed(2);
-  }
-
-  function renderDeliveryTable() {
-    const tb = document.getElementById('deliveryPkgTbody');
-    tb.innerHTML = "";
-
-    deliveryRows.forEach((r, idx) => {
-      const computed = computeSellAndAmountAlways(r);
-
-      const outCaseVal = r.outCase > 0 ? r.outCase : "";
-      const outPcsVal  = r.outPcs  > 0 ? r.outPcs  : "";
-      const retCaseVal = r.retCase > 0 ? r.retCase : "";
-      const retPcsVal  = r.retPcs  > 0 ? r.retPcs  : "";
-
-      tb.innerHTML += `
-        <tr>
-          <td class="pkg-cell">
-            ${r.serial != null ? `<span class="serial-badge">${r.serial}</span>` : ``}
-            ${r.pkgName || ""}
-            <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
-          </td>
-
-          <td><input class="qty-inp" type="number" min="0" value="${outCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="outCase"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${outPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="outPcs"></td>
-
-          <td><input class="qty-inp" type="number" min="0" value="${retCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retCase"></td>
-          <td><input class="qty-inp" type="number" min="0" value="${retPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retPcs"></td>
-
-          <td class="sellpcs-cell">
-            <span id="sellpcs-${idx}" style="min-width:24px; display:inline-block;">${computed.sellPcs}</span>
-          </td>
-
-          <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
-        </tr>
+  function renderDuesList() {
+    const cont = document.getElementById('dueListContainer');
+    cont.innerHTML = "";
+    currentDues.forEach((d, i) => {
+      cont.innerHTML += `
+        <div class="due-item" onclick="editDueItem(${i})">
+          <span>${d.shop}</span>
+          <span>৳${d.amt}</span>
+        </div>
       `;
     });
-
-    attachZeroBehavior();
-    bindLiveDeliveryInputs();
-    updateTotalsLive();
   }
 
-  let deliveryInputsBound = false;
-  function bindLiveDeliveryInputs(){
-    if (deliveryInputsBound) return;
-    deliveryInputsBound = true;
-
-    const tbody = document.getElementById('deliveryPkgTbody');
-    if (!tbody) return;
-
-    tbody.addEventListener('input', (e) => {
-      const el = e.target;
-      if (!el || el.tagName !== "INPUT") return;
-      if (el.type !== "number") return;
-
-      const idx = parseInt(el.dataset.idx, 10);
-      const field = el.dataset.field;
-      if (isNaN(idx) || !field || !deliveryRows[idx]) return;
-
-      if (field === "retCase" || field === "retPcs") {
-        const v = String(el.value ?? "").trim();
-        if (v !== "") deliveryRows[idx].retTouched = true; // "0" counts
-      }
-
-      deliveryRows[idx][field] = safeNum(el.value);
-
-      const { sellPcs, amt } = computeSellAndAmountAlways(deliveryRows[idx]);
-      const spEl = document.getElementById(`sellpcs-${idx}`);
-      const amEl = document.getElementById(`amt-${idx}`);
-      if (spEl) spEl.innerText = sellPcs;
-      if (amEl) amEl.innerText = amt;
-
-      updateTotalsLive();
-    });
-  }
+  window.savePaymentData = async () => {
+    const cash = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+    const items = window.groupedData[activePaymentGroupKey].items;
+    for(let item of items) {
+      await update(ref(database, `transactions/${item.key}`), { cashReceived: cash, dues: currentDues });
+    }
+    alert("পেমেন্ট আপডেট হয়েছে!");
+    closeModal('paymentModal');
+    applyFilters();
+  };
 
   function getPkgKeyByName(name) {
     const k = Object.keys(packages).find(x => (packages[x]?.name || "") === name);
     return k || null;
   }
 
-  function makeNewGroupId(person, date){
-    return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  }
-
-  window.startDelivery = () => {
-    const s = document.getElementById('mainPersonSelect');
-    if(!s.value) return alert("লোক সিলেক্ট করুন");
-    selectedPersonName = s.value;
-    currentEditingGroupKey = null;
-
-    deliveryInputsBound = false;
-
-    document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + selectedPersonName;
-    document.getElementById('deliveryDate').value = todayISO();
-
-    currentCashData = 0;
-    currentDuesData = [];
-
-    buildDeliveryRowsFromPackages();
-
-    currentDeliveryGroupId = makeNewGroupId(selectedPersonName, document.getElementById('deliveryDate').value || todayISO());
-
-    renderDeliveryTable();
-
-    closeModal('deliverySelectModal');
-
-    // ✅ open full page (not popup)
-    openDeliveryPage();
-  };
-
-  window.saveDeliverySmart = async () => {
-    const date = document.getElementById('deliveryDate').value || todayISO();
-    if(!selectedPersonName) return;
-
-    if (!currentDeliveryGroupId) currentDeliveryGroupId = makeNewGroupId(selectedPersonName, date);
-
-    if (currentEditingGroupKey) {
-      const g = window.groupedData[currentEditingGroupKey];
-      const existingGid = (g?.groupId || g?.items?.[0]?.groupId || "").trim();
-      if (existingGid) currentDeliveryGroupId = existingGid;
-    }
-
-    const saleConfirmed = deliveryRows.some(r => r.retTouched);
-
-    const retMode =
-      saleConfirmed ||
-      deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) ||
-      currentEditingGroupKey;
-
-    if (!retMode) {
-      try{
-        for (const r of deliveryRows) {
-          const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-          if (outTotal <= 0) continue;
-
-          const payload = {
-            groupId: currentDeliveryGroupId,
-            personName: selectedPersonName,
-            date,
-            type: "Out",
-            pkgName: r.pkgName,
-            totalPcs: outTotal,
-            pkgSellPrice: r.sellPrice,
-            amount: (outTotal * r.sellPrice).toFixed(2),
-            cashReceived: currentCashData,
-            dues: currentDuesData,
-            appliedSellPcs: r.appliedSellPcs || 0,
-
-            saleConfirmed: false
-          };
-
-          if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), payload);
-          else {
-            const pushed = await push(ref(database, 'transactions'), payload);
-            r.outKey = pushed.key;
-          }
-        }
-
-        applyFilters();
-        alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
-        closeDeliveryPage();
-      }catch(e){
-        alert(e.message);
-      }
-      return;
-    }
-
-    try{
-      for (const r of deliveryRows) {
-        const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
-        const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
-
-        if (outTotal <= 0 && retTotal <= 0 && !r.outKey && !r.returnKey) continue;
-
-        if (outTotal > 0) {
-          const outPayload = {
-            groupId: currentDeliveryGroupId,
-            personName: selectedPersonName,
-            date,
-            type: "Out",
-            pkgName: r.pkgName,
-            totalPcs: outTotal,
-            pkgSellPrice: r.sellPrice,
-            amount: (outTotal * r.sellPrice).toFixed(2),
-            cashReceived: currentCashData,
-            dues: currentDuesData,
-            appliedSellPcs: r.appliedSellPcs || 0,
-
-            saleConfirmed: saleConfirmed
-          };
-          if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), outPayload);
-          else {
-            const pushed = await push(ref(database, 'transactions'), outPayload);
-            r.outKey = pushed.key;
-          }
-        }
-
-        if (retTotal > 0) {
-          const retPayload = {
-            groupId: currentDeliveryGroupId,
-            personName: selectedPersonName,
-            date,
-            type: "Return",
-            pkgName: r.pkgName,
-            totalPcs: retTotal,
-            pkgSellPrice: r.sellPrice,
-            amount: (retTotal * r.sellPrice).toFixed(2),
-            cashReceived: currentCashData,
-            dues: currentDuesData,
-
-            saleConfirmed: saleConfirmed
-          };
-          if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
-          else {
-            const pushed = await push(ref(database, 'transactions'), retPayload);
-            r.returnKey = pushed.key;
-          }
-        } else if (r.returnKey) {
-          await remove(ref(database, `transactions/${r.returnKey}`));
-          r.returnKey = null;
-        }
-
-        const netSell = Math.max(0, outTotal - retTotal);
-
-        let oldApplied = 0;
-        if (r.outKey) {
-          const outSnap = await get(ref(database, `transactions/${r.outKey}`));
-          oldApplied = parseInt(outSnap.val()?.appliedSellPcs || 0) || 0;
-        } else {
-          oldApplied = parseInt(r.appliedSellPcs || 0) || 0;
-        }
-
-        const diff = netSell - oldApplied;
-        if (diff !== 0) {
-          const pkg = packages[r.pkgKey];
-          const currentStock = parseInt(pkg?.stock) || 0;
-          const newStock = currentStock - diff;
-          await update(ref(database, `packages/${r.pkgKey}`), { stock: newStock });
-
-          packages[r.pkgKey].stock = newStock;
-          r.stock = newStock;
-        }
-
-        if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), { appliedSellPcs: netSell, groupId: currentDeliveryGroupId, saleConfirmed });
-        r.appliedSellPcs = netSell;
-      }
-
-      applyFilters();
-      alert("✅ সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
-      closeDeliveryPage();
-    }catch(e){
-      alert(e.message);
-    }
-  };
-
-  window.reopenDeliveryForm = (groupKey) => {
-    const group = window.groupedData[groupKey];
-    selectedPersonName = group.name;
-    currentEditingGroupKey = groupKey;
-
-    deliveryInputsBound = false;
-
-    document.getElementById('displaySelectedPerson').innerText = "গ্রহীতা: " + group.name;
-    document.getElementById('deliveryDate').value = group.date;
-
-    currentCashData = group.cash || 0;
-    currentDuesData = group.items[0]?.dues || [];
-
-    currentDeliveryGroupId = (group.groupId || group.items[0]?.groupId || "").trim() || makeNewGroupId(group.name, group.date);
-
-    buildDeliveryRowsFromPackages();
-
-    const savedSaleConfirmed = group.items.some(x => x.saleConfirmed === true);
-
-    group.items.forEach(item => {
-      const pKey = getPkgKeyByName(item.pkgName);
-      if (!pKey) return;
-      const row = deliveryRows.find(x => x.pkgKey === pKey);
-      if (!row) return;
-
-      const tq = parseInt(item.totalPcs) || 0;
-      if ((item.type || "Out") === "Out") {
-        const sp = splitToCasePcs(tq, row.caseQty);
-        row.outCase = sp.c; row.outPcs = sp.p;
-        row.outKey = item.key;
-        row.appliedSellPcs = parseInt(item.appliedSellPcs || 0) || 0;
-      } else {
-        const sp = splitToCasePcs(tq, row.caseQty);
-        row.retCase = sp.c; row.retPcs = sp.p;
-        row.returnKey = item.key;
-      }
-
-      row.retTouched = savedSaleConfirmed;
-    });
-
-    renderDeliveryTable();
-
-    // ✅ open full page (not popup)
-    openDeliveryPage();
-  };
-
-  /* =========================================================
-     ✅ FIX: Delete group => Stock back correctly
-     ========================================================= */
   window.deleteTransactionGroup = async (groupKey) => {
     if(!confirm("মুছে ফেলতে চান?")) return;
     const items = window.groupedData[groupKey].items;
@@ -1917,69 +1188,7 @@
     applyFilters();
   };
 
-  window.openPaymentForm = (groupKey) => {
-    activePaymentGroupKey = groupKey;
-    const group = window.groupedData[groupKey];
-    document.getElementById('paymentTitle').innerText = group.name + " - কালেকশন";
-    document.getElementById('cashReceivedInput').value = String(group.cash || 0);
-    currentDues = group.items[0]?.dues || [];
-    editingDueIndex = null;
-    renderDuesList();
-    openModal('paymentModal');
-    attachZeroBehavior();
-  };
-
-  window.addDueToList = () => {
-    const shop = document.getElementById('dueShopName').value.trim();
-    const amt = parseFloat(document.getElementById('dueAmount').value) || 0;
-    if(!shop || amt <= 0) return;
-
-    if (editingDueIndex !== null && currentDues[editingDueIndex]) {
-      currentDues[editingDueIndex] = { shop, amt };
-      editingDueIndex = null;
-    } else {
-      currentDues.push({ shop, amt });
-    }
-
-    document.getElementById('dueShopName').value = "";
-    document.getElementById('dueAmount').value = "0";
-    renderDuesList();
-    attachZeroBehavior();
-  };
-
-  window.editDueItem = (idx) => {
-    if (!currentDues[idx]) return;
-    editingDueIndex = idx;
-    document.getElementById('dueShopName').value = currentDues[idx].shop || "";
-    document.getElementById('dueAmount').value = String(currentDues[idx].amt || 0);
-    attachZeroBehavior();
-  };
-
-  function renderDuesList() {
-    const cont = document.getElementById('dueListContainer');
-    cont.innerHTML = "";
-    currentDues.forEach((d, i) => {
-      cont.innerHTML += `
-        <div class="due-item" onclick="editDueItem(${i})">
-          <span>${d.shop}</span>
-          <span>৳${d.amt}</span>
-        </div>
-      `;
-    });
-  }
-
-  window.savePaymentData = async () => {
-    const cash = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
-    const items = window.groupedData[activePaymentGroupKey].items;
-    for(let item of items) {
-      await update(ref(database, `transactions/${item.key}`), { cashReceived: cash, dues: currentDues });
-    }
-    alert("পেমেন্ট আপডেট হয়েছে!");
-    closeModal('paymentModal');
-    applyFilters();
-  };
-
-  // ✅ NEW: Rename person everywhere in transactions (so old data stays usable)
+  // ✅ Rename person everywhere (আপনার আগের মতো)
   async function renamePersonEverywhere(oldName, newName){
     if (!oldName || !newName || oldName === newName) return;
 
@@ -2029,86 +1238,6 @@
     }
   };
 
-  /* =========================
-     ✅ PDF Download (NO DATA MISS)
-     - Clone deliveryPrintArea
-     - Replace inputs with text spans (so values never miss)
-     - Hide buttons automatically (we don't include them in clone anyway)
-     - Filename: Person + dd-mm-yyyy (slashes not allowed in filename)
-     ========================= */
-  function isoToDDMMYYYY(iso){
-    if(!iso) return "";
-    const [y,m,d] = iso.split("-");
-    return `${d}-${m}-${y}`;
-  }
-  function safeFileName(s){
-    return String(s || "").replace(/[\\/:*?"<>|]/g, "_").trim();
-  }
-
-  window.downloadDeliveryPDF = async () => {
-    try{
-      const person = selectedPersonName || "";
-      const iso = document.getElementById('deliveryDate').value || todayISO();
-      const dmy = isoToDDMMYYYY(iso);
-
-      const filename = safeFileName(`${person}${dmy}.pdf`);
-
-      const src = document.getElementById('deliveryPrintArea');
-      if(!src) return;
-
-      // ✅ clone
-      const clone = src.cloneNode(true);
-
-      // remove any pdf-hide blocks inside clone (buttons)
-      clone.querySelectorAll('.pdf-hide').forEach(el => el.remove());
-
-      // ✅ replace input elements with spans (ensures no missing values)
-      clone.querySelectorAll('input').forEach(inp => {
-        const span = document.createElement('span');
-        const isDate = (inp.type === "date");
-        const v = String(inp.value ?? "").trim();
-        span.textContent = isDate ? (v ? isoToDDMMYYYY(v) : "") : (v !== "" ? v : "");
-        span.style.display = "inline-block";
-        span.style.minWidth = inp.style.minWidth || "40px";
-        span.style.padding = "2px 6px";
-        span.style.border = "1px solid rgba(229,231,235,.95)";
-        span.style.borderRadius = "10px";
-        span.style.fontWeight = "1000";
-        span.style.fontSize = "10px";
-        span.style.background = "rgba(255,255,255,.96)";
-        span.style.textAlign = "center";
-        inp.replaceWith(span);
-      });
-
-      // ✅ place clone offscreen
-      const holder = document.createElement('div');
-      holder.style.position = "fixed";
-      holder.style.left = "-99999px";
-      holder.style.top = "0";
-      holder.style.width = "1120px"; // keep table width stable for pdf
-      holder.appendChild(clone);
-      document.body.appendChild(holder);
-
-      // ✅ generate
-      const opt = {
-        margin:       [6, 6, 6, 6],
-        filename:     filename,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak:    { mode: ['css', 'legacy'] }
-      };
-
-      await html2pdf().set(opt).from(clone).save();
-
-      // cleanup
-      holder.remove();
-    }catch(e){
-      alert(e.message || "PDF বানাতে সমস্যা হয়েছে");
-    }
-  };
-
-  setTimeout(attachZeroBehavior, 500);
 </script>
 </body>
 </html>
