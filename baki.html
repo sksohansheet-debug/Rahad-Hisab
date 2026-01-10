@@ -1,1305 +1,1216 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>বাকীর হিসাব - Hisab</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy & Sell - Hisab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <style>
-    :root{
-      --bg:#f5f7fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e5e7eb;
+<style>
+  /* আপনার দেয়া CSS - অপরিবর্তিত */
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e5e7eb;
 
-      --brand:#2563eb;
-      --brand2:#60a5fa;
+    --brand:#2563eb;
+    --brand2:#60a5fa;
 
-      --good:#16a34a;
-      --warn:#f59e0b;
-      --bad:#ef4444;
+    --good:#16a34a;
+    --bad:#ef4444;
+    --warn:#f59e0b;
 
-      --shadow: 0 10px 30px rgba(15,23,42,.08);
-      --shadow2: 0 2px 10px rgba(15,23,42,.08);
+    --shadow: 0 10px 30px rgba(15,23,42,.08);
+    --shadow2: 0 2px 10px rgba(15,23,42,.08);
 
-      --r14:14px;
-      --r18:18px;
+    --r12:12px;
+    --r16:16px;
+    --r18:18px;
 
-      --topbar-h: 80px;
+    --topbar-h: 106px;
+    --sb-w: 295px;
 
-      /* Sidebar width (like screenshot) */
-      --sb-w: 295px;
-    }
+    --del-head-row1: 40px;
+  }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
-        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
-        var(--bg);
-      padding-top: var(--topbar-h);
-      color: var(--text);
-    }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+      radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+      var(--bg);
+    padding-top: var(--topbar-h);
+    color: var(--text);
+  }
 
-    /* ===== Navbar ===== */
-    .navbar{
-      background: rgba(255,255,255,.86);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      box-shadow: 0 8px 30px rgba(15,23,42,.06);
-      padding: 14px 16px;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 10;
+  .page-loader{
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    transition: .22s ease;
+  }
+  .page-loader.hide{ opacity:0; pointer-events:none; }
+  .loader-card{
+    width: min(420px, 92vw);
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 18px;
+    box-shadow: 0 30px 120px rgba(15,23,42,.18);
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .loader-title{ font-weight: 1000; font-size: 15px; color:#0f172a; margin: 10px 0 4px 0; }
+  .loader-sub{ font-weight: 900; font-size: 12px; color: var(--muted); margin: 0; }
+  .spinner{
+    width: 54px; height: 54px; border-radius: 999px;
+    border: 6px solid rgba(37,99,235,.18);
+    border-top-color: rgba(37,99,235,1);
+    margin: 4px auto 10px auto;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
-    }
-    .menu-icon{
-      position:absolute;
-      left: 14px;
-      width:42px; height:42px;
-      display:grid;
-      place-items:center;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
-      color: var(--brand);
-      font-size: 20px;
-      cursor:pointer;
-      box-shadow: var(--shadow2);
-      user-select:none;
-    }
-    .navbar h1{
-      font-size: 18px;
-      margin:0;
-      font-weight: 1000;
-      color: #0f172a;
-      letter-spacing:.2px;
-    }
+  .navbar{
+    background: rgba(255,255,255,.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(229,231,235,.9);
+    box-shadow: 0 8px 30px rgba(15,23,42,.06);
+    padding: 10px 14px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+  }
+  .nav-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 10px; gap: 10px;
+  }
+  .menu-icon{
+    width:42px; height:42px;
+    display:grid; place-items:center;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+    color: var(--brand);
+    font-size: 20px;
+    cursor:pointer;
+    box-shadow: var(--shadow2);
+    user-select:none;
+  }
+  .navbar h1{
+    font-size: 18px; margin:0; font-weight: 900;
+    flex-grow:1; text-align:center; letter-spacing: .2px; color:#0f172a;
+  }
+  .nav-buttons{ display:flex; gap:10px; justify-content:center; }
+  .btn{
+    padding: 10px 14px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 900;
+    color: white;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    box-shadow: var(--shadow2);
+    transition: .15s;
+    white-space: nowrap;
+  }
+  .btn:active{ transform: scale(.99); }
+  .btn-person{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+  .btn-delivery{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); }
 
-    /* ===== Sidebar + overlay (like your screenshot) ===== */
-    .sidebar-overlay{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.35);
-      z-index: 80;
-      opacity:0;
-      pointer-events:none;
-      transition:.2s;
-    }
-    .sidebar-overlay.show{
-      opacity:1;
-      pointer-events:auto;
-    }
+  .sidebar-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,.35);
+    z-index: 80;
+    opacity:0; pointer-events:none;
+    transition:.2s;
+  }
+  .sidebar-overlay.show{ opacity:1; pointer-events:auto; }
 
-    .sidebar{
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: var(--sb-w);
-      height: 100%;
-      transform: translateX(-110%);
-      transition: .28s ease;
-      z-index: 90;
+  .sidebar{
+    position: fixed; top: 0; left: 0;
+    width: var(--sb-w); height: 100%;
+    transform: translateX(-110%);
+    transition: .28s ease;
+    z-index: 90;
+    background: linear-gradient(180deg, #0b1224 0%, #0f172a 45%, #0b1224 100%);
+    box-shadow: 0 30px 80px rgba(0,0,0,.28);
+    padding: 14px 14px 18px 14px;
+    overflow: auto;
+  }
+  .sidebar.open{ transform: translateX(0); }
 
-      background: linear-gradient(180deg, #0b1224 0%, #0f172a 45%, #0b1224 100%);
-      box-shadow: 0 30px 80px rgba(0,0,0,.28);
+  .sb-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding: 8px 4px 12px 4px; }
+  .sb-title{ color:#fff; font-weight:1000; font-size:20px; line-height:1.1; margin:2px 0 0 0; }
+  .sb-sub{ color:rgba(255,255,255,.65); font-weight:800; font-size:12px; margin-top:4px; }
+  .sb-close{
+    width:44px; height:44px;
+    border:none; border-radius: 16px;
+    cursor:pointer;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.12);
+    color:#fff;
+    display:grid; place-items:center;
+    font-size:18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  }
+  .sb-close:active{ transform: scale(.98); }
+  .sb-divider{ height:1px; background: rgba(255,255,255,.08); margin: 10px 0 14px 0; }
+  .sb-links{ display:flex; flex-direction:column; gap:12px; }
+  .sidebar a{
+    display:flex; align-items:center; gap:12px;
+    padding: 14px 14px;
+    border-radius: 16px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    font-weight: 1000;
+    font-size: 15px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    transition:.18s;
+    margin:0;
+  }
+  .sidebar a:hover{
+    background: rgba(255,255,255,.10);
+    border-color: rgba(255,255,255,.16);
+    transform: translateY(-1px);
+  }
+  .sb-ic{
+    width:34px; height:34px;
+    border-radius: 12px;
+    display:grid; place-items:center;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.10);
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
 
-      padding: 14px 14px 18px 14px;
-      overflow:auto;
-    }
-    .sidebar.open{ transform: translateX(0); }
+  .main-container{
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 12px 18px;
+  }
+  @media (min-width:1200px){
+    .main-container{ padding: 14px 22px; }
+  }
 
-    /* sidebar header */
-    .sb-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 12px;
-      padding: 8px 4px 12px 4px;
-    }
-    .sb-title{
-      color:#fff;
-      font-weight: 1000;
-      font-size: 20px;
-      line-height: 1.1;
-      margin: 2px 0 0 0;
-    }
-    .sb-sub{
-      color: rgba(255,255,255,.65);
-      font-weight: 800;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-    .sb-close{
-      width:44px; height:44px;
-      border:none;
-      border-radius: 16px;
-      cursor:pointer;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.12);
-      color:#fff;
-      display:grid;
-      place-items:center;
-      font-size: 18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-    }
-    .sb-close:active{ transform: scale(.98); }
+  .filter-wrapper{
+    background: rgba(255,255,255,.88);
+    border: 1px solid rgba(229,231,235,.9);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    border-radius: var(--r18);
+    margin-bottom: 14px;
+    width: 100%;
+  }
+  .filter-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    align-items: end;
+  }
 
-    .sb-divider{
-      height: 1px;
-      background: rgba(255,255,255,.08);
-      margin: 10px 0 14px 0;
-    }
+  label{ font-size: 12px; font-weight: 900; color: var(--muted); display:block; margin-bottom: 6px; }
+  input, select{
+    width: 100%;
+    padding: 10px 12px;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    outline:none;
+    box-shadow: 0 1px 0 rgba(0,0,0,.02);
+  }
+  input:focus, select:focus{
+    border-color: rgba(37,99,235,.55);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+  }
 
-    .sb-links{ display:flex; flex-direction:column; gap: 12px; }
+  .date-range-box{
+    display:flex; gap:8px;
+    background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(37,99,235,.02));
+    padding:10px; border-radius: 16px;
+    border: 1px solid rgba(37,99,235,.18);
+  }
+  .date-range-box input{ border: 1px solid rgba(229,231,235,.9); border-radius: 14px; padding: 10px 10px; font-size:12px; }
 
-    .sb-item{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      padding: 14px 14px;
-      border-radius: 16px;
+  .profit-box{
+    background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1));
+    color:#fff; padding:12px; border-radius: 18px;
+    text-align:center; font-weight: 1000;
+    box-shadow: var(--shadow2);
+  }
+  #displayTotalProfit{ font-size:16px; }
 
-      color: rgba(255,255,255,.92);
-      text-decoration:none;
-      font-weight: 1000;
-      font-size: 15px;
+  .history-card{
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 14px;
+    border-radius: var(--r18);
+    box-shadow: var(--shadow);
+    margin-top: 14px;
+    overflow: hidden;
+    width: 100%;
+  }
+  .history-card h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
 
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-      transition: .18s;
-    }
-    .sb-item:hover{
-      background: rgba(255,255,255,.10);
-      border-color: rgba(255,255,255,.16);
-      transform: translateY(-1px);
-    }
-    .sb-ic{
-      width:34px; height:34px;
-      border-radius: 12px;
-      display:grid;
-      place-items:center;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.10);
-      font-size: 16px;
-    }
+  .table-container{
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(229,231,235,.9);
+  }
+  table{
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  table th, table td{
+    border-bottom: 1px solid rgba(229,231,235,.8);
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 1000;
+  }
+  table th{
+    background: linear-gradient(180deg, #0f172a, #111827);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 13px;
+    font-weight: 1000;
+    border-bottom: 1px solid rgba(0,0,0,.2);
+  }
+  tbody tr:hover{ background: rgba(37,99,235,.06); }
 
-    /* ===== Main layout ===== */
-    .main-container { padding: 14px; max-width: 1200px; margin: 0 auto; }
+  .col-no{ background-color: #f1f5f9; font-weight: 1000; }
+  .col-date{ background-color: #fff7ed; }
+  .col-name{ background-color: #eff6ff; font-weight: 1000; }
 
-    /* ===== Card/Table ===== */
-    .table-card{
-      background: rgba(255,255,255,.90);
-      border: 1px solid rgba(229,231,235,.9);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative; /* ✅ NEW: loader overlay anchor */
-    }
+  .col-outamt{ background-color:#ffffff; color:#0f172a; font-weight:1000; }
+  .col-sellamt{ background-color:#ffffff; color:#d9480f; font-weight:1000; }
+  .col-cash{ background-color: #f0fdf4; color: #166534; font-weight: 1000; }
 
-    .table-header{
-      padding: 14px 14px;
-      background: rgba(255,255,255,.7);
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .table-header h3{
-      margin:0;
-      font-size: 15px;
-      font-weight: 1000;
-      color:#0f172a;
-    }
+  .action-btn{
+    padding: 8px 10px; border: none; border-radius: 12px;
+    cursor:pointer; color:#fff; margin:2px;
+    font-weight: 1000; font-size: 12px;
+    box-shadow: var(--shadow2);
+    transition:.15s;
+  }
+  .action-btn:active{ transform: scale(.99); }
+  .btn-edit-row{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); }
+  .btn-pay-row{ background: linear-gradient(135deg, rgba(124,58,237,1), rgba(168,85,247,1)); }
+  .btn-del-row{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); }
 
-    .add-baki-btn{
-      background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1));
-      color: #111827;
-      border:none;
-      padding: 10px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight: 1000;
-      transition:.15s;
-      box-shadow: var(--shadow2);
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-    .add-baki-btn:active{ transform: scale(.99); }
+  .modal{
+    display:none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,.60);
+    z-index: 100;
+    justify-content:center;
+    align-items:center;
+    padding: 16px;
+  }
+  .modal-content{
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 16px;
+    border-radius: 18px;
+    width: 98%;
+    max-width: 1100px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 120px rgba(0,0,0,.25);
+  }
+  .modal-content h3{ margin:0 0 10px 0; font-size:15px; font-weight:1000; color:#0f172a; }
 
-    /* ===== Filter Bar ===== */
-    .filter-bar{
-      padding: 12px 14px;
-      background: rgba(255,255,255,.75);
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      display:flex;
-      gap: 12px;
-      align-items:flex-end;
-      flex-wrap: wrap;
-    }
-    .filter-item{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-      min-width: 170px;
-    }
-    .filter-item label{
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 900;
-    }
-    .filter-item input, .filter-item select{
-      padding: 12px;
-      border: 1px solid rgba(229,231,235,.95);
-      border-radius: 14px;
-      font-size: 14px;
-      background:#fff;
-      font-family: inherit;
-      font-weight: 800;
-      outline:none;
-    }
-    .filter-item input:focus, .filter-item select:focus{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
-    }
+  .form-box{
+    background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.01));
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 14px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+  .form-title{
+    font-size: 13px; font-weight:1000;
+    color:#0f172a;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(229,231,235,.9);
+    padding-bottom: 8px;
+  }
 
-    .range-box{ min-width: 270px; }
-    .range-toggle{ cursor:pointer; background: #fff; }
-    .range-panel{ display:none; margin-top: 6px; gap: 10px; }
-    .range-panel.open{ display:flex; }
-    .range-panel input{ min-width: 0; width: 100%; }
+  #mainPersonSelect option:nth-child(even){ background-color: #f2f2f2; }
+  #mainPersonSelect option:nth-child(odd){ background-color: #ffffff; }
 
-    .total-due-box{
-      margin-left: auto;
-      background: rgba(37,99,235,.06);
-      border: 1px solid rgba(37,99,235,.18);
-      padding: 10px 12px;
-      border-radius: 16px;
-      font-weight: 1000;
-      color: #0f172a;
-      min-width: 220px;
-      text-align:center;
-      box-shadow: 0 2px 10px rgba(15,23,42,.05);
-    }
-    .total-due-box span{ color: #0d47a1; }
+  .save-btn{
+    background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
+    color: white;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 16px;
+    box-shadow: var(--shadow2);
+  }
+  .cancel-btn{
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+    color: white;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 10px;
+    box-shadow: var(--shadow2);
+  }
+  .ok-btn{
+    background: linear-gradient(135deg, rgba(245,158,11,1), rgba(251,191,36,1));
+    color: #111827;
+    border:none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 16px;
+    font-weight: 1000;
+    cursor:pointer;
+    margin-top: 10px;
+    box-shadow: var(--shadow2);
+  }
+  .close-link{
+    display:block;
+    text-align:center;
+    margin-top: 12px;
+    color: var(--muted);
+    cursor:pointer;
+    text-decoration: underline;
+    font-size: 13px;
+    font-weight: 800;
+  }
 
-    /* ===== Table ===== */
-    .table-container{ width:100%; overflow-x:auto; }
-    table{ width:100%; border-collapse: collapse; white-space: nowrap; font-size: 14px; }
-    thead th{
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: linear-gradient(135deg, #0f172a, #1f2937);
-      color: white;
-      padding: 12px 14px;
-      text-align: center;
-      font-weight: 1000;
-      border-bottom: 1px solid rgba(255,255,255,.10);
-    }
-    tbody td{
-      padding: 12px 14px;
-      text-align:center;
-      border-bottom: 1px solid rgba(229,231,235,.9);
-      font-weight: 800;
-      color:#111827;
-    }
+  .pagination-bar{
+    padding: 12px 10px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 16px;
+    margin-top: 10px;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(15,23,42,.06);
+  }
+  .pager{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .page-btn{
+    border: 1px solid rgba(229,231,235,.9);
+    background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
+    color: #0f172a;
+    padding: 8px 12px;
+    border-radius: 14px;
+    cursor:pointer;
+    font-weight: 1000;
+    min-width: 42px;
+    text-align:center;
+    transition:.15s;
+    user-select:none;
+  }
+  .page-btn:hover{ transform: translateY(-1px); }
+  .page-btn.active{
+    background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
+    border-color: rgba(37,99,235,.6);
+    color:#fff;
+  }
+  .page-btn.disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+  .page-ellipsis{ padding: 8px 6px; color: var(--muted); font-weight: 1000; }
+  .page-size{ margin-left:auto; display:flex; align-items:center; gap: 8px; }
+  .page-size select{
+    padding: 8px 10px;
+    border: 1px solid rgba(229,231,235,.9);
+    border-radius: 14px;
+    font-size: 13px;
+    background: #fff;
+    font-weight: 900;
+    width: 90px;
+  }
 
-    tbody tr:nth-child(even){ background-color: rgba(37,99,235,.03); }
-    tbody tr:nth-child(odd){ background-color: rgba(255,255,255,.92); }
+  .due-item{
+    background:#fff;
+    padding:10px 10px;
+    border:1px solid rgba(229,231,235,.9);
+    margin-top:8px;
+    display:flex;
+    justify-content:space-between;
+    cursor:pointer;
+    border-radius: 14px;
+    font-weight: 900;
+    color:#0f172a;
+    box-shadow: 0 2px 10px rgba(15,23,42,.04);
+  }
+  .due-item:hover{ background: rgba(37,99,235,.04); }
 
-    /* Status Badges */
-    .status-badge{
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 1000;
-      display:inline-block;
-      border: 1px solid rgba(0,0,0,.06);
-    }
-    .pending{ background: rgba(245,158,11,.15); color: #7c5208; border-color: rgba(245,158,11,.25); }
-    .completed{ background: rgba(22,163,74,.14); color: #14532d; border-color: rgba(22,163,74,.22); }
+  @media (max-width:520px){
+    .nav-buttons .btn{ flex:1; justify-content:center; }
+    .navbar{ padding: 10px 12px; }
+    .main-container{ padding: 10px 10px; }
+    .form-box{ padding: 10px; }
+  }
 
-    /* Action Button */
-    .action-btn{
-      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
-      color: white;
-      border:none;
-      padding: 9px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      transition:.15s;
-      box-shadow: var(--shadow2);
-      font-weight: 1000;
-      display:inline-flex;
-      align-items:center;
-      gap: 7px;
-      white-space: nowrap;
-    }
-    .action-btn:active{ transform: scale(.99); }
+  /* =========================================================
+     ✅ NEW: Payment modal input size + buttons same line
+     (শুধু পেমেন্ট অংশের জন্য)
+     ========================================================= */
+  .pay-input{
+    width: 70%;
+    height: 54px;
+    font-size: 16px;
+    font-weight: 1000;
+    border-radius: 16px;
+  }
 
-    /* Column colors */
-    .col-no{ font-weight: 1000; color: #64748b; }
-    .col-date{ color: #334155; }
-    .col-person{ color: #0d47a1; font-weight: 1000; }
-    .col-shop{ color: #6a1b9a; font-weight: 1000; }
-    .col-baki{ color: #b91c1c; font-weight: 1000; }
-    .col-paid{ color: #166534; font-weight: 1000; }
-    .col-due{ color: #ea580c; font-weight: 1000; }
-
-    /* Pagination */
-    .pagination-bar{
-      padding: 14px 14px;
-      background: rgba(255,255,255,.75);
-      border-top: 1px solid rgba(229,231,235,.9);
-      display:flex;
-      align-items:center;
-      gap: 10px;
-    }
-    .pager{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
-    .page-btn{
-      border: 1px solid rgba(229,231,235,.95);
-      background: #fff;
-      color: #111827;
-      padding: 8px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight: 1000;
-      min-width: 44px;
-      text-align:center;
-      transition:.15s;
-      user-select:none;
-      box-shadow: 0 2px 10px rgba(15,23,42,.04);
-    }
-    .page-btn:hover{ transform: translateY(-1px); }
-    .page-btn.active{
-      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
-      border-color: rgba(37,99,235,1);
-      color:#fff;
-    }
-    .page-btn.disabled{
-      opacity:.5;
-      cursor:not-allowed;
-      transform:none;
-    }
-    .page-ellipsis{ padding: 8px 6px; color: #64748b; font-weight: 1000; }
-
-    .page-size{ margin-left:auto; display:flex; align-items:center; gap: 8px; }
-    .page-size select{
-      padding: 10px 12px;
-      border: 1px solid rgba(229,231,235,.95);
-      border-radius: 14px;
-      font-size: 14px;
-      background:#fff;
-      font-weight: 1000;
-      outline:none;
-    }
-
-    /* ===== Modal ===== */
-    .modal{
-      display:none;
-      position:fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background: rgba(0,0,0,0.60);
-      z-index:100;
-      justify-content:center;
-      align-items:center;
-      padding: 16px;
-    }
-    .modal-content{
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(229,231,235,.9);
-      padding: 18px;
-      border-radius: 18px;
-      width: 92%;
-      max-width: 420px;
-      box-shadow: 0 40px 120px rgba(0,0,0,.25);
-    }
-    .modal-content h3{
-      margin: 0 0 10px 0;
-      color:#0f172a;
-      font-weight: 1000;
-      text-align:center;
-      font-size: 16px;
-    }
-    .modal-content p{ margin:0 0 10px 0; }
-
-    .modal-content input, .modal-content select{
-      width:100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid rgba(229,231,235,.95);
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 900;
-      outline:none;
-    }
-    .modal-content input:focus, .modal-content select:focus{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
-    }
-
-    .modal-btns{ display:flex; gap: 10px; margin-top: 8px; }
-    .save-btn{
-      flex:1;
-      background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1));
-      color:white;
-      border:none;
-      padding: 12px;
-      border-radius: 16px;
-      cursor:pointer;
-      font-weight: 1000;
-      box-shadow: var(--shadow2);
-    }
-    .close-btn{
-      flex:1;
-      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
-      color:white;
-      border:none;
-      padding: 12px;
-      border-radius: 16px;
-      cursor:pointer;
-      font-weight: 1000;
-      box-shadow: var(--shadow2);
-    }
-
-    /* Two input in one row */
-    .row-2{ display:flex; gap: 10px; }
-    .row-2 > *{ flex:1; }
-
-    @media (max-width: 520px){
-      .range-box{ min-width: 100%; }
-      .filter-item{ min-width: 100%; }
-      .total-due-box{ margin-left: 0; width: 100%; }
-      .row-2{ flex-direction: column; }
-      :root{ --sb-w: 280px; }
-    }
-
-    /* =========================
-       ✅ NEW: Modern Loading UI
-       ========================= */
-    .loading-layer{
-      position:absolute;
-      inset:0;
-      z-index: 60;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      background:
-        radial-gradient(900px 420px at 10% 0%, rgba(37,99,235,.10), transparent 60%),
-        rgba(255,255,255,.70);
-      backdrop-filter: blur(10px);
-      border-radius: 18px;
-    }
-    .loading-card{
-      width: min(560px, 96%);
-      border-radius: 18px;
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(229,231,235,.95);
-      box-shadow: 0 30px 90px rgba(15,23,42,.12);
-      overflow:hidden;
-    }
-    .loading-top{
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      border-bottom: 1px solid rgba(229,231,235,.9);
-    }
-    .loading-title{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      font-weight: 1000;
-      color:#0f172a;
-      font-size: 14px;
-      letter-spacing:.2px;
-    }
-    .spinner{
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 3px solid rgba(37,99,235,.18);
-      border-top-color: rgba(37,99,235,1);
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg); } }
-
-    .loading-body{ padding: 12px 14px 14px 14px; }
-    .skeleton{
-      position: relative;
-      overflow:hidden;
-      background: rgba(148,163,184,.22);
-      border-radius: 12px;
-    }
-    .skeleton::after{
-      content:"";
-      position:absolute;
-      top:0; left:-40%;
-      height:100%;
-      width:40%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-      animation: shimmer 1.1s ease-in-out infinite;
-    }
-    @keyframes shimmer{
-      0%{ left:-45%; }
-      100%{ left: 120%; }
-    }
-
-    .sk-row{
-      display:flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .sk-cell{ height: 12px; }
-    .sk-1{ width: 18%; }
-    .sk-2{ width: 24%; }
-    .sk-3{ width: 30%; }
-    .sk-4{ width: 16%; margin-left:auto; }
-
-    .loading-hint{
-      margin-top: 10px;
-      font-size: 12px;
-      color: #64748b;
-      font-weight: 900;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .loading-pill{
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(37,99,235,.08);
-      border: 1px solid rgba(37,99,235,.18);
-      color:#0d47a1;
-      font-weight: 1000;
-      white-space: nowrap;
-    }
-
-    /* ==================================================
-       ✅ NEW: Laptop size full-width + bigger form controls
-       ================================================== */
-    @media (min-width: 1024px){
-      .main-container{
-        max-width: 100%;
-        padding-left: 28px;
-        padding-right: 28px;
-      }
-
-      .filter-item input,
-      .filter-item select{
-        padding: 14px 16px;
-        font-size: 15px;
-      }
-
-      .range-toggle{
-        padding: 14px 16px;
-        font-size: 15px;
-      }
-
-      .page-size select{
-        padding: 12px 14px;
-        font-size: 15px;
-      }
-
-      .modal-content{
-        max-width: 520px;
-      }
-      .modal-content input,
-      .modal-content select{
-        padding: 14px 16px;
-        font-size: 16px;
-      }
-
-      .add-baki-btn{
-        padding: 12px 16px;
-        font-size: 15px;
-      }
-      .action-btn{
-        padding: 11px 14px;
-        font-size: 14px;
-      }
-      .save-btn,
-      .close-btn{
-        padding: 13px 16px;
-        font-size: 15px;
-      }
-
-      table{ font-size: 15px; }
-      thead th{ padding: 14px 16px; }
-      tbody td{ padding: 14px 16px; }
-
-      .page-btn{
-        padding: 10px 14px;
-        font-size: 14px;
-      }
-    }
-  </style>
+  .pay-actions{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    margin-top: 12px;
+  }
+  .pay-actions .save-btn,
+  .pay-actions .cancel-btn{
+    width: 50%;
+    margin-top: 0;
+  }
+</style>
 </head>
 
 <body>
-  <!-- overlay -->
-  <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebarFromOverlay()"></div>
 
-  <!-- Navbar -->
-  <div class="navbar">
+<div id="pageLoader" class="page-loader">
+  <div class="loader-card">
+    <div class="spinner"></div>
+    <div class="loader-title">ডাটা লোড হচ্ছে...</div>
+    <p class="loader-sub">অনুগ্রহ করে অপেক্ষা করুন</p>
+  </div>
+</div>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebarFromOverlay()"></div>
+
+<div class="navbar">
+  <div class="nav-top">
     <span class="menu-icon" onclick="toggleSidebar(event)">☰</span>
-    <h1>বাকীর তালিকা</h1>
+    <h1>Buy & Sell</h1>
+    <div style="width:22px"></div>
   </div>
+  <div class="nav-buttons">
+    <button class="btn btn-person" onclick="openModal('personModal')"><i class="fas fa-user-plus"></i> Person</button>
+    <button class="btn btn-person" onclick="openModal('personListModal')"><i class="fas fa-list"></i> List</button>
+    <button class="btn btn-delivery" onclick="openModal('deliverySelectModal')">🚚 Delivery</button>
+  </div>
+</div>
 
-  <!-- Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <div class="sb-head">
+<div id="sidebar" class="sidebar">
+  <div class="sb-head">
+    <div>
+      <div class="sb-title">Today Hisab</div>
+      <div class="sb-sub">মেনু</div>
+    </div>
+    <button class="sb-close" onclick="closeSidebarFromOverlay()" aria-label="Close">✕</button>
+  </div>
+  <div class="sb-divider"></div>
+
+  <div class="sb-links">
+    <a href="index.html"><span class="sb-ic">🏠</span> Dashboard</a>
+    <a href="hisab.html"><span class="sb-ic">🧾</span> লেনদেন</a>
+    <a href="stock.html"><span class="sb-ic">📦</span> মালের স্টক</a>
+    <a href="today.html"><span class="sb-ic">📅</span> আজকের সেল</a>
+    <a href="baki.html"><span class="sb-ic">🧍</span> বাকীর হিসাব</a>
+  </div>
+</div>
+
+<div class="main-container">
+  <div class="filter-wrapper">
+    <div class="filter-grid">
       <div>
-        <div class="sb-title">Baki Hisab</div>
-        <div class="sb-sub">মেনু</div>
-      </div>
-      <button class="sb-close" onclick="closeSidebarFromOverlay()" aria-label="Close">✕</button>
-    </div>
-    <div class="sb-divider"></div>
-
-    <div class="sb-links">
-      <a class="sb-item" href="index.html">
-        <span class="sb-ic">🏠</span> Dashboard
-      </a>
-      <a class="sb-item" href="hisab.html">
-        <span class="sb-ic">🧾</span> লেনদেন
-      </a>
-      <a class="sb-item" href="stock.html">
-        <span class="sb-ic">📦</span> মালের স্টক
-      </a>
-      <a class="sb-item" href="today.html">
-        <span class="sb-ic">📅</span> আজকের সেল
-      </a>
-      <a class="sb-item" href="baki.html">
-        <span class="sb-ic">🧍</span> বাকীর হিসাব
-      </a>
-    </div>
-  </div>
-
-  <div class="main-container">
-    <div class="table-card">
-
-      <!-- Loading Layer -->
-      <div id="loadingLayer" class="loading-layer">
-        <div class="loading-card">
-          <div class="loading-top">
-            <div class="loading-title">
-              <span class="spinner"></span>
-              ডাটা লোড হচ্ছে...
-            </div>
-            <div class="loading-pill">Please wait</div>
-          </div>
-
-          <div class="loading-body">
-            <div class="skeleton sk-cell" style="height:14px; width: 55%;"></div>
-
-            <div class="sk-row">
-              <div class="skeleton sk-cell sk-1"></div>
-              <div class="skeleton sk-cell sk-2"></div>
-              <div class="skeleton sk-cell sk-3"></div>
-              <div class="skeleton sk-cell sk-4"></div>
-            </div>
-            <div class="sk-row">
-              <div class="skeleton sk-cell sk-2"></div>
-              <div class="skeleton sk-cell sk-3"></div>
-              <div class="skeleton sk-cell sk-1"></div>
-              <div class="skeleton sk-cell sk-4"></div>
-            </div>
-            <div class="sk-row">
-              <div class="skeleton sk-cell sk-3"></div>
-              <div class="skeleton sk-cell sk-1"></div>
-              <div class="skeleton sk-cell sk-2"></div>
-              <div class="skeleton sk-cell sk-4"></div>
-            </div>
-
-            <div class="loading-hint">
-              <span>Firebase থেকে তথ্য আনা হচ্ছে</span>
-              <span class="loading-pill">Syncing</span>
-            </div>
-          </div>
+        <label><i class="fas fa-calendar-alt"></i> তারিখ ফিল্টার (শুরু - শেষ):</label>
+        <div class="date-range-box">
+          <input type="date" id="filterStartDate" onchange="applyFilters()">
+          <input type="date" id="filterEndDate" onchange="applyFilters()">
         </div>
       </div>
-
-      <div class="table-header">
-        <h3 style="margin:0">দোকানভিত্তিক বাকী রিপোর্ট</h3>
-        <button class="add-baki-btn" onclick="openAddBakiModal()">
-          <i class="fas fa-plus"></i> Add Baki
-        </button>
+      <div>
+        <label><i class="fas fa-user"></i> ব্যক্তির নাম:</label>
+        <select id="filterPerson" onchange="applyFilters()"></select>
       </div>
-
-      <!-- Filter Bar -->
-      <div class="filter-bar">
-        <div class="filter-item range-box">
-          <label>তারিখ (রেঞ্জ)</label>
-          <input class="range-toggle" id="rangeToggle" type="text" readonly value="তারিখ রেঞ্জ সিলেক্ট করুন" onclick="toggleRangePanel()">
-          <div id="rangePanel" class="range-panel">
-            <input type="date" id="startDate" onchange="applyFilters(true)">
-            <input type="date" id="endDate" onchange="applyFilters(true)">
-          </div>
-        </div>
-
-        <div class="filter-item">
-          <label>পারসোন</label>
-          <select id="filterPerson" onchange="applyFilters(true)">
-            <option value="">সব</option>
-          </select>
-        </div>
-
-        <div class="filter-item">
-          <label>স্টেটাস</label>
-          <select id="filterStatus" onchange="applyFilters(true)">
-            <option value="all">সব</option>
-            <option value="complete">Complete</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-
-        <div class="total-due-box">
-          মোট পাওনা: <span id="totalDue">৳0.00</span>
-        </div>
-      </div>
-
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>নম্বর</th>
-              <th>তারিখ</th>
-              <th>পারসোন নাম</th>
-              <th>দোকানের নাম</th>
-              <th>বাকীর পরিমান</th>
-              <th>জমা</th>
-              <th>পাওনা</th>
-              <th>স্টেটাস</th>
-              <th>একশন</th>
-            </tr>
-          </thead>
-          <tbody id="bakiTableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Pagination Bar -->
-      <div class="pagination-bar">
-        <div class="pager" id="pager"></div>
-
-        <div class="page-size">
-          <select id="pageSizeSelect" onchange="changePageSize()">
-            <option value="10" selected>10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </div>
+      <div class="profit-box">
+        <div style="font-size: 12px; opacity: 0.9;">মোট লাভ</div>
+        <span id="displayTotalProfit">৳0</span>
       </div>
     </div>
   </div>
 
-  <!-- Collection Modal -->
-  <div id="paymentModal" class="modal">
-    <div class="modal-content">
-      <h3>টাকা জমা করুন</h3>
-      <p id="modalInfo" style="font-weight: 1000; color: #2563eb; margin: 0 0 10px 0;"></p>
-      <label style="font-size:12px;color:#64748b;font-weight:900;">জমার পরিমাণ লিখুন:</label>
-      <input type="number" id="collectionInput" placeholder="0.00">
-      <div class="modal-btns">
-        <button class="save-btn" onclick="processCollection()">জমা করুন</button>
-        <button class="close-btn" onclick="closeModal()">বন্ধ</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Baki Modal -->
-  <div id="addBakiModal" class="modal">
-    <div class="modal-content">
-      <h3>নতুন বাকী যোগ করুন</h3>
-
-      <div class="row-2">
-        <div>
-          <label style="font-size:12px;color:#64748b;font-weight:900;">তারিখ:</label>
-          <input type="date" id="addDate">
-        </div>
-        <div>
-          <label style="font-size:12px;color:#64748b;font-weight:900;">পারসোন:</label>
-          <select id="addPerson">
-            <option value="">Select Person</option>
-          </select>
-        </div>
-      </div>
-
-      <label style="font-size:12px;color:#64748b;font-weight:900;">দোকানের নাম:</label>
-      <input type="text" id="addShop" placeholder="দোকানের নাম লিখুন">
-
-      <label style="font-size:12px;color:#64748b;font-weight:900;">টাকার পরিমান:</label>
-      <input type="number" id="addAmount" placeholder="0.00">
-
-      <div class="modal-btns">
-        <button class="save-btn" onclick="saveManualBaki()">সেভ</button>
-        <button class="close-btn" onclick="closeAddBakiModal()">বন্ধ</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { database } from './firebase-config.js';
-    import { ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    let activeTransactionKey = null;
-    let activeDueIndex = null;
-    let activeAmt = 0;
-    let activePaid = 0;
-    let activePerson = "";
-    let activeShop = "";
-
-    // Store rows
-    let renderedItems = [];
-    let filteredItems = [];
-    let currentPage = 1;
-    let pageSize = 10;
-
-    // ✅ FIX: persons list store (Firebase persons path)
-    let personsMaster = [];           // persons node থেকে আসা person list
-    let personsLoaded = false;        // loading flag
-    let transactionsLoaded = false;   // loading flag
-
-    // Loading show/hide
-    function showLoading(){
-      const el = document.getElementById('loadingLayer');
-      if (el) el.style.display = 'flex';
-    }
-    function hideLoading(){
-      const el = document.getElementById('loadingLayer');
-      if (el) el.style.display = 'none';
-    }
-    function tryHideLoading(){
-      if (personsLoaded && transactionsLoaded) hideLoading();
-    }
-
-    // প্রথমে লোডিং দেখাই
-    showLoading();
-
-    // Sidebar Toggle
-    window.toggleSidebar = (e) => {
-      e.stopPropagation();
-      const sb = document.getElementById('sidebar');
-      const ov = document.getElementById('sidebarOverlay');
-      sb.classList.toggle('open');
-      if (sb.classList.contains('open')) ov.classList.add('show');
-      else ov.classList.remove('show');
-    };
-
-    window.closeSidebarFromOverlay = () => {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebarOverlay').classList.remove('show');
-    };
-
-    document.addEventListener('click', (e) => {
-      const sidebar = document.getElementById('sidebar');
-      const menuIcon = document.querySelector('.menu-icon');
-      if (!sidebar.contains(e.target) && e.target !== menuIcon) {
-        sidebar.classList.remove('open');
-        document.getElementById('sidebarOverlay').classList.remove('show');
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') window.closeSidebarFromOverlay();
-    });
-
-    // Date range panel toggle
-    window.toggleRangePanel = () => {
-      document.getElementById('rangePanel').classList.toggle('open');
-    };
-
-    /* =========================================
-       ✅ FIX: Load Persons from `persons` node
-       - আপনার "Person Add" যেখানেই সেভ করেন, সেটা সাধারণত persons এ থাকে
-       - persons না থাকলে fallback -> transactions থেকে
-       ========================================= */
-    const personsRef = ref(database, 'persons');
-    onValue(personsRef, (snapshot) => {
-      const set = new Set();
-
-      snapshot.forEach((ch) => {
-        const v = ch.val();
-
-        // Support: "name" field OR plain string
-        let name = "";
-        if (typeof v === "string") name = v;
-        else if (v && typeof v === "object") {
-          name = v.name || v.personName || v.person || v.title || "";
-        }
-
-        name = String(name || "").trim();
-        if (name) set.add(name);
-      });
-
-      personsMaster = [...set].sort();
-      fillPersonDropdown(personsMaster);
-      fillFilterPersonDropdown(personsMaster);
-
-      personsLoaded = true;
-      tryHideLoading();
-    });
-
-    // Load Baki Data (transactions)
-    const bakiRef = ref(database, 'transactions');
-    onValue(bakiRef, (snapshot) => {
-      // ✅ fallback set (যদি personsMaster খালি থাকে)
-      const personFallbackSet = new Set();
-
-      const transList = [];
-      snapshot.forEach((childSnapshot) => {
-        const v = childSnapshot.val();
-        transList.push({ key: childSnapshot.key, val: v });
-
-        if (v && v.personName) {
-          const nm = String(v.personName).trim();
-          if (nm) personFallbackSet.add(nm);
-        }
-      });
-
-      // ✅ If persons node empty, use transactions derived person list
-      if (!personsMaster || personsMaster.length === 0) {
-        const personsFallback = [...personFallbackSet].sort();
-        fillPersonDropdown(personsFallback);
-        fillFilterPersonDropdown(personsFallback);
-      }
-
-      // Latest first
-      transList.reverse();
-
-      const seenTxn = new Set();
-      renderedItems = [];
-
-      transList.forEach((item) => {
-        const transKey = item.key;
-        const trans = item.val;
-
-        if (trans && trans.dues && Array.isArray(trans.dues)) {
-          trans.dues.forEach((due, index) => {
-            const dateStr = trans.date || "";
-            const personName = trans.personName || "";
-            const shopName = (due && due.shop) ? String(due.shop) : "";
-            const amtStr = (due && due.amt != null) ? String(due.amt) : "0";
-            const uniqueKey = `${dateStr}||${personName}||${shopName}||${amtStr}`;
-
-            if (seenTxn.has(uniqueKey)) return;
-            seenTxn.add(uniqueKey);
-
-            const totalBaki = parseFloat(due.amt) || 0;
-            const paid = parseFloat(due.paidAmt) || 0;
-            const balanceRaw = totalBaki - paid;
-            const balance = balanceRaw <= 0 ? 0 : balanceRaw;
-
-            const status = balance <= 0 ? "Complete" : "Pending";
-
-            renderedItems.push({
-              transKey,
-              dueIndex: index,
-              date: dateStr,
-              person: personName,
-              shop: shopName,
-              total: totalBaki,
-              paid,
-              balance,
-              status
-            });
-          });
-        }
-      });
-
-      applyFilters(true);
-
-      transactionsLoaded = true;
-      tryHideLoading();
-    });
-
-    function fillPersonDropdown(persons) {
-      const sel = document.getElementById('addPerson');
-      const current = sel.value;
-      sel.innerHTML = `<option value="">Select Person</option>`;
-      persons.forEach((p) => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        sel.appendChild(opt);
-      });
-      if (persons.includes(current)) sel.value = current;
-    }
-
-    function fillFilterPersonDropdown(persons) {
-      const sel = document.getElementById('filterPerson');
-      const current = sel.value;
-
-      sel.innerHTML = `<option value="">সব</option>`;
-      persons.forEach((p) => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        sel.appendChild(opt);
-      });
-
-      if (persons.includes(current)) sel.value = current;
-    }
-
-    // Apply filters
-    window.applyFilters = (resetPage = false) => {
-      if (resetPage) currentPage = 1;
-
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      const filterPerson = document.getElementById('filterPerson').value;
-      const filterStatus = document.getElementById('filterStatus').value;
-
-      const rangeToggle = document.getElementById('rangeToggle');
-      if (startDate || endDate) {
-        const s = startDate ? formatDate(startDate) : "--";
-        const e = endDate ? formatDate(endDate) : "--";
-        rangeToggle.value = `${s} থেকে ${e}`;
-      } else {
-        rangeToggle.value = "তারিখ রেঞ্জ সিলেক্ট করুন";
-      }
-
-      filteredItems = [];
-      let totalDueSum = 0;
-
-      renderedItems.forEach((it) => {
-        if (startDate && it.date && it.date < startDate) return;
-        if (endDate && it.date && it.date > endDate) return;
-
-        if (filterPerson && it.person !== filterPerson) return;
-
-        if (filterStatus === "complete" && it.status !== "Complete") return;
-        if (filterStatus === "pending" && it.status !== "Pending") return;
-
-        filteredItems.push(it);
-        totalDueSum += (parseFloat(it.balance) || 0);
-      });
-
-      document.getElementById('totalDue').innerText = `৳${totalDueSum.toFixed(2)}`;
-
-      renderPage();
-      renderPager();
-    };
-
-    function renderPage() {
-      const tbody = document.getElementById('bakiTableBody');
-      tbody.innerHTML = "";
-
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const startIdx = (currentPage - 1) * pageSize;
-      const endIdx = startIdx + pageSize;
-
-      const pageItems = filteredItems.slice(startIdx, endIdx);
-
-      let count = startIdx + 1;
-
-      pageItems.forEach((it) => {
-        const statusClass = it.status === "Complete" ? "completed" : "pending";
-
-        tbody.innerHTML += `
+  <div class="history-card">
+    <h3>লেনদেন রিপোর্ট</h3>
+    <div class="table-container">
+      <table>
+        <thead>
           <tr>
-            <td class="col-no">${count++}</td>
-            <td class="col-date">${formatDate(it.date)}</td>
-            <td class="col-person">${it.person || "-"}</td>
-            <td class="col-shop">${it.shop || "-"}</td>
-            <td class="col-baki">৳${it.total.toFixed(2)}</td>
-            <td class="col-paid">৳${it.paid.toFixed(2)}</td>
-            <td class="col-due">৳${it.balance.toFixed(2)}</td>
-            <td><span class="status-badge ${statusClass}">${it.status}</span></td>
-            <td>
-              <button class="action-btn" onclick="openPaymentModal('${it.transKey}', ${it.dueIndex}, '${escapeQuotes(it.person || "")}', '${escapeQuotes(it.shop || "")}', ${it.total}, ${it.paid})">
-                <i class="fas fa-hand-holding-usd"></i> কালেকশন
-              </button>
-            </td>
+            <th>নম্বর</th>
+            <th>তারিখ</th>
+            <th>নাম</th>
+            <th>বহির পণ্য (টাকা)</th>
+            <th>সেল পণ্য (টাকা)</th>
+            <th>জমা (টাকা)</th>
+            <th>একশন</th>
           </tr>
-        `;
-      });
+        </thead>
+        <tbody id="historyTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination-bar">
+      <div class="pager" id="pager"></div>
+      <div class="page-size">
+        <select id="pageSizeSelect" onchange="changePageSize()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delivery Select Modal (থাকবে) -->
+<div id="deliverySelectModal" class="modal">
+  <div class="modal-content" style="max-width: 400px;">
+    <h3>ডেলিভারি গ্রহীতা</h3>
+    <select id="mainPersonSelect"></select>
+    <button class="save-btn" onclick="startDelivery()">পরবর্তী</button>
+    <button class="cancel-btn" onclick="closeModal('deliverySelectModal')">বাতিল করুন</button>
+  </div>
+</div>
+
+<!-- আগের deliveryMainModal রেখে দিলাম (এখন আর ব্যবহার হবে না) -->
+<div id="deliveryMainModal" class="modal">
+  <div class="modal-content">
+    <h3>এই মোডাল আর ব্যবহার হবে না</h3>
+    <span class="close-link" onclick="closeModal('deliveryMainModal')">বন্ধ</span>
+  </div>
+</div>
+
+<!-- ✅ Payment Modal (Due system removed) -->
+<div id="paymentModal" class="modal">
+  <div class="modal-content" style="max-width: 450px;">
+    <h3 id="paymentTitle">পেমেন্ট এন্ট্রি</h3>
+
+    <div class="form-box">
+      <label>নগদ জমা টাকা:</label>
+      <input class="qty-inp pay-input" type="number" id="cashReceivedInput" value="0">
+    </div>
+
+    <!-- ✅ buttons same line -->
+    <div class="pay-actions">
+      <button class="save-btn" onclick="savePaymentData()">সেভ</button>
+      <button class="cancel-btn" onclick="closeModal('paymentModal')">বন্ধ করুন</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="personModal" class="modal">
+  <div class="modal-content" style="max-width: 520px;">
+    <h3 id="personModalTitle">নতুন লোক</h3>
+    <input type="hidden" id="personEditKey" value="">
+    <input type="hidden" id="personOldName" value="">
+    <input type="text" id="personName" placeholder="নাম">
+    <button class="save-btn" onclick="savePerson()">Save</button>
+    <span class="close-link" onclick="closeModal('personModal')">বন্ধ</span>
+  </div>
+</div>
+
+<div id="personListModal" class="modal">
+  <div class="modal-content" style="max-width: 620px;">
+    <h3>Person List</h3>
+
+    <div class="form-box" style="margin-bottom:10px;">
+      <div class="form-title">এড করা পারসোন</div>
+      <div id="personListContainer"></div>
+    </div>
+
+    <div class="form-box" style="margin-bottom:0; background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.18);">
+      <div class="form-title">Hide করা পারসোন (Restore)</div>
+      <div id="hiddenPersonListContainer"></div>
+    </div>
+
+    <span class="close-link" onclick="closeModal('personListModal')">বন্ধ করুন</span>
+  </div>
+</div>
+
+<script type="module">
+  import { database } from './firebase-config.js';
+  import { ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  let packages = {};
+  let selectedPersonName = "";
+  let activePaymentGroupKey = null;
+  let allTransactions = [];
+
+  let currentCashData = 0;
+  let currentEditingGroupKey = null;
+
+  let currentPage = 1;
+  let pageSize = 10;
+  let lastSortedKeys = [];
+
+  let personsCache = []; // [{key, name}]
+
+  const formatDate = (dateStr) => {
+    if(!dateStr) return "";
+    const [y, m, d] = dateStr.split('-');
+    return `${d}-${m}-${y}`;
+  };
+
+  const todayISO = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const da = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${da}`;
+  };
+
+  /* =========================
+     ✅ Loading control
+     ========================= */
+  const loaderEl = document.getElementById('pageLoader');
+  const hideLoader = () => {
+    if (!loaderEl) return;
+    loaderEl.classList.add('hide');
+    setTimeout(() => { loaderEl.style.display = 'none'; }, 260);
+  };
+
+  const loadState = { persons:false, categories:false, packages:false, transactions:false };
+  const checkAllLoaded = () => {
+    if (loadState.persons && loadState.categories && loadState.packages && loadState.transactions) hideLoader();
+  };
+
+  // ✅ Sidebar UI
+  window.toggleSidebar = (e) => {
+    e.stopPropagation();
+    const sb = document.getElementById('sidebar');
+    sb.classList.toggle('open');
+    const ov = document.getElementById('sidebarOverlay');
+    if (sb.classList.contains('open')) ov.classList.add('show');
+    else ov.classList.remove('show');
+  };
+  window.closeSidebarFromOverlay = () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  };
+  document.addEventListener('click', (event) => {
+    const sb = document.getElementById('sidebar');
+    const menuIcon = document.querySelector('.menu-icon');
+    if (!sb.contains(event.target) && event.target !== menuIcon) {
+      sb.classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
     }
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeSidebarFromOverlay(); });
 
-    function renderPager() {
-      const pager = document.getElementById('pager');
-      pager.innerHTML = "";
+  window.openModal = (id) => {
+    document.getElementById(id).style.display = 'flex';
+    if (id === "personListModal") renderPersonListModal();
+  };
+  window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
 
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
-
-      const prevBtn = makeBtn("<<", () => gotoPage(currentPage - 1), currentPage === 1);
-      pager.appendChild(prevBtn);
-
-      const maxShow = 5;
-      const showUntil = Math.min(maxShow, totalPages);
-
-      for (let p = 1; p <= showUntil; p++) {
-        pager.appendChild(makePageBtn(p));
-      }
-
-      if (totalPages > maxShow + 1) {
-        const ell = document.createElement('span');
-        ell.className = "page-ellipsis";
-        ell.textContent = "...";
-        pager.appendChild(ell);
-
-        pager.appendChild(makePageBtn(totalPages));
-      } else if (totalPages === maxShow + 1) {
-        pager.appendChild(makePageBtn(totalPages));
-      }
-
-      const nextBtn = makeBtn(">>", () => gotoPage(currentPage + 1), currentPage === totalPages);
-      pager.appendChild(nextBtn);
+  /* =========================
+     ✅ Person Hide (only website) - LocalStorage
+     ========================= */
+  const LS_HIDDEN_PERSONS = "hisab_hidden_person_keys_v1";
+  function getHiddenPersonKeys(){
+    try{
+      const raw = localStorage.getItem(LS_HIDDEN_PERSONS);
+      const arr = JSON.parse(raw || "[]");
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){
+      return [];
     }
+  }
+  function setHiddenPersonKeys(arr){
+    try{ localStorage.setItem(LS_HIDDEN_PERSONS, JSON.stringify(arr || [])); }catch(e){}
+  }
+  function isPersonHidden(key){
+    return getHiddenPersonKeys().includes(key);
+  }
+  function hidePersonKey(key){
+    const arr = getHiddenPersonKeys();
+    if (!arr.includes(key)) arr.push(key);
+    setHiddenPersonKeys(arr);
+  }
+  function restorePersonKey(key){
+    const arr = getHiddenPersonKeys().filter(k => k !== key);
+    setHiddenPersonKeys(arr);
+  }
 
-    function makeBtn(text, onClick, disabled) {
-      const btn = document.createElement('div');
-      btn.className = "page-btn" + (disabled ? " disabled" : "");
-      btn.textContent = text;
-      if (!disabled) btn.onclick = onClick;
-      return btn;
+  function buildPersonOptions(){
+    const visible = personsCache.filter(p => p && p.key && !isPersonHidden(p.key));
+
+    let optionsMain = '<option value="">নাম বেছে নিন</option>';
+    visible.forEach(p => { optionsMain += `<option value="${p.name}">${p.name}</option>`; });
+
+    document.getElementById('mainPersonSelect').innerHTML = optionsMain;
+    document.getElementById('filterPerson').innerHTML = '<option value="">সকল ব্যক্তি</option>' + optionsMain;
+
+    renderPersonListModal();
+  }
+
+  function renderPersonListModal(){
+    const cont = document.getElementById('personListContainer');
+    const hcont = document.getElementById('hiddenPersonListContainer');
+    if (!cont || !hcont) return;
+
+    const hiddenKeys = getHiddenPersonKeys();
+    const visible = personsCache.filter(p => p && p.key && !hiddenKeys.includes(p.key));
+    const hidden = personsCache.filter(p => p && p.key && hiddenKeys.includes(p.key));
+
+    const rowHtml = (p, hiddenMode=false) => `
+      <div class="due-item" style="cursor: default;">
+        <span style="font-weight:1000;">${p.name}</span>
+        <span style="display:flex; gap:8px; align-items:center;">
+          ${
+            hiddenMode
+              ? `<button class="action-btn btn-edit-row" style="padding:8px 10px;" onclick="restorePerson('${p.key}')"><i class="fas fa-rotate-left"></i> Restore</button>`
+              : `
+                <button class="action-btn btn-edit-row" style="padding:8px 10px;" onclick="openPersonEdit('${p.key}')"><i class="fas fa-pen"></i> Edit</button>
+                <button class="action-btn btn-del-row" style="padding:8px 10px;" onclick="hidePerson('${p.key}')"><i class="fas fa-eye-slash"></i> Hide</button>
+              `
+          }
+        </span>
+      </div>
+    `;
+
+    cont.innerHTML = visible.length ? visible.map(p => rowHtml(p,false)).join("") : `<div style="text-align:center; color: var(--muted); font-weight:900; padding: 10px 0;">কোনো Person নেই</div>`;
+    hcont.innerHTML = hidden.length ? hidden.map(p => rowHtml(p,true)).join("") : `<div style="text-align:center; color: var(--muted); font-weight:900; padding: 10px 0;">কেউ Hide করা নেই</div>`;
+  }
+
+  window.hidePerson = (key) => {
+    const p = personsCache.find(x => x.key === key);
+    if (!p) return;
+    if(!confirm(`"${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)`)) return;
+    hidePersonKey(key);
+    buildPersonOptions();
+  };
+
+  window.restorePerson = (key) => {
+    restorePersonKey(key);
+    buildPersonOptions();
+  };
+
+  window.openPersonEdit = (key) => {
+    const p = personsCache.find(x => x.key === key);
+    if (!p) return;
+
+    document.getElementById('personModalTitle').innerText = "Person Edit";
+    document.getElementById('personEditKey').value = p.key;
+    document.getElementById('personOldName').value = p.name || "";
+    document.getElementById('personName').value = p.name || "";
+
+    closeModal('personListModal');
+    openModal('personModal');
+  };
+
+  // ✅ Persons
+  let personsFirstLoad = true;
+  onValue(ref(database, 'persons'), (snapshot) => {
+    personsCache = [];
+    snapshot.forEach(child => {
+      personsCache.push({ key: child.key, name: child.val()?.name || "" });
+    });
+    personsCache.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
+    buildPersonOptions();
+
+    if (personsFirstLoad) {
+      personsFirstLoad = false;
+      loadState.persons = true;
+      checkAllLoaded();
     }
+  });
 
-    function makePageBtn(pageNum) {
-      const btn = document.createElement('div');
-      btn.className = "page-btn" + (pageNum === currentPage ? " active" : "");
-      btn.textContent = String(pageNum);
-      btn.onclick = () => gotoPage(pageNum);
-      return btn;
+  // ✅ Categories (loader only)
+  let categoriesFirstLoad = true;
+  onValue(ref(database, 'categories'), () => {
+    if (categoriesFirstLoad) {
+      categoriesFirstLoad = false;
+      loadState.categories = true;
+      checkAllLoaded();
     }
+  });
 
-    window.gotoPage = (p) => {
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
-      if (p < 1 || p > totalPages) return;
-      currentPage = p;
-      renderPage();
-      renderPager();
-    };
+  // ✅ Packages
+  let packagesFirstLoad = true;
+  onValue(ref(database, 'packages'), (snapshot) => {
+    packages = {};
+    snapshot.forEach(child => { packages[child.key] = { ...child.val(), key: child.key }; });
 
-    window.changePageSize = () => {
-      const val = parseInt(document.getElementById('pageSizeSelect').value, 10) || 10;
-      pageSize = val;
-      currentPage = 1;
-      renderPage();
-      renderPager();
-    };
+    if (packagesFirstLoad) {
+      packagesFirstLoad = false;
+      loadState.packages = true;
+      checkAllLoaded();
+    }
+  });
 
-    // Add Baki Modal handlers
-    window.openAddBakiModal = () => {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('addDate').value = `${yyyy}-${mm}-${dd}`;
+  // ✅ Transactions
+  let transactionsFirstLoad = true;
+  onValue(ref(database, 'transactions'), (snapshot) => {
+    allTransactions = [];
+    snapshot.forEach(child => { allTransactions.push({key: child.key, ...child.val()}); });
+    applyFilters();
 
-      document.getElementById('addPerson').value = "";
-      document.getElementById('addShop').value = "";
-      document.getElementById('addAmount').value = "";
-      document.getElementById('addBakiModal').style.display = 'flex';
-    };
+    if (transactionsFirstLoad) {
+      transactionsFirstLoad = false;
+      loadState.transactions = true;
+      checkAllLoaded();
+    }
+  });
 
-    window.closeAddBakiModal = () => {
-      document.getElementById('addBakiModal').style.display = 'none';
-    };
+  function makeNewGroupId(person, date){
+    return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
 
-    window.saveManualBaki = async () => {
-      const date = document.getElementById('addDate').value;
-      const person = document.getElementById('addPerson').value;
-      const shop = document.getElementById('addShop').value.trim();
-      const amt = parseFloat(document.getElementById('addAmount').value) || 0;
+  function openDeliveryWindow({ personName, date, groupId }){
+    const q = new URLSearchParams();
+    q.set("person", personName || "");
+    q.set("date", date || "");
+    q.set("groupId", groupId || "");
+    q.set("returnUrl", encodeURIComponent(location.href));
+    const url = `delivery-form.html?${q.toString()}`;
+    window.location.href = url;
+  }
 
-      if (!date) return alert("তারিখ সিলেক্ট করুন");
-      if (!person) return alert("পারসোন সিলেক্ট করুন");
-      if (!shop) return alert("দোকানের নাম লিখুন");
-      if (amt <= 0) return alert("সঠিক টাকার পরিমান লিখুন");
+  window.startDelivery = () => {
+    const s = document.getElementById('mainPersonSelect');
+    if(!s.value) return alert("লোক সিলেক্ট করুন");
+    const person = s.value;
+    const date = todayISO();
+    const gid = makeNewGroupId(person, date);
 
-      const newTrans = {
-        date: date,
-        personName: person,
-        dues: [{ shop: shop, amt: amt, paidAmt: 0 }]
+    closeModal('deliverySelectModal');
+    openDeliveryWindow({ personName: person, date, groupId: gid });
+  };
+
+  window.applyFilters = () => {
+    currentPage = 1;
+
+    const startDate = document.getElementById('filterStartDate').value;
+    const endDate = document.getElementById('filterEndDate').value;
+    const filterPerson = document.getElementById('filterPerson').value;
+
+    const filtered = allTransactions.filter(t => {
+      const dateMatch = (!startDate || t.date >= startDate) && (!endDate || t.date <= endDate);
+      const personMatch = !filterPerson || t.personName === filterPerson;
+      return dateMatch && personMatch;
+    });
+
+    const grouped = {};
+    let totalProfit = 0;
+    const hasFilter = startDate || endDate || filterPerson;
+
+    filtered.forEach(t => {
+      const gId = (t.groupId || "").trim() || `${t.date}_${t.personName}__legacy`;
+      const groupKey = gId;
+
+      if(!grouped[groupKey]) grouped[groupKey] = {
+        groupId: gId,
+        date: t.date,
+        name: t.personName,
+
+        outPcs: 0,
+        returnPcs: 0,
+
+        outAmt: 0,
+        returnAmt: 0,
+        sellAmt: 0,
+
+        cash: 0,
+        items: [],
+        lastKey: t.key || "",
+
+        saleConfirmed: false
       };
 
-      push(ref(database, 'transactions'), newTrans).then(() => {
-        closeAddBakiModal();
-        alert("নতুন বাকী সেভ হয়েছে!");
-      });
-    };
+      if ((t.key || "") > (grouped[groupKey].lastKey || "")) grouped[groupKey].lastKey = t.key || "";
 
-    // Collection Modal handlers
-    window.openPaymentModal = (key, index, personName, shopName, amt, paidAmt) => {
-      activeTransactionKey = key;
-      activeDueIndex = index;
+      const type = t.type || "Out";
+      const sellPrice = parseFloat(t.pkgSellPrice) || 0;
+      const totalPcs = parseInt(t.totalPcs) || 0;
 
-      activeAmt = parseFloat(amt) || 0;
-      activePaid = parseFloat(paidAmt) || 0;
+      if (t.saleConfirmed === true) grouped[groupKey].saleConfirmed = true;
 
-      activePerson = personName || "";
-      activeShop = shopName || "";
-
-      const currentDue = Math.max(activeAmt - activePaid, 0);
-
-      document.getElementById('modalInfo').innerText =
-        (activePerson ? activePerson + " | " : "") +
-        (activeShop ? activeShop : "") +
-        " (পাওনা: ৳" + currentDue.toFixed(2) + ")";
-
-      document.getElementById('collectionInput').value = "";
-      document.getElementById('paymentModal').style.display = 'flex';
-    };
-
-    window.closeModal = () => {
-      document.getElementById('paymentModal').style.display = 'none';
-    };
-
-    window.processCollection = async () => {
-      const amount = parseFloat(document.getElementById('collectionInput').value) || 0;
-      if (amount <= 0) return alert("সঠিক অংক লিখুন");
-
-      onValue(ref(database, `transactions/${activeTransactionKey}`), (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.dues && Array.isArray(data.dues) && data.dues[activeDueIndex]) {
-          const dues = [...data.dues];
-
-          const currentPaid = parseFloat(dues[activeDueIndex].paidAmt) || 0;
-          dues[activeDueIndex].paidAmt = currentPaid + amount;
-
-          update(ref(database, `transactions/${activeTransactionKey}`), {
-            dues: dues
-          }).then(() => {
-            closeModal();
-            alert("কালেকশন সফল হয়েছে!");
-          });
+      if(hasFilter) {
+        const pkgInfo = Object.values(packages).find(p => p.name === t.pkgName);
+        if(pkgInfo) {
+          const buyPrice = parseFloat(pkgInfo.buyPrice) || 0;
+          const unitProfit = sellPrice - buyPrice;
+          if(type === "Out") totalProfit += (unitProfit * totalPcs);
+          else totalProfit -= (unitProfit * totalPcs);
         }
-      }, { onlyOnce: true });
-    };
+      }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return "-";
-      const parts = dateStr.split('-');
-      if (parts.length !== 3) return dateStr;
-      const [y, m, d] = parts;
-      return `${d}-${m}-${y}`;
+      const amt = totalPcs * sellPrice;
+
+      if(type === "Out"){
+        grouped[groupKey].outPcs += totalPcs;
+        grouped[groupKey].outAmt += amt;
+      }else{
+        grouped[groupKey].returnPcs += totalPcs;
+        grouped[groupKey].returnAmt += amt;
+      }
+
+      grouped[groupKey].cash = (parseFloat(t.cashReceived) || 0);
+      grouped[groupKey].items.push(t);
+    });
+
+    Object.keys(grouped).forEach(k => {
+      const g = grouped[k];
+      g.sellAmt = (g.outAmt || 0) - (g.returnAmt || 0);
+      g.displaySellAmt = ((g.returnPcs || 0) > 0 || g.saleConfirmed === true) ? g.sellAmt : 0;
+    });
+
+    document.getElementById('displayTotalProfit').innerText = hasFilter ? `৳${totalProfit.toFixed(2)}` : `৳0`;
+    renderTable(grouped);
+  };
+
+  function renderTable(grouped) {
+    const tbody = document.getElementById('historyTableBody');
+    tbody.innerHTML = "";
+
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      const A = grouped[a], B = grouped[b];
+      if (A.date !== B.date) return (B.date || "").localeCompare(A.date || "");
+      return (B.lastKey || "").localeCompare(A.lastKey || "");
+    });
+
+    lastSortedKeys = sortedKeys;
+
+    const total = sortedKeys.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    const pageKeys = sortedKeys.slice(startIdx, endIdx);
+
+    let count = startIdx + 1;
+
+    pageKeys.forEach(groupKey => {
+      const row = grouped[groupKey];
+      tbody.innerHTML += `<tr>
+        <td class="col-no">${count++}</td>
+        <td class="col-date">${formatDate(row.date)}</td>
+        <td class="col-name">${row.name}</td>
+
+        <td class="col-outamt">৳${(row.outAmt || 0).toFixed(2)}</td>
+        <td class="col-sellamt">৳${(row.displaySellAmt || 0).toFixed(2)}</td>
+        <td class="col-cash">৳${(row.cash || 0).toFixed(2)}</td>
+
+        <td>
+          <button class="action-btn btn-edit-row" onclick="openDeliveryFormPage('${row.groupId}', '${row.name}', '${row.date}')"><i class="fas fa-file-invoice"></i> Form</button>
+          <button class="action-btn btn-pay-row" onclick="openPaymentForm('${groupKey}')"><i class="fas fa-money-bill-wave"></i> পেমেন্ট</button>
+          <button class="action-btn btn-del-row" onclick="deleteTransactionGroup('${groupKey}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+
+    window.groupedData = grouped;
+    renderPager(totalPages);
+  }
+
+  window.openDeliveryFormPage = (groupId, name, date) => {
+    openDeliveryWindow({ personName: name, date, groupId });
+  };
+
+  window.changePageSize = () => {
+    pageSize = parseInt(document.getElementById('pageSizeSelect').value, 10) || 10;
+    currentPage = 1;
+    if (window.groupedData) renderTable(window.groupedData);
+  };
+
+  window.gotoPage = (p) => {
+    const total = lastSortedKeys.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    if (window.groupedData) renderTable(window.groupedData);
+  };
+
+  function makeBtn(text, onClick, disabled) {
+    const btn = document.createElement('div');
+    btn.className = "page-btn" + (disabled ? " disabled" : "");
+    btn.textContent = text;
+    if (!disabled) btn.onclick = onClick;
+    return btn;
+  }
+
+  function makePageBtn(pageNum) {
+    const btn = document.createElement('div');
+    btn.className = "page-btn" + (pageNum === currentPage ? " active" : "");
+    btn.textContent = String(pageNum);
+    btn.onclick = () => gotoPage(pageNum);
+    return btn;
+  }
+
+  function renderPager(totalPages) {
+    const pager = document.getElementById('pager');
+    pager.innerHTML = "";
+    pager.appendChild(makeBtn("<<", () => gotoPage(currentPage - 1), currentPage === 1));
+
+    const maxShow = 5;
+    const showUntil = Math.min(maxShow, totalPages);
+    for (let p = 1; p <= showUntil; p++) pager.appendChild(makePageBtn(p));
+
+    if (totalPages > maxShow + 1) {
+      const ell = document.createElement('span');
+      ell.className = "page-ellipsis";
+      ell.textContent = "...";
+      pager.appendChild(ell);
+      pager.appendChild(makePageBtn(totalPages));
+    } else if (totalPages === maxShow + 1) {
+      pager.appendChild(makePageBtn(totalPages));
     }
 
-    function escapeQuotes(str) {
-      return String(str).replace(/'/g, "\\'");
+    pager.appendChild(makeBtn(">>", () => gotoPage(currentPage + 1), currentPage === totalPages));
+  }
+
+  /* =========================
+     ✅ Payment (Due system removed)
+     ========================= */
+  window.openPaymentForm = (groupKey) => {
+    activePaymentGroupKey = groupKey;
+    const group = window.groupedData[groupKey];
+    document.getElementById('paymentTitle').innerText = group.name + " - কালেকশন";
+    document.getElementById('cashReceivedInput').value = String(group.cash || 0);
+    openModal('paymentModal');
+  };
+
+  window.savePaymentData = async () => {
+    const cash = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+    const items = window.groupedData[activePaymentGroupKey].items;
+
+    for(let item of items) {
+      await update(ref(database, `transactions/${item.key}`), { cashReceived: cash });
     }
-  </script>
+
+    alert("পেমেন্ট আপডেট হয়েছে!");
+    closeModal('paymentModal');
+    applyFilters();
+  };
+
+  function getPkgKeyByName(name) {
+    const k = Object.keys(packages).find(x => (packages[x]?.name || "") === name);
+    return k || null;
+  }
+
+  window.deleteTransactionGroup = async (groupKey) => {
+    if(!confirm("মুছে ফেলতে চান?")) return;
+    const items = window.groupedData[groupKey].items;
+
+    for(let itm of items) {
+      const pKey = getPkgKeyByName(itm.pkgName);
+      if(pKey) {
+        const pkg = packages[pKey];
+
+        let adj = 0;
+        if ((itm.type || "Out") === "Out") {
+          const applied = parseInt(itm.appliedSellPcs || 0) || 0;
+          const legacy = parseInt(itm.totalPcs || 0) || 0;
+          adj = (applied > 0) ? applied : legacy;
+        } else {
+          adj = 0;
+        }
+
+        if (adj !== 0) {
+          await update(ref(database, `packages/${pKey}`), { stock: (parseInt(pkg.stock) || 0) + adj });
+          packages[pKey].stock = (parseInt(pkg.stock) || 0) + adj;
+        }
+      }
+
+      await remove(ref(database, `transactions/${itm.key}`));
+    }
+
+    alert("মুছে ফেলা হয়েছে");
+    applyFilters();
+  };
+
+  async function renamePersonEverywhere(oldName, newName){
+    if (!oldName || !newName || oldName === newName) return;
+
+    const snap = await get(ref(database, 'transactions'));
+    if (!snap.exists()) return;
+
+    const updates = [];
+    snap.forEach(ch => {
+      const v = ch.val() || {};
+      if ((v.personName || "") === oldName) {
+        updates.push(update(ref(database, `transactions/${ch.key}`), { personName: newName }));
+      }
+    });
+
+    if (updates.length) await Promise.all(updates);
+  }
+
+  window.savePerson = async () => {
+    const name = document.getElementById('personName').value.trim();
+    if(!name) return;
+
+    const editKey = (document.getElementById('personEditKey').value || "").trim();
+    const oldName = (document.getElementById('personOldName').value || "").trim();
+
+    if(!editKey){
+      push(ref(database, 'persons'), { name }).then(() => {
+        document.getElementById('personName').value = "";
+        closeModal('personModal');
+      });
+      return;
+    }
+
+    try{
+      await update(ref(database, `persons/${editKey}`), { name });
+      await renamePersonEverywhere(oldName, name);
+
+      document.getElementById('personEditKey').value = "";
+      document.getElementById('personOldName').value = "";
+      document.getElementById('personName').value = "";
+      document.getElementById('personModalTitle').innerText = "নতুন লোক";
+
+      alert("✅ Person আপডেট হয়েছে!");
+      closeModal('personModal');
+      renderPersonListModal();
+    }catch(e){
+      alert(e.message);
+    }
+  };
+
+</script>
 </body>
 </html>
