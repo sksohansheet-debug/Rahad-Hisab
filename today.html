@@ -477,6 +477,30 @@
     .main-container{ padding: 10px 10px; }
     .form-box{ padding: 10px; }
   }
+
+  /* =========================================================
+     ✅ NEW: Payment modal input size + buttons same line
+     (শুধু পেমেন্ট অংশের জন্য)
+     ========================================================= */
+  .pay-input{
+    width: 70%;
+    height: 54px;
+    font-size: 16px;
+    font-weight: 1000;
+    border-radius: 16px;
+  }
+
+  .pay-actions{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    margin-top: 12px;
+  }
+  .pay-actions .save-btn,
+  .pay-actions .cancel-btn{
+    width: 50%;
+    margin-top: 0;
+  }
 </style>
 </head>
 
@@ -596,24 +620,22 @@
   </div>
 </div>
 
+<!-- ✅ Payment Modal (Due system removed) -->
 <div id="paymentModal" class="modal">
   <div class="modal-content" style="max-width: 450px;">
     <h3 id="paymentTitle">পেমেন্ট এন্ট্রি</h3>
+
     <div class="form-box">
       <label>নগদ জমা টাকা:</label>
-      <input class="qty-inp" type="number" id="cashReceivedInput" value="0">
+      <input class="qty-inp pay-input" type="number" id="cashReceivedInput" value="0">
     </div>
 
-    <div class="form-box" style="background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.25);">
-      <div class="form-title">বাকী (দোকান ভিত্তিক)</div>
-      <input type="text" id="dueShopName" placeholder="দোকানের নাম">
-      <input class="qty-inp" type="number" id="dueAmount" value="0">
-      <button class="ok-btn" style="background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1)); color:#fff;" onclick="addDueToList()">বাকী যোগ করুন</button>
-      <div id="dueListContainer"></div>
+    <!-- ✅ buttons same line -->
+    <div class="pay-actions">
+      <button class="save-btn" onclick="savePaymentData()">সেভ</button>
+      <button class="cancel-btn" onclick="closeModal('paymentModal')">বন্ধ করুন</button>
     </div>
 
-    <button class="save-btn" onclick="savePaymentData()">পেমেন্ট সেভ করুন</button>
-    <span class="close-link" onclick="closeModal('paymentModal')">বন্ধ করুন</span>
   </div>
 </div>
 
@@ -651,20 +673,16 @@
   import { ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   let packages = {};
-  let currentDues = [];
   let selectedPersonName = "";
   let activePaymentGroupKey = null;
   let allTransactions = [];
 
   let currentCashData = 0;
-  let currentDuesData = [];
   let currentEditingGroupKey = null;
 
   let currentPage = 1;
   let pageSize = 10;
   let lastSortedKeys = [];
-
-  let editingDueIndex = null;
 
   let personsCache = []; // [{key, name}]
 
@@ -876,9 +894,6 @@
     }
   });
 
-  /* =========================================================
-     ✅ NEW: Delivery opens in new window (full page)
-     ========================================================= */
   function makeNewGroupId(person, date){
     return `g_${date}_${person}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   }
@@ -888,15 +903,11 @@
     q.set("person", personName || "");
     q.set("date", date || "");
     q.set("groupId", groupId || "");
-
-    /* ✅ FIX: returnUrl এখানে থাকবে, বাইরে নয় */
     q.set("returnUrl", encodeURIComponent(location.href));
-
     const url = `delivery-form.html?${q.toString()}`;
     window.location.href = url;
   }
 
-  // ✅ Delivery start after person select
   window.startDelivery = () => {
     const s = document.getElementById('mainPersonSelect');
     if(!s.value) return alert("লোক সিলেক্ট করুন");
@@ -908,7 +919,6 @@
     openDeliveryWindow({ personName: person, date, groupId: gid });
   };
 
-  // ✅ Report rule (FIXED) - আপনারই আগের মতো
   window.applyFilters = () => {
     currentPage = 1;
 
@@ -1025,7 +1035,6 @@
         <td class="col-cash">৳${(row.cash || 0).toFixed(2)}</td>
 
         <td>
-          <!-- ✅ Changed: form opens new page -->
           <button class="action-btn btn-edit-row" onclick="openDeliveryFormPage('${row.groupId}', '${row.name}', '${row.date}')"><i class="fas fa-file-invoice"></i> Form</button>
           <button class="action-btn btn-pay-row" onclick="openPaymentForm('${groupKey}')"><i class="fas fa-money-bill-wave"></i> পেমেন্ট</button>
           <button class="action-btn btn-del-row" onclick="deleteTransactionGroup('${groupKey}')"><i class="fas fa-trash"></i></button>
@@ -1037,7 +1046,6 @@
     renderPager(totalPages);
   }
 
-  // ✅ NEW: open existing group in full page
   window.openDeliveryFormPage = (groupId, name, date) => {
     openDeliveryWindow({ personName: name, date, groupId });
   };
@@ -1095,62 +1103,24 @@
   }
 
   /* =========================
-     ✅ Payment, Delete, Person Edit
+     ✅ Payment (Due system removed)
      ========================= */
   window.openPaymentForm = (groupKey) => {
     activePaymentGroupKey = groupKey;
     const group = window.groupedData[groupKey];
     document.getElementById('paymentTitle').innerText = group.name + " - কালেকশন";
     document.getElementById('cashReceivedInput').value = String(group.cash || 0);
-    currentDues = group.items[0]?.dues || [];
-    editingDueIndex = null;
-    renderDuesList();
     openModal('paymentModal');
   };
-
-  window.addDueToList = () => {
-    const shop = document.getElementById('dueShopName').value.trim();
-    const amt = parseFloat(document.getElementById('dueAmount').value) || 0;
-    if(!shop || amt <= 0) return;
-
-    if (editingDueIndex !== null && currentDues[editingDueIndex]) {
-      currentDues[editingDueIndex] = { shop, amt };
-      editingDueIndex = null;
-    } else {
-      currentDues.push({ shop, amt });
-    }
-
-    document.getElementById('dueShopName').value = "";
-    document.getElementById('dueAmount').value = "0";
-    renderDuesList();
-  };
-
-  window.editDueItem = (idx) => {
-    if (!currentDues[idx]) return;
-    editingDueIndex = idx;
-    document.getElementById('dueShopName').value = currentDues[idx].shop || "";
-    document.getElementById('dueAmount').value = String(currentDues[idx].amt || 0);
-  };
-
-  function renderDuesList() {
-    const cont = document.getElementById('dueListContainer');
-    cont.innerHTML = "";
-    currentDues.forEach((d, i) => {
-      cont.innerHTML += `
-        <div class="due-item" onclick="editDueItem(${i})">
-          <span>${d.shop}</span>
-          <span>৳${d.amt}</span>
-        </div>
-      `;
-    });
-  }
 
   window.savePaymentData = async () => {
     const cash = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
     const items = window.groupedData[activePaymentGroupKey].items;
+
     for(let item of items) {
-      await update(ref(database, `transactions/${item.key}`), { cashReceived: cash, dues: currentDues });
+      await update(ref(database, `transactions/${item.key}`), { cashReceived: cash });
     }
+
     alert("পেমেন্ট আপডেট হয়েছে!");
     closeModal('paymentModal');
     applyFilters();
@@ -1192,7 +1162,6 @@
     applyFilters();
   };
 
-  // ✅ Rename person everywhere (আপনার আগের মতো)
   async function renamePersonEverywhere(oldName, newName){
     if (!oldName || !newName || oldName === newName) return;
 
