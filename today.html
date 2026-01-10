@@ -889,7 +889,7 @@
     q.set("date", date || "");
     q.set("groupId", groupId || "");
     const url = `delivery-form.html?${q.toString()}`;
-    window.open(url, "_blank");
+    window.location.href = url;
   }
 
   // ✅ Delivery start after person select
