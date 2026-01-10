@@ -68,7 +68,7 @@
       display:flex;
       flex-direction:column;
       gap: 2px;
-      text-align: center; /* ✅ centered like you asked */
+      text-align: center;
     }
     .title{
       font-weight: 1000;
@@ -155,7 +155,7 @@
       padding: 10px;
     }
 
-    /* ✅ NEW: header inside page + in PDF */
+    /* ✅ header inside page + in PDF */
     .print-header{
       text-align:center;
       font-weight: 1000;
@@ -184,12 +184,12 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 9.2px;       /* ✅ smaller to fit 30 rows */
+      font-size: 9.2px;
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 3px 3px;       /* ✅ smaller to fit 30 rows */
+      padding: 3px 3px;
       text-align: center;
       vertical-align: middle;
       font-weight: 900;
@@ -238,10 +238,10 @@
       background: rgba(34,197,94,.07);
     }
 
-    /* ✅ pkg width কমানো (ফাকা জায়গা কমে যাবে) */
+    /* ✅ pkg width */
     .delivery-table th:first-child,
     .delivery-table td:first-child{
-      width: 240px; /* ✅ tighter than before */
+      width: 240px;
       text-align:left;
       white-space: normal;
       word-break: break-word;
@@ -251,13 +251,7 @@
       color: #0f172a;
       background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
     }
-    .pkg-sub{
-      display:block;
-      font-size: 8.4px;
-      font-weight: 900;
-      color: rgba(15,23,42,.60);
-      margin-top: 1px;
-    }
+
     .serial-badge{
       display:inline-flex;
       align-items:center;
@@ -274,8 +268,8 @@
     }
 
     .qty-inp{
-      width: 48px;           /* ✅ smaller */
-      padding: 3px 3px;      /* ✅ smaller */
+      width: 48px;
+      padding: 3px 3px;
       border-radius: 9px;
       border: 1px solid rgba(229,231,235,.95);
       font-weight: 1000;
@@ -315,10 +309,14 @@
     .tot-sellpcs{ background: rgba(16,185,129,.10); color:#065f46; }
     .tot-money{ background: rgba(239,68,68,.10); color:#b42318; }
 
-    .center-back{
-      margin-top: 10px;
-      text-align: center;
-    }
+    /* ✅ PDF smaller look (html2pdf also uses screen CSS) */
+    body.pdf-mode .delivery-table{ font-size: 8.2px; }
+    body.pdf-mode .delivery-table th, 
+    body.pdf-mode .delivery-table td{ padding: 2.4px 2.4px; }
+    body.pdf-mode .delivery-table thead th{ font-size: 8.2px; padding: 4px 2.4px; }
+    body.pdf-mode .qty-inp{ width: 44px; padding: 2.6px 2.6px; font-size: 9px; }
+    body.pdf-mode .print-header{ font-size: 11px; padding: 4px 4px 8px 4px; }
+    body.pdf-mode .print-header small{ font-size: 9px; }
 
     /* ✅ Print/PDF: hide buttons only */
     @media print{
@@ -331,7 +329,7 @@
     }
     @page{
       size: A4 landscape;
-      margin: 4mm; /* ✅ smaller margin => more rows fit */
+      margin: 6mm; /* ✅ more white space around */
     }
   </style>
 </head>
@@ -339,8 +337,9 @@
 <body>
   <div class="topbar no-print">
     <div class="title-box">
-      <div class="title" id="headlineTitle">ডেলিভারি ফর্ম</div>
-      <div class="sub" id="headlineSub">লোড হচ্ছে...</div>
+      <!-- ✅ Navbar: no person/date -->
+      <div class="title" id="headlineTitle">Delivery Form</div>
+      <div class="sub" id="headlineSub">ডেলিভারি ফর্ম</div>
     </div>
 
     <div class="meta">
@@ -352,6 +351,9 @@
       <!-- ✅ PDF now downloads directly -->
       <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
       <button class="btn btn-save" onclick="saveDeliverySmart()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+
+      <!-- ✅ Cancel moved to navbar -->
+      <button class="btn btn-back" onclick="goBackToMain()"><i class="fa-solid fa-xmark"></i> Cancel</button>
     </div>
   </div>
 
@@ -393,10 +395,7 @@
         </table>
       </div>
 
-      <!-- ✅ Close button small + centered -->
-      <div class="center-back no-print">
-        <button class="btn btn-back" onclick="goBackToMain()"><i class="fa-solid fa-arrow-left"></i> বন্ধ করুন</button>
-      </div>
+      <!-- ✅ bottom cancel removed (as requested) -->
     </div>
   </div>
 
@@ -409,6 +408,9 @@
   const urlPerson = (qs.get("person") || "").trim();
   const urlDate = (qs.get("date") || "").trim();
   const urlGroupId = (qs.get("groupId") || "").trim();
+
+  /* ✅ NEW: return URL for same-tab back */
+  const returnUrl = decodeURIComponent(qs.get("returnUrl") || "");
 
   const todayISO = () => {
     const d = new Date();
@@ -469,11 +471,11 @@
     const dmy = ddmmyyyy(dateInput.value || "");
     const person = selectedPersonName || "N/A";
 
-    // topbar centered
-    document.getElementById("headlineTitle").innerText = `${person}${dmy ? " • " + dmy : ""}`;
+    // ✅ Navbar fixed (no person/date)
+    document.getElementById("headlineTitle").innerText = `Delivery Form`;
     document.getElementById("headlineSub").innerText = `ডেলিভারি ফর্ম`;
 
-    // PDF/header inside page
+    // ✅ PDF/header inside page
     document.getElementById("pdfHeaderLine").innerText = `${person}${dmy ? " (" + dmy + ")" : ""}`;
     document.getElementById("pdfHeaderDate").innerText = dmy ? `তারিখ: ${dmy}` : "";
   }
@@ -603,7 +605,6 @@
           <td class="pkg-cell">
             ${r.serial != null ? `<span class="serial-badge">${r.serial}</span>` : ``}
             ${r.pkgName || ""}
-            <span class="pkg-sub">কেসে: ${r.caseQty} পিস • স্টক: ${r.stock}</span>
           </td>
 
           <td><input class="qty-inp" type="number" min="0" value="${outCaseVal}" placeholder="-" data-idx="${idx}" data-field="outCase"></td>
@@ -792,52 +793,55 @@
     }
   };
 
+  /* ✅ CHANGED: same-tab return after Save */
   function returnToMainAfterSave(){
-    try{
-      if (window.opener && typeof window.opener.applyFilters === "function") window.opener.applyFilters();
-    }catch(e){}
-    window.close();
-    setTimeout(() => {}, 200);
+    if (returnUrl) {
+      location.href = returnUrl;
+      return;
+    }
+    history.back();
   }
 
   /* ========= PDF (direct download, no print dialog) ========= */
   window.saveAsPDF = async () => {
-    // ✅ ensure latest totals
     updateTotalsLive();
-    setHeadline(); // ensure header correct
+    setHeadline();
 
     const dateISO = dateInput.value || "";
     const dmy = ddmmyyyy(dateISO);
     const name = sanitizeFile(selectedPersonName || "Delivery");
-
-    // ✅ EXACT filename: Rahad10-12-2026.pdf (no extra)
     const filename = `${name}${dmy}.pdf`;
 
-    // ✅ make sure PDF uses exact current UI
     const el = document.getElementById("printArea");
 
+    // ✅ make PDF smaller + more white space
+    document.body.classList.add("pdf-mode");
+
     const opt = {
-      margin:       [3, 3, 3, 3], // mm-like (html2pdf uses inches internally but this works well)
+      margin:       [6, 6, 6, 6],  // ✅ more space
       filename:     filename,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      html2canvas:  { scale: 1.6, useCORS: true, backgroundColor: '#ffffff' }, // ✅ smaller content
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // ✅ wait one frame so DOM updates are captured
     requestAnimationFrame(() => {
-      html2pdf().set(opt).from(el).save();
+      html2pdf().set(opt).from(el).save().then(() => {
+        document.body.classList.remove("pdf-mode");
+      }).catch(() => {
+        document.body.classList.remove("pdf-mode");
+      });
     });
   };
 
-  /* ========= back ========= */
+  /* ✅ Cancel works same-tab */
   window.goBackToMain = () => {
-    try{
-      if (window.opener && typeof window.opener.applyFilters === "function") window.opener.applyFilters();
-    }catch(e){}
-    window.close();
-    setTimeout(() => { history.back(); }, 150);
+    if (returnUrl) {
+      location.href = returnUrl;
+      return;
+    }
+    history.back();
   };
 </script>
 
