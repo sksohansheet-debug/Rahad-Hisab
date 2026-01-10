@@ -641,6 +641,7 @@
       shipments: [],
       cash: [],
       transactions: [],
+      bakiTransactions: [],   // ✅ NEW (only for 8th card due)
       bakiDueTotal: 0,
       collectionTotal: 0,
       bakiPaidTotal: 0
@@ -802,6 +803,25 @@
       return total;
     }
 
+    /* ✅ NEW: 8th card due will come from bakiTransactions node (amt/paidAmt) */
+    function computeBakiDueFromBakiTransactions(bakiRows){
+      let dueTotal = 0;
+
+      for (const tr of (bakiRows || [])){
+        const dues = tr?.dues;
+        if (!Array.isArray(dues)) continue;
+
+        for (const d of dues){
+          const amt = num(d?.amt);
+          const paid = num(d?.paidAmt);
+          const due = amt - paid;
+          if (due > 0) dueTotal += due;
+        }
+      }
+
+      return dueTotal;
+    }
+
     function render(){
       const stockBalance = computeStockBalance(state.packages);
 
@@ -880,6 +900,27 @@
       render();
     });
 
+    // ✅ NEW) bakiTransactions (ONLY for 8th card Total Due)
+    pulse();
+    onValue(ref(database, "bakiTransactions"), (snap) => {
+      const arr = [];
+      snap.forEach(ch => {
+        const v = ch.val() || {};
+        arr.push({
+          key: ch.key,
+          ...v,
+          date: safeISODate(v.date),
+          dues: Array.isArray(v.dues) ? v.dues : []
+        });
+      });
+
+      state.bakiTransactions = arr;
+      state.bakiDueTotal = computeBakiDueFromBakiTransactions(state.bakiTransactions);
+
+      markLoaded('baki');
+      render();
+    });
+
     // 4) transactions
     pulse();
     onValue(ref(database, "transactions"), (snap) => {
@@ -902,12 +943,11 @@
 
       state.transactions = arr;
 
-      state.bakiDueTotal = computeBakiDueOnly(state.transactions);
+      /* ✅ আগের সব লজিক যেমন ছিল তেমনই থাকছে (৮নং কার্ড বাদে) */
       state.collectionTotal = computeCollectionTotalFromTransactions(state.transactions);
       state.bakiPaidTotal = computeBakiPaidTotalFromTransactions(state.transactions);
 
       markLoaded('transactions');
-      markLoaded('baki');
       render();
     });
 
