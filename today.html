@@ -1016,9 +1016,10 @@
     setTimeout(() => { loaderEl.style.display = 'none'; }, 260);
   };
 
-  const loadState = { persons:false, categories:false, packages:false, transactions:false };
+  // ✅ FIX: categories বাদ (এই পেজে লাগছে না)
+  const loadState = { persons:false, packages:false, transactions:false };
   const checkAllLoaded = () => {
-    if (loadState.persons && loadState.categories && loadState.packages && loadState.transactions) hideLoader();
+    if (loadState.persons && loadState.packages && loadState.transactions) hideLoader();
   };
 
   // ✅ Sidebar UI
@@ -1126,7 +1127,7 @@
   window.hidePerson = (key) => {
     const p = personsCache.find(x => x.key === key);
     if (!p) return;
-    if(!confirm(\`"\${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)\`)) return;
+    if(!confirm(`"${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)`)) return;
     hidePersonKey(key);
     buildPersonOptions();
   };
@@ -1215,16 +1216,6 @@
     if (personsFirstLoad) {
       personsFirstLoad = false;
       loadState.persons = true;
-      checkAllLoaded();
-    }
-  });
-
-  // ✅ Categories (loader only)
-  let categoriesFirstLoad = true;
-  onValue(ref(database, 'categories'), () => {
-    if (categoriesFirstLoad) {
-      categoriesFirstLoad = false;
-      loadState.categories = true;
       checkAllLoaded();
     }
   });
