@@ -153,6 +153,8 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
       padding: 10px;
+      position: relative; /* ✅ NEW: loading overlay anchor */
+      overflow: hidden;   /* ✅ NEW */
     }
 
     /* ✅ header inside page + in PDF */
@@ -250,6 +252,7 @@
       font-weight: 1000;
       color: #0f172a;
       background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
+      transition: background .15s ease, box-shadow .15s ease;
     }
 
     .serial-badge{
@@ -309,9 +312,28 @@
     .tot-sellpcs{ background: rgba(16,185,129,.10); color:#065f46; }
     .tot-money{ background: rgba(239,68,68,.10); color:#b42318; }
 
+    /* ✅ NEW: totals row thicker + bigger text (only bottom total line) */
+    .delivery-table tfoot tr td{
+      border-top: 3px solid rgba(15,23,42,.25) !important;
+      font-size: 10.8px !important;
+      padding: 6px 4px !important;
+      font-weight: 1000 !important;
+    }
+
+    /* ✅ NEW: row hover/touch highlight */
+    .delivery-table tbody tr{
+      transition: background .15s ease;
+    }
+    .delivery-table tbody tr:hover td{
+      background: rgba(37,99,235,.06);
+    }
+    .delivery-table tbody tr.active-row td{
+      background: rgba(37,99,235,.08) !important;
+    }
+
     /* ✅ PDF smaller look (html2pdf also uses screen CSS) */
     body.pdf-mode .delivery-table{ font-size: 8.2px; }
-    body.pdf-mode .delivery-table th, 
+    body.pdf-mode .delivery-table th,
     body.pdf-mode .delivery-table td{ padding: 2.4px 2.4px; }
     body.pdf-mode .delivery-table thead th{ font-size: 8.2px; padding: 4px 2.4px; }
     body.pdf-mode .qty-inp{ width: 44px; padding: 2.6px 2.6px; font-size: 9px; }
@@ -331,6 +353,177 @@
       size: A4 landscape;
       margin: 6mm; /* ✅ more white space around */
     }
+
+    /* =========================
+       ✅ NEW: Loading overlay (same style idea like other page)
+       ========================= */
+    .loading-layer{
+      position:absolute;
+      inset:0;
+      z-index: 120;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      background:
+        radial-gradient(900px 420px at 10% 0%, rgba(37,99,235,.10), transparent 60%),
+        rgba(255,255,255,.70);
+      backdrop-filter: blur(10px);
+    }
+    .loading-layer.show{ display:flex; }
+    .loading-card{
+      width: min(520px, 96%);
+      border-radius: 18px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.95);
+      box-shadow: 0 30px 90px rgba(15,23,42,.12);
+      overflow:hidden;
+    }
+    .loading-top{
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(229,231,235,.9);
+    }
+    .loading-title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 1000;
+      color:#0f172a;
+      font-size: 14px;
+      letter-spacing:.2px;
+    }
+    .spinner{
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 3px solid rgba(37,99,235,.18);
+      border-top-color: rgba(37,99,235,1);
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+    .loading-body{ padding: 12px 14px 14px 14px; }
+    .skeleton{
+      position: relative;
+      overflow:hidden;
+      background: rgba(148,163,184,.22);
+      border-radius: 12px;
+    }
+    .skeleton::after{
+      content:"";
+      position:absolute;
+      top:0; left:-40%;
+      height:100%;
+      width:40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      animation: shimmer 1.1s ease-in-out infinite;
+    }
+    @keyframes shimmer{
+      0%{ left:-45%; }
+      100%{ left: 120%; }
+    }
+    .sk-row{ display:flex; gap: 10px; margin-top: 10px; }
+    .sk-cell{ height: 12px; }
+    .sk-1{ width: 18%; }
+    .sk-2{ width: 24%; }
+    .sk-3{ width: 30%; }
+    .sk-4{ width: 16%; margin-left:auto; }
+    .loading-hint{
+      margin-top: 10px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 900;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .loading-pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(37,99,235,.08);
+      border: 1px solid rgba(37,99,235,.18);
+      color:#0d47a1;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    /* =========================
+       ✅ NEW: PDF confirm modal
+       ========================= */
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+    }
+    .modal.show{ display:flex; }
+    .modal-box{
+      width: min(420px, 92%);
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 18px;
+      box-shadow: 0 40px 120px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .modal-head{
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(229,231,235,.9);
+    }
+    .modal-title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 1000;
+      color:#0f172a;
+      font-size: 15px;
+    }
+    .modal-body{
+      padding: 12px 14px 6px 14px;
+      color:#0f172a;
+      font-weight: 900;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .modal-sub{
+      margin-top: 6px;
+      color: rgba(15,23,42,.62);
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .modal-actions{
+      padding: 12px 14px 14px 14px;
+      display:flex;
+      gap: 10px;
+    }
+    .m-btn{
+      flex:1;
+      border: none;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 1000;
+      font-size: 12px;
+      padding: 11px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      box-shadow: var(--shadow2);
+    }
+    .m-btn:active{ transform: scale(.99); }
+    .m-cancel{ background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1)); color:#fff; }
+    .m-save{ background: linear-gradient(135deg, rgba(22,163,74,1), rgba(34,197,94,1)); color:#fff; }
   </style>
 </head>
 
@@ -348,8 +541,8 @@
         <input type="date" id="deliveryDate">
       </div>
 
-      <!-- ✅ PDF now downloads directly -->
-      <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+      <!-- ✅ PDF now opens confirm modal -->
+      <button class="btn btn-pdf" onclick="openPdfConfirm()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
       <button class="btn btn-save" onclick="saveDeliverySmart()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
 
       <!-- ✅ Cancel moved to navbar -->
@@ -360,6 +553,48 @@
   <div class="wrap">
     <!-- ✅ This area will be converted to PDF exactly -->
     <div class="card" id="printArea">
+
+      <!-- ✅ NEW: Loading Layer -->
+      <div id="loadingLayer" class="loading-layer">
+        <div class="loading-card">
+          <div class="loading-top">
+            <div class="loading-title">
+              <span class="spinner"></span>
+              ডাটা লোড হচ্ছে...
+            </div>
+            <div class="loading-pill">Please wait</div>
+          </div>
+
+          <div class="loading-body">
+            <div class="skeleton sk-cell" style="height:14px; width: 55%;"></div>
+
+            <div class="sk-row">
+              <div class="skeleton sk-cell sk-1"></div>
+              <div class="skeleton sk-cell sk-2"></div>
+              <div class="skeleton sk-cell sk-3"></div>
+              <div class="skeleton sk-cell sk-4"></div>
+            </div>
+            <div class="sk-row">
+              <div class="skeleton sk-cell sk-2"></div>
+              <div class="skeleton sk-cell sk-3"></div>
+              <div class="skeleton sk-cell sk-1"></div>
+              <div class="skeleton sk-cell sk-4"></div>
+            </div>
+            <div class="sk-row">
+              <div class="skeleton sk-cell sk-3"></div>
+              <div class="skeleton sk-cell sk-1"></div>
+              <div class="skeleton sk-cell sk-2"></div>
+              <div class="skeleton sk-cell sk-4"></div>
+            </div>
+
+            <div class="loading-hint">
+              <span>Firebase থেকে তথ্য আনা হচ্ছে</span>
+              <span class="loading-pill">Syncing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ✅ name+date centered in page + will be in PDF -->
       <div class="print-header" id="pdfHeader">
         <div id="pdfHeaderLine">গ্রহীতা: ...</div>
@@ -396,6 +631,27 @@
       </div>
 
       <!-- ✅ bottom cancel removed (as requested) -->
+    </div>
+  </div>
+
+  <!-- ✅ NEW: PDF Confirm Modal -->
+  <div id="pdfConfirmModal" class="modal" onclick="closePdfConfirmFromOverlay(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">
+          <i class="fa-solid fa-file-pdf" style="color:#16a34a;"></i>
+          পিডিএফ সেভ করুন
+        </div>
+        <div style="font-weight:1000;color:rgba(15,23,42,.55);font-size:12px;">Ready</div>
+      </div>
+      <div class="modal-body">
+        আপনার ডেলিভারি ফর্মটি PDF হিসেবে সেভ করতে চান?
+        <div class="modal-sub">Save চাপলে PDF ডাউনলোড হবে।</div>
+      </div>
+      <div class="modal-actions">
+        <button class="m-btn m-cancel" onclick="closePdfConfirm()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+        <button class="m-btn m-save" onclick="confirmSavePDF()"><i class="fa-solid fa-download"></i> Save</button>
+      </div>
     </div>
   </div>
 
@@ -463,6 +719,16 @@
   let currentCashData = 0;
   let currentDuesData = [];
 
+  /* ========= loading controls ========= */
+  function showLoading(){
+    const el = document.getElementById("loadingLayer");
+    if (el) el.classList.add("show");
+  }
+  function hideLoading(){
+    const el = document.getElementById("loadingLayer");
+    if (el) el.classList.remove("show");
+  }
+
   /* ========= UI init ========= */
   const dateInput = document.getElementById("deliveryDate");
   dateInput.value = urlDate || todayISO();
@@ -485,14 +751,41 @@
     setHeadline();
   });
 
+  /* ========= row highlight for touch ========= */
+  function bindRowHighlight(){
+    const tbody = document.getElementById('deliveryPkgTbody');
+    if (!tbody) return;
+
+    tbody.addEventListener('touchstart', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr) return;
+      tbody.querySelectorAll('tr.active-row').forEach(x => x.classList.remove('active-row'));
+      tr.classList.add('active-row');
+    }, { passive:true });
+
+    tbody.addEventListener('mousedown', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr) return;
+      tbody.querySelectorAll('tr.active-row').forEach(x => x.classList.remove('active-row'));
+      tr.classList.add('active-row');
+    });
+  }
+
   /* ========= load packages + then load group transactions ========= */
+  showLoading();
+
   onValue(ref(database, 'packages'), async (snapshot) => {
     packages = {};
     snapshot.forEach(child => { packages[child.key] = { ...child.val(), key: child.key }; });
 
     buildDeliveryRowsFromPackages();
+
     await hydrateExistingGroupIfAny();
+
     renderDeliveryTable();
+    bindRowHighlight();
+
+    hideLoading();
   });
 
   async function hydrateExistingGroupIfAny(){
@@ -655,10 +948,39 @@
     });
   }
 
+  /* ========= PDF confirm modal ========= */
+  window.openPdfConfirm = () => {
+    document.getElementById("pdfConfirmModal").classList.add("show");
+  };
+  window.closePdfConfirm = () => {
+    document.getElementById("pdfConfirmModal").classList.remove("show");
+  };
+  window.closePdfConfirmFromOverlay = (e) => {
+    if (e.target && e.target.id === "pdfConfirmModal") closePdfConfirm();
+  };
+
+  window.confirmSavePDF = async () => {
+    closePdfConfirm();
+    // ✅ If form loads again, show loading (as requested)
+    showLoading();
+    try{
+      await saveAsPDF(); // saveAsPDF will hide loading at end
+    }catch(e){
+      hideLoading();
+      alert("PDF সেভ করা যায়নি!");
+    }
+  };
+
   /* ========= SAVE (unchanged logic) ========= */
   window.saveDeliverySmart = async () => {
+    // ✅ if saving triggers loading, show it
+    showLoading();
+
     const date = dateInput.value || todayISO();
-    if(!selectedPersonName) return alert("গ্রহীতা পাওয়া যায়নি!");
+    if(!selectedPersonName){
+      hideLoading();
+      return alert("গ্রহীতা পাওয়া যায়নি!");
+    }
 
     if (!currentDeliveryGroupId) {
       currentDeliveryGroupId = `g_${date}_${selectedPersonName}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -700,9 +1022,11 @@
           }
         }
 
+        hideLoading();
         alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
         returnToMainAfterSave();
       }catch(e){
+        hideLoading();
         alert(e.message);
       }
       return;
@@ -786,9 +1110,11 @@
         r.appliedSellPcs = netSell;
       }
 
+      hideLoading();
       alert("✅ সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
       returnToMainAfterSave();
     }catch(e){
+      hideLoading();
       alert(e.message);
     }
   };
@@ -826,11 +1152,17 @@
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    requestAnimationFrame(() => {
-      html2pdf().set(opt).from(el).save().then(() => {
-        document.body.classList.remove("pdf-mode");
-      }).catch(() => {
-        document.body.classList.remove("pdf-mode");
+    return new Promise((resolve, reject) => {
+      requestAnimationFrame(() => {
+        html2pdf().set(opt).from(el).save().then(() => {
+          document.body.classList.remove("pdf-mode");
+          hideLoading(); // ✅ hide loading after saving
+          resolve(true);
+        }).catch((e) => {
+          document.body.classList.remove("pdf-mode");
+          hideLoading();
+          reject(e);
+        });
       });
     });
   };
