@@ -699,6 +699,21 @@
     }
     .save-delivery-btn:active{ transform: scale(.99); }
 
+    /* ✅ NEW: PDF Share/Save button style (form-এর স্টাইল বদলানো হয়নি, শুধু নতুন বাটন) */
+    .share-pdf-btn{
+      margin-top: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
+      color:#fff;
+      border:none;
+      padding: 11px 12px;
+      border-radius: 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      box-shadow: var(--shadow2);
+    }
+    .share-pdf-btn:active{ transform: scale(.99); }
+
     @media (max-width:520px){
       .nav-buttons .btn{ flex:1; justify-content:center; }
       .navbar{ padding: 10px 12px; }
@@ -867,6 +882,9 @@
       </div>
 
       <button class="save-delivery-btn" onclick="saveDeliverySmart()">✅ Save</button>
+
+      <!-- ✅ NEW: Share/Save PDF Button -->
+      <button class="share-pdf-btn" onclick="shareDeliveryAsPDF()">📄 Share / Save PDF</button>
     </div>
 
     <span class="close-link" onclick="closeModal('deliveryMainModal')">বন্ধ করুন</span>
@@ -923,6 +941,9 @@
     <span class="close-link" onclick="closeModal('personListModal')">বন্ধ করুন</span>
   </div>
 </div>
+
+<!-- ✅ NEW: html2pdf (PDF বানানোর জন্য) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script type="module">
   import { database } from './firebase-config.js';
@@ -1235,9 +1256,6 @@
 
   /* =========================================================
      ✅ Report rule (FIXED)
-     - "Sell money" shows when:
-        ✅ group has any Return
-        OR ✅ group has saleConfirmed (user confirmed even with Return=0)
      ========================================================= */
   window.applyFilters = () => {
     currentPage = 1;
@@ -1285,7 +1303,6 @@
       const sellPrice = parseFloat(t.pkgSellPrice) || 0;
       const totalPcs = parseInt(t.totalPcs) || 0;
 
-      // ✅ collect group confirm flag
       if (t.saleConfirmed === true) grouped[groupKey].saleConfirmed = true;
 
       if(hasFilter) {
@@ -1315,8 +1332,6 @@
     Object.keys(grouped).forEach(k => {
       const g = grouped[k];
       g.sellAmt = (g.outAmt || 0) - (g.returnAmt || 0);
-
-      // ✅ FIXED RULE:
       g.displaySellAmt = ((g.returnPcs || 0) > 0 || g.saleConfirmed === true) ? g.sellAmt : 0;
     });
 
@@ -1447,7 +1462,6 @@
         returnKey: null,
         appliedSellPcs: 0,
 
-        // ✅ NEW: user touched return inputs (even typing 0)
         retTouched: false
       }))
       .sort((a,b) => {
@@ -1508,7 +1522,6 @@
           <td><input class="qty-inp" type="number" min="0" value="${retCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retCase"></td>
           <td><input class="qty-inp" type="number" min="0" value="${retPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retPcs"></td>
 
-          <!-- ✅ Sell pcs অটো (কিছু না থাকলে 0) -->
           <td class="sellpcs-cell">
             <span id="sellpcs-${idx}" style="min-width:28px; display:inline-block;">${computed.sellPcs}</span>
           </td>
@@ -1540,10 +1553,9 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
-      // ✅ if user touched return inputs (even typing 0), confirm
       if (field === "retCase" || field === "retPcs") {
         const v = String(el.value ?? "").trim();
-        if (v !== "") deliveryRows[idx].retTouched = true; // "0" counts
+        if (v !== "") deliveryRows[idx].retTouched = true;
       }
 
       deliveryRows[idx][field] = safeNum(el.value);
@@ -1603,16 +1615,13 @@
       if (existingGid) currentDeliveryGroupId = existingGid;
     }
 
-    // ✅ FIX: saleConfirmed হবে যদি কোনো রোতে ফেরত ইনপুট touch হয় (0 দিলেও)
     const saleConfirmed = deliveryRows.some(r => r.retTouched);
 
-    // ✅ retMode triggers stock update mode
     const retMode =
       saleConfirmed ||
       deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) ||
       currentEditingGroupKey;
 
-    // ✅ if NOT retMode => only Out save, no stock cut
     if (!retMode) {
       try{
         for (const r of deliveryRows) {
@@ -1651,7 +1660,6 @@
       return;
     }
 
-    // ✅ retMode OR saleConfirmed => stock update
     try{
       for (const r of deliveryRows) {
         const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
@@ -1672,8 +1680,6 @@
             cashReceived: currentCashData,
             dues: currentDuesData,
             appliedSellPcs: r.appliedSellPcs || 0,
-
-            // ✅ important
             saleConfirmed: saleConfirmed
           };
           if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), outPayload);
@@ -1695,7 +1701,6 @@
             amount: (retTotal * r.sellPrice).toFixed(2),
             cashReceived: currentCashData,
             dues: currentDuesData,
-
             saleConfirmed: saleConfirmed
           };
           if (r.returnKey) await update(ref(database, `transactions/${r.returnKey}`), retPayload);
@@ -1778,7 +1783,6 @@
         row.returnKey = item.key;
       }
 
-      // ✅ keep confirm state when reopened
       row.retTouched = savedSaleConfirmed;
     });
 
@@ -1786,9 +1790,6 @@
     openModal('deliveryMainModal');
   };
 
-  /* =========================================================
-     ✅ FIX: Delete group => Stock back correctly
-     ========================================================= */
   window.deleteTransactionGroup = async (groupKey) => {
     if(!confirm("মুছে ফেলতে চান?")) return;
     const items = window.groupedData[groupKey].items;
@@ -1882,7 +1883,6 @@
     applyFilters();
   };
 
-  // ✅ NEW: Rename person everywhere in transactions (so old data stays usable)
   async function renamePersonEverywhere(oldName, newName){
     if (!oldName || !newName || oldName === newName) return;
 
@@ -1907,7 +1907,6 @@
     const editKey = (document.getElementById('personEditKey').value || "").trim();
     const oldName = (document.getElementById('personOldName').value || "").trim();
 
-    // add
     if(!editKey){
       push(ref(database, 'persons'), { name }).then(() => {
         document.getElementById('personName').value = "";
@@ -1916,7 +1915,6 @@
       return;
     }
 
-    // edit
     try{
       await update(ref(database, `persons/${editKey}`), { name });
       await renamePersonEverywhere(oldName, name);
@@ -1928,7 +1926,6 @@
 
       alert("✅ Person আপডেট হয়েছে!");
       closeModal('personModal');
-      // list refresh
       renderPersonListModal();
     }catch(e){
       alert(e.message);
@@ -1936,6 +1933,183 @@
   };
 
   setTimeout(attachZeroBehavior, 500);
+
+  /* =========================================================
+     ✅ NEW: Delivery PDF Share/Save
+     - PDF এ কোনো ডিজাইন ব্যাকগ্রাউন্ড নেই (সাদা),
+       শুধু টেক্সটের কালার রাখা হয়েছে।
+     ========================================================= */
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    }[m]));
+  }
+
+  function buildDeliveryPDFElement(){
+    const person = selectedPersonName || "";
+    const dateISO = document.getElementById('deliveryDate')?.value || todayISO();
+
+    // rows: সব প্যাকেজ দেখাবে, কিন্তু empty হলে ঘর ফাঁকা
+    let totalSell = 0;
+    let totalMoney = 0;
+
+    const rowsHtml = deliveryRows.map(r => {
+      const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
+      const retTotal = pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty);
+      const sellPcs = Math.max(0, outTotal - retTotal);
+      const money = sellPcs * (parseFloat(r.sellPrice)||0);
+
+      totalSell += sellPcs;
+      totalMoney += money;
+
+      const oc = r.outCase > 0 ? r.outCase : "";
+      const op = r.outPcs > 0 ? r.outPcs : "";
+      const rc = r.retCase > 0 ? r.retCase : "";
+      const rp = r.retPcs > 0 ? r.retPcs : "";
+
+      return `
+        <tr>
+          <td style="text-align:left; font-weight:1000; color:#0f172a;">${escapeHtml(r.pkgName)}</td>
+          <td>${escapeHtml(oc)}</td>
+          <td>${escapeHtml(op)}</td>
+          <td>${escapeHtml(rc)}</td>
+          <td>${escapeHtml(rp)}</td>
+          <td style="color:#065f46; font-weight:1000;">${sellPcs ? sellPcs : ""}</td>
+          <td style="color:#b42318; font-weight:1000;">${sellPcs ? ("৳"+money.toFixed(2)) : ""}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const wrap = document.createElement("div");
+    wrap.style.width = "210mm";
+    wrap.style.padding = "12mm";
+    wrap.style.background = "#ffffff";
+    wrap.style.color = "#0f172a";
+    wrap.style.fontFamily = "Poppins, Arial, sans-serif";
+
+    wrap.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:10px;">
+        <div style="font-size:18px; font-weight:1000; color:#1d4ed8;">
+          ${escapeHtml(person)}
+        </div>
+        <div style="font-size:12px; font-weight:900; color:#0f172a;">
+          তারিখ: ${escapeHtml(formatDate(dateISO))}
+        </div>
+      </div>
+
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead>
+          <tr>
+            <th rowspan="2" style="border:1px solid #111827; padding:7px 6px; text-align:left; font-weight:1000;">প্যাকেজের নাম</th>
+            <th colspan="2" style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#2563eb;">বহির পণ্য</th>
+            <th colspan="2" style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#16a34a;">ফেরত পণ্য</th>
+            <th rowspan="2" style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#065f46;">সেল পিস</th>
+            <th rowspan="2" style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#b42318;">টাকা</th>
+          </tr>
+          <tr>
+            <th style="border:1px solid #111827; padding:7px 6px; font-weight:1000;">কেস</th>
+            <th style="border:1px solid #111827; padding:7px 6px; font-weight:1000;">পিস</th>
+            <th style="border:1px solid #111827; padding:7px 6px; font-weight:1000;">কেস</th>
+            <th style="border:1px solid #111827; padding:7px 6px; font-weight:1000;">পিস</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="border:1px solid #111827; padding:7px 6px; font-weight:1000; text-align:left;">মোট</td>
+            <td style="border:1px solid #111827;"></td>
+            <td style="border:1px solid #111827;"></td>
+            <td style="border:1px solid #111827;"></td>
+            <td style="border:1px solid #111827;"></td>
+            <td style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#065f46;">${totalSell}</td>
+            <td style="border:1px solid #111827; padding:7px 6px; font-weight:1000; color:#b42318;">৳${totalMoney.toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    `;
+
+    return { el: wrap, person, dateISO };
+  }
+
+  async function makePDFBlobFromElement(el){
+    // html2pdf worker
+    const opt = {
+      margin:       [8, 8, 8, 8],
+      filename:     "delivery.pdf",
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, backgroundColor: '#ffffff' },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // element must be in DOM to render properly
+    const holder = document.createElement("div");
+    holder.style.position = "fixed";
+    holder.style.left = "-99999px";
+    holder.style.top = "0";
+    holder.style.width = "210mm";
+    holder.appendChild(el);
+    document.body.appendChild(holder);
+
+    try{
+      const worker = window.html2pdf().set(opt).from(el);
+      // html2pdf bundle supports outputPdf('blob'); fallback to output('blob')
+      let blob = null;
+      try{
+        blob = await worker.outputPdf('blob');
+      }catch(e){
+        blob = await worker.output('blob');
+      }
+      return blob;
+    } finally {
+      holder.remove();
+    }
+  }
+
+  async function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  // ✅ Button handler
+  window.shareDeliveryAsPDF = async () => {
+    try{
+      if (!selectedPersonName) return alert("আগে গ্রহীতা সিলেক্ট করুন");
+
+      const { el, person, dateISO } = buildDeliveryPDFElement();
+      const blob = await makePDFBlobFromElement(el);
+
+      const safePerson = (person || "Delivery").replace(/[\\/:*?"<>|]/g, "_");
+      const filename = `Delivery_${safePerson}_${dateISO}.pdf`;
+
+      const file = new File([blob], filename, { type: "application/pdf" });
+
+      // ✅ Share (WhatsApp/Messenger/Bluetooth) if supported
+      const canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share);
+
+      if (canShareFiles) {
+        await navigator.share({
+          files: [file],
+          title: "Delivery PDF",
+          text: `${person} - ${formatDate(dateISO)}`
+        });
+        return;
+      }
+
+      // ✅ fallback: download/save
+      await downloadBlob(blob, filename);
+      alert("✅ আপনার ব্রাউজারে Direct Share সাপোর্ট নেই। তাই PDF ডাউনলোড/সেভ করা হলো। (ফোনের Files থেকে WhatsApp/Messenger এ শেয়ার করতে পারবেন)");
+    }catch(e){
+      alert("PDF বানাতে সমস্যা: " + (e?.message || e));
+    }
+  };
 </script>
 </body>
 </html>
