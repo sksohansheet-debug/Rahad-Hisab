@@ -6,6 +6,9 @@
   <title>Delivery Form</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- ✅ NEW: direct PDF downloader (no print dialog) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+
   <style>
     :root{
       --bg:#f5f7fb;
@@ -29,7 +32,7 @@
       --topbar-h: 64px;
 
       /* sticky header row heights */
-      --del-head-row1: 30px;
+      --del-head-row1: 28px;
     }
 
     *{ box-sizing:border-box; }
@@ -65,10 +68,11 @@
       display:flex;
       flex-direction:column;
       gap: 2px;
+      text-align: center; /* ✅ centered like you asked */
     }
     .title{
       font-weight: 1000;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -124,8 +128,8 @@
       border-radius: 12px;
       cursor: pointer;
       font-weight: 1000;
-      font-size: 11px;        /* ✅ ছোট */
-      padding: 8px 10px;      /* ✅ ছোট */
+      font-size: 11px;
+      padding: 8px 10px;
       display:flex;
       align-items:center;
       gap: 6px;
@@ -151,10 +155,26 @@
       padding: 10px;
     }
 
-    /* ✅ Full page table, no unnecessary big gaps */
+    /* ✅ NEW: header inside page + in PDF */
+    .print-header{
+      text-align:center;
+      font-weight: 1000;
+      font-size: 12px;
+      padding: 6px 6px 10px 6px;
+      color:#0f172a;
+    }
+    .print-header small{
+      display:block;
+      font-weight: 900;
+      font-size: 10px;
+      color: rgba(15,23,42,.62);
+      margin-top: 2px;
+    }
+
+    /* ✅ Full page table */
     .delivery-table-wrap{
       width: 100%;
-      overflow: hidden; /* ✅ নিচে স্ক্রল না (আপনি চান একসাথে দেখবেন) */
+      overflow: hidden;
       background: #fff;
       border-radius: 14px;
       border: 1px solid rgba(229,231,235,.9);
@@ -163,17 +183,17 @@
     .delivery-table{
       width: 100%;
       border-collapse: collapse;
-      table-layout: fixed;     /* ✅ width control */
-      font-size: 10px;         /* ✅ আরো ছোট */
+      table-layout: fixed;
+      font-size: 9.2px;       /* ✅ smaller to fit 30 rows */
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 4px 4px;        /* ✅ আরো ছোট */
+      padding: 3px 3px;       /* ✅ smaller to fit 30 rows */
       text-align: center;
       vertical-align: middle;
       font-weight: 900;
-      line-height: 1.05;
+      line-height: 1.02;
     }
 
     /* ✅ sticky 2-row header */
@@ -182,9 +202,9 @@
       color:#0f172a !important;
       position: sticky;
       z-index: 50;
-      font-size: 10px;         /* ✅ ছোট */
+      font-size: 9.2px;
       font-weight: 1000;
-      padding: 6px 4px;        /* ✅ ছোট */
+      padding: 5px 3px;
       box-shadow: 0 2px 0 rgba(15,23,42,.08);
       background-clip: padding-box;
     }
@@ -207,7 +227,7 @@
     .delivery-table tbody td:nth-child(3),
     .delivery-table tfoot td:nth-child(2),
     .delivery-table tfoot td:nth-child(3){
-      background: rgba(59,130,246,.08);
+      background: rgba(59,130,246,.07);
     }
     .delivery-table thead th:nth-child(4),
     .delivery-table thead th:nth-child(5),
@@ -215,13 +235,13 @@
     .delivery-table tbody td:nth-child(5),
     .delivery-table tfoot td:nth-child(4),
     .delivery-table tfoot td:nth-child(5){
-      background: rgba(34,197,94,.08);
+      background: rgba(34,197,94,.07);
     }
 
-    /* ✅ pkg column width কমানো + ফাকা জায়গা কমানো */
+    /* ✅ pkg width কমানো (ফাকা জায়গা কমে যাবে) */
     .delivery-table th:first-child,
     .delivery-table td:first-child{
-      width: 280px; /* ✅ আপনার ২৫টা প্যাকেজ ধরার জন্য safe (প্রিন্টেও fit) */
+      width: 240px; /* ✅ tighter than before */
       text-align:left;
       white-space: normal;
       word-break: break-word;
@@ -233,7 +253,7 @@
     }
     .pkg-sub{
       display:block;
-      font-size: 9px;
+      font-size: 8.4px;
       font-weight: 900;
       color: rgba(15,23,42,.60);
       margin-top: 1px;
@@ -242,24 +262,24 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-width: 22px;
-      padding: 1px 5px;
+      min-width: 20px;
+      padding: 1px 4px;
       border-radius: 999px;
       background: rgba(37,99,235,.12);
       border: 1px solid rgba(37,99,235,.22);
       color: #1d4ed8;
-      font-size: 9px;
+      font-size: 8.6px;
       font-weight: 1000;
       margin-right: 6px;
     }
 
     .qty-inp{
-      width: 54px;             /* ✅ ছোট */
-      padding: 4px 4px;        /* ✅ ছোট */
+      width: 48px;           /* ✅ smaller */
+      padding: 3px 3px;      /* ✅ smaller */
       border-radius: 9px;
       border: 1px solid rgba(229,231,235,.95);
       font-weight: 1000;
-      font-size: 10px;
+      font-size: 9.6px;
       outline: none;
       text-align: center;
       color: rgba(15,23,42,.92);
@@ -274,16 +294,16 @@
     .sellpcs-cell{
       font-weight: 1000;
       color:#065f46;
-      background: rgba(16,185,129,.08);
+      background: rgba(16,185,129,.07);
     }
     .money-cell{
       font-weight: 1000;
       color:#b42318;
-      background: rgba(239,68,68,.08);
+      background: rgba(239,68,68,.07);
     }
 
     .delivery-table tfoot td{
-      font-size: 10px;
+      font-size: 9.2px;
       font-weight: 1000;
       background: #fff;
       border-top: 2px solid rgba(15,23,42,.12);
@@ -292,8 +312,8 @@
       text-align:left !important;
       background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
     }
-    .tot-sellpcs{ background: rgba(16,185,129,.12); color:#065f46; }
-    .tot-money{ background: rgba(239,68,68,.12); color:#b42318; }
+    .tot-sellpcs{ background: rgba(16,185,129,.10); color:#065f46; }
+    .tot-money{ background: rgba(239,68,68,.10); color:#b42318; }
 
     .center-back{
       margin-top: 10px;
@@ -307,10 +327,11 @@
       .wrap{ padding: 0 !important; }
       .card{ box-shadow:none !important; border: none !important; padding: 0 !important; }
       .delivery-table-wrap{ border: none !important; border-radius: 0 !important; }
+      .print-header{ padding: 0 0 6px 0 !important; }
     }
     @page{
       size: A4 landscape;
-      margin: 8mm;
+      margin: 4mm; /* ✅ smaller margin => more rows fit */
     }
   </style>
 </head>
@@ -328,13 +349,21 @@
         <input type="date" id="deliveryDate">
       </div>
 
+      <!-- ✅ PDF now downloads directly -->
       <button class="btn btn-pdf" onclick="saveAsPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
       <button class="btn btn-save" onclick="saveDeliverySmart()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
     </div>
   </div>
 
   <div class="wrap">
-    <div class="card">
+    <!-- ✅ This area will be converted to PDF exactly -->
+    <div class="card" id="printArea">
+      <!-- ✅ name+date centered in page + will be in PDF -->
+      <div class="print-header" id="pdfHeader">
+        <div id="pdfHeaderLine">গ্রহীতা: ...</div>
+        <small id="pdfHeaderDate">তারিখ: ...</small>
+      </div>
+
       <div class="delivery-table-wrap">
         <table class="delivery-table">
           <thead>
@@ -413,11 +442,14 @@
     return isNaN(n) ? null : n;
   };
 
-  const ddmmyyyyForTitle = (iso) => {
+  // ✅ dd-mm-yyyy for filename + header
+  const ddmmyyyy = (iso) => {
     if(!iso) return "";
     const [y,m,d] = iso.split("-");
-    return `${d}-${m}-${y}`; // filename safe
+    return `${d}-${m}-${y}`;
   };
+
+  const sanitizeFile = (s) => (s || "").replace(/[\\/:*?"<>|]/g, "_").trim();
 
   /* ========= state ========= */
   let packages = {};
@@ -425,7 +457,7 @@
 
   let selectedPersonName = urlPerson || "";
   let currentDeliveryGroupId = urlGroupId || "";
-  let currentEditingGroupId = urlGroupId || ""; // same in this page
+  let currentEditingGroupId = urlGroupId || "";
   let currentCashData = 0;
   let currentDuesData = [];
 
@@ -434,29 +466,30 @@
   dateInput.value = urlDate || todayISO();
 
   function setHeadline(){
-    const dateTxt = ddmmyyyyForTitle(dateInput.value || "");
-    document.getElementById("headlineTitle").innerText = `গ্রহীতা: ${selectedPersonName || "N/A"}`;
-    document.getElementById("headlineSub").innerText = `তারিখ: ${dateTxt || ""} • Group: ${currentDeliveryGroupId || ""}`;
+    const dmy = ddmmyyyy(dateInput.value || "");
+    const person = selectedPersonName || "N/A";
+
+    // topbar centered
+    document.getElementById("headlineTitle").innerText = `${person}${dmy ? " • " + dmy : ""}`;
+    document.getElementById("headlineSub").innerText = `ডেলিভারি ফর্ম`;
+
+    // PDF/header inside page
+    document.getElementById("pdfHeaderLine").innerText = `${person}${dmy ? " (" + dmy + ")" : ""}`;
+    document.getElementById("pdfHeaderDate").innerText = dmy ? `তারিখ: ${dmy}` : "";
   }
   setHeadline();
 
   dateInput.addEventListener("change", () => {
     setHeadline();
-    // date change করলে title/filename আপডেট হবে
   });
 
   /* ========= load packages + then load group transactions ========= */
-  let packagesLoaded = false;
-  let transactionsLoaded = false;
-
   onValue(ref(database, 'packages'), async (snapshot) => {
     packages = {};
     snapshot.forEach(child => { packages[child.key] = { ...child.val(), key: child.key }; });
 
-    packagesLoaded = true;
-
     buildDeliveryRowsFromPackages();
-    await hydrateExistingGroupIfAny(); // fill out/return keys & values if editing
+    await hydrateExistingGroupIfAny();
     renderDeliveryTable();
   });
 
@@ -469,31 +502,24 @@
     const items = [];
     snap.forEach(ch => {
       const v = ch.val() || {};
-      if ((v.groupId || "").trim() === currentEditingGroupId) {
-        items.push({ key: ch.key, ...v });
-      }
+      if ((v.groupId || "").trim() === currentEditingGroupId) items.push({ key: ch.key, ...v });
     });
-
     if (!items.length) return;
 
-    // sync person/date from existing data if missing
     if (!selectedPersonName) selectedPersonName = items[0].personName || "";
     if (!dateInput.value) dateInput.value = items[0].date || todayISO();
     setHeadline();
 
-    // load dues/cash
     currentCashData = parseFloat(items[0]?.cashReceived || 0) || 0;
     currentDuesData = items[0]?.dues || [];
 
     const savedSaleConfirmed = items.some(x => x.saleConfirmed === true);
 
-    // apply to rows
     items.forEach(item => {
       const row = deliveryRows.find(r => (r.pkgName || "") === (item.pkgName || ""));
       if(!row) return;
 
       const tq = parseInt(item.totalPcs) || 0;
-
       if((item.type || "Out") === "Out"){
         const sp = splitToCasePcs(tq, row.caseQty);
         row.outCase = sp.c; row.outPcs = sp.p;
@@ -611,7 +637,6 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
-      // ✅ return touched (0 দিলেও)
       if (field === "retCase" || field === "retPcs") {
         const v = String(el.value ?? "").trim();
         if (v !== "") deliveryRows[idx].retTouched = true;
@@ -629,7 +654,7 @@
     });
   }
 
-  /* ========= SAVE (same logic as your saveDeliverySmart) ========= */
+  /* ========= SAVE (unchanged logic) ========= */
   window.saveDeliverySmart = async () => {
     const date = dateInput.value || todayISO();
     if(!selectedPersonName) return alert("গ্রহীতা পাওয়া যায়নি!");
@@ -639,16 +664,13 @@
       setHeadline();
     }
 
-    // saleConfirmed যদি কোনো রোতে return input touch হয় (0 দিলেও)
     const saleConfirmed = deliveryRows.some(r => r.retTouched);
 
-    // retMode triggers stock update mode
     const retMode =
       saleConfirmed ||
       deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) ||
       (!!currentEditingGroupId);
 
-    // ✅ if NOT retMode => only Out save, no stock cut
     if (!retMode) {
       try{
         for (const r of deliveryRows) {
@@ -685,7 +707,6 @@
       return;
     }
 
-    // ✅ retMode OR saleConfirmed => stock update
     try{
       for (const r of deliveryRows) {
         const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
@@ -773,52 +794,50 @@
 
   function returnToMainAfterSave(){
     try{
-      if (window.opener && typeof window.opener.applyFilters === "function") {
-        window.opener.applyFilters();
-      }
+      if (window.opener && typeof window.opener.applyFilters === "function") window.opener.applyFilters();
     }catch(e){}
-
-    // ✅ close window (works if opened by window.open)
     window.close();
-
-    // ✅ if close blocked, show fallback
-    setTimeout(() => {
-      // if still open
-      // user can press "বন্ধ করুন" button
-    }, 200);
+    setTimeout(() => {}, 200);
   }
 
-  /* ========= PDF ========= */
-  window.saveAsPDF = () => {
-    // ✅ ensure latest totals are calculated
+  /* ========= PDF (direct download, no print dialog) ========= */
+  window.saveAsPDF = async () => {
+    // ✅ ensure latest totals
     updateTotalsLive();
+    setHeadline(); // ensure header correct
 
     const dateISO = dateInput.value || "";
-    const safeDate = ddmmyyyyForTitle(dateISO);      // dd-mm-yyyy
-    const safeName = (selectedPersonName || "Delivery").replace(/[\\/:*?"<>|]/g, "_");
-    // title often used as default file name in "Save as PDF"
-    document.title = `${safeName}_${safeDate}`;
+    const dmy = ddmmyyyy(dateISO);
+    const name = sanitizeFile(selectedPersonName || "Delivery");
 
-    // ✅ wait a tick so title updates before print
+    // ✅ EXACT filename: Rahad10-12-2026.pdf (no extra)
+    const filename = `${name}${dmy}.pdf`;
+
+    // ✅ make sure PDF uses exact current UI
+    const el = document.getElementById("printArea");
+
+    const opt = {
+      margin:       [3, 3, 3, 3], // mm-like (html2pdf uses inches internally but this works well)
+      filename:     filename,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    // ✅ wait one frame so DOM updates are captured
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.print();
-      });
+      html2pdf().set(opt).from(el).save();
     });
   };
 
   /* ========= back ========= */
   window.goBackToMain = () => {
     try{
-      if (window.opener && typeof window.opener.applyFilters === "function") {
-        window.opener.applyFilters();
-      }
+      if (window.opener && typeof window.opener.applyFilters === "function") window.opener.applyFilters();
     }catch(e){}
     window.close();
-    // fallback: if close blocked, go back
-    setTimeout(() => {
-      history.back();
-    }, 150);
+    setTimeout(() => { history.back(); }, 150);
   };
 </script>
 
