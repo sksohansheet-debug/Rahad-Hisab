@@ -1126,7 +1126,7 @@
   window.hidePerson = (key) => {
     const p = personsCache.find(x => x.key === key);
     if (!p) return;
-    if(!confirm(`"${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)`)) return;
+    if(!confirm(\`"\${p.name}" Hide করতে চান? (ডাটাবেইজ থেকে ডিলিট হবে না)\`)) return;
     hidePersonKey(key);
     buildPersonOptions();
   };
@@ -1961,9 +1961,30 @@
   setTimeout(attachZeroBehavior, 500);
 
   /* =========================================================
-     ✅ NEW: Delivery Form => PDF Save (FAST)
-     - ক্লিক করলে delivery modal এর বর্তমান অবস্থা 그대로 PDF হয়ে ডাউনলোড হবে
+     ✅ NEW: Delivery Form => PDF Save (FAST)  [FIXED ✅]
+     - এখন স্ক্রল এর ভিতরে থাকা সব প্যাকেজ (সব রো) PDF এ যাবে
+     - PDF এ সাইজ ছোট করা হয়েছে (তারিখ/নাম কাটবে না)
+     - Save/PDF বাটন PDF এ যাবে না
+     - ফাইল নাম: গ্রহীতার নাম + তারিখ (dd-mm-yyyy)  যেমন: রাহাদ13-12-2026.pdf
      ========================================================= */
+
+  // ✅ helper: ISO -> dd/mm/yyyy
+  function isoToDDMMYYYY(iso){
+    if(!iso) return "";
+    const [y,m,d] = String(iso).split("-");
+    if(!y || !m || !d) return iso;
+    return `${d}/${m}/${y}`;
+  }
+
+  // ✅ helper: safe filename (no / \ : * ? " < > |)
+  function safeFileName(s){
+    return String(s || "")
+      .replace(/গ্রহীতা\s*:\s*/g, "")
+      .replace(/[\/\\:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "")
+      .trim();
+  }
+
   window.downloadDeliveryPDF = async () => {
     const btn = document.getElementById('pdfSaveBtn');
     if (btn) { btn.disabled = true; btn.innerText = "⏳ PDF হচ্ছে..."; }
@@ -1975,7 +1996,6 @@
         return;
       }
 
-      // capture only modal content (exact UI)
       const modal = document.getElementById('deliveryMainModal');
       const content = modal?.querySelector('.modal-content');
       if (!content) return;
@@ -1983,30 +2003,58 @@
       // ensure latest input values are rendered
       await new Promise(r => requestAnimationFrame(() => r()));
 
-      // make a clean clone for capture (so button text changes don't appear)
+      // clone current UI
       const clone = content.cloneNode(true);
-      // remove "বন্ধ করুন" link in PDF if you want to keep same UI remove nothing? -> keep everything as is except no need to remove.
-      // (No change to layout; clone keeps same)
 
-      // put clone offscreen
+      // ✅ PDF এ Save / PDF বাটন + close link থাকবে না
+      clone.querySelectorAll('.save-delivery-btn, .pdf-delivery-btn, .close-link').forEach(el => el.remove());
+
+      // ✅ স্ক্রল কন্টেইনার expand => সব রো (সব প্যাকেজ) দেখা যাবে
+      const tw = clone.querySelector('.delivery-table-wrap');
+      if (tw) {
+        tw.style.maxHeight = "none";
+        tw.style.overflow = "visible";
+        tw.style.borderRadius = "0";
+      }
+
+      // ✅ print-friendly + ছোট সাইজ (নাম/তারিখ কাটবে না)
+      const printStyle = document.createElement('style');
+      printStyle.textContent = `
+        /* PDF Print Override */
+        .delivery-headline{ gap: 8px !important; }
+        .delivery-person{ font-size: 12px !important; }
+        .meta-box label{ font-size: 10px !important; }
+        .meta-box input{ width: 150px !important; font-size: 10px !important; padding: 5px 6px !important; }
+
+        .form-title{ font-size: 12px !important; }
+        .delivery-table{ font-size: 9.5px !important; min-width: 0 !important; white-space: nowrap !important; }
+        .delivery-table th, .delivery-table td{ padding: 4px 4px !important; }
+        .pkg-cell{ min-width: 220px !important; max-width: 320px !important; }
+        .pkg-sub{ font-size: 9px !important; }
+        .qty-inp{ width: 58px !important; font-size: 10px !important; padding: 4px 4px !important; }
+
+        /* sticky off for correct full render */
+        .delivery-table thead th,
+        .delivery-table tfoot td{ position: static !important; top: auto !important; bottom: auto !important; }
+
+        /* remove max-height/scroll visuals */
+        .delivery-table-wrap{ max-height: none !important; overflow: visible !important; }
+      `;
+
+      // offscreen wrapper
       const wrap = document.createElement('div');
       wrap.style.position = 'fixed';
       wrap.style.left = '-100000px';
       wrap.style.top = '0';
-      wrap.style.width = content.offsetWidth + 'px';
       wrap.style.background = '#ffffff';
       wrap.style.padding = '0';
       wrap.style.zIndex = '999999';
+
+      wrap.appendChild(printStyle);
       wrap.appendChild(clone);
       document.body.appendChild(wrap);
 
-      // ✅ IMPORTANT: For accurate inputs in clone, copy values
-      // copy delivery date
-      const realDate = document.getElementById('deliveryDate')?.value || "";
-      const cloneDate = wrap.querySelector('#deliveryDate');
-      if (cloneDate) cloneDate.value = realDate;
-
-      // copy all number inputs in table by order
+      // ✅ IMPORTANT: clone inputs value sync
       const realInputs = content.querySelectorAll('input');
       const cloneInputs = wrap.querySelectorAll('input');
       const len = Math.min(realInputs.length, cloneInputs.length);
@@ -2014,8 +2062,11 @@
         cloneInputs[i].value = realInputs[i].value;
       }
 
-      // capture
-      const scale = Math.min(2, (window.devicePixelRatio || 1.5)); // fast but clear
+      // force layout (now that scroll expanded)
+      await new Promise(r => requestAnimationFrame(() => r()));
+
+      // capture full size (including previously hidden rows)
+      const scale = Math.min(2, (window.devicePixelRatio || 1.5));
       const canvas = await window.html2canvas(wrap, {
         backgroundColor: '#ffffff',
         scale,
@@ -2030,10 +2081,9 @@
       document.body.removeChild(wrap);
 
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-
       const { jsPDF } = window.jspdf;
 
-      // A4 landscape for wide table
+      // A4 landscape
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
       const pageW = pdf.internal.pageSize.getWidth();
@@ -2043,32 +2093,22 @@
       const imgW = pageW - margin*2;
       const imgH = (canvas.height * imgW) / canvas.width;
 
-      // paginate if tall
-      let y = margin;
-      let remaining = imgH;
+      const usableH = pageH - margin*2;
 
-      pdf.addImage(imgData, 'JPEG', margin, y, imgW, imgH);
-
-      // If image height exceeds page, we add pages by shifting y negatively
-      if (imgH > (pageH - margin*2)) {
-        pdf.deletePage(1);
-        let offsetY = 0;
-        while (remaining > 0) {
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', margin, margin - offsetY, imgW, imgH);
-          remaining -= (pageH - margin*2);
-          offsetY += (pageH - margin*2);
-        }
-        // remove first blank page if exists
-        if (pdf.getNumberOfPages() > 0 && pdf.internal.getCurrentPageInfo().pageNumber === 1) {
-          // nothing
-        }
+      // ✅ paginate properly (full content)
+      const pages = Math.max(1, Math.ceil(imgH / usableH));
+      for (let i=0; i<pages; i++){
+        if (i > 0) pdf.addPage();
+        const offsetY = i * usableH;
+        pdf.addImage(imgData, 'JPEG', margin, margin - offsetY, imgW, imgH);
       }
 
-      // file name
-      const personText = (document.getElementById('displaySelectedPerson')?.innerText || "Delivery").replace(/[^\w\u0980-\u09FF\- ]+/g,'').trim();
-      const date = document.getElementById('deliveryDate')?.value || todayISO();
-      const fileName = `${personText}_${date}.pdf`.replace(/\s+/g,'_');
+      // ✅ file name: গ্রহীতার নাম + তারিখ
+      const rawPerson = (document.getElementById('displaySelectedPerson')?.innerText || selectedPersonName || "Delivery");
+      const personName = safeFileName(rawPerson) || "Delivery";
+      const dateIso = document.getElementById('deliveryDate')?.value || todayISO();
+      const datePretty = isoToDDMMYYYY(dateIso).replace(/\//g,'-'); // filename safe
+      const fileName = `${personName}${datePretty}.pdf`;
 
       pdf.save(fileName);
     }catch(e){
