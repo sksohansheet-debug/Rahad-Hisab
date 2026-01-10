@@ -644,7 +644,8 @@
       bakiTransactions: [],   // ✅ NEW (only for 8th card due)
       bakiDueTotal: 0,
       collectionTotal: 0,
-      bakiPaidTotal: 0
+      bakiPaidTotal: 0,
+      bakiPaidTotalFromBaki: 0 // ✅ NEW: baki node paid adds to Hand Cash
     };
 
     function num(x){ return Number(x) || 0; }
@@ -673,7 +674,7 @@
       return total;
     }
 
-    function computeCashAndPending(cashRows, shipmentRows, packagesMap, collectionTotal, bakiPaidTotal){
+    function computeCashAndPending(cashRows, shipmentRows, packagesMap, collectionTotal, bakiPaidTotal, bakiPaidTotalFromBaki){
       let hand = 0;
       let pending = 0;
 
@@ -693,6 +694,9 @@
 
       hand += num(collectionTotal);
       hand += num(bakiPaidTotal);
+
+      /* ✅ NEW: ৮নং Due কমলে (paidAmt) সেই টাকা Hand Cash এ যোগ হবে */
+      hand += num(bakiPaidTotalFromBaki);
 
       let shipBuy = 0;
       for (const sh of (shipmentRows || [])){
@@ -822,6 +826,22 @@
       return dueTotal;
     }
 
+    /* ✅ NEW: bakiTransactions থেকে paidAmt টোটাল (Due কমার টাকা) */
+    function computeBakiPaidTotalFromBakiTransactions(bakiRows){
+      let total = 0;
+
+      for (const tr of (bakiRows || [])){
+        const dues = tr?.dues;
+        if (!Array.isArray(dues)) continue;
+
+        for (const d of dues){
+          total += num(d?.paidAmt);
+        }
+      }
+
+      return total;
+    }
+
     function render(){
       const stockBalance = computeStockBalance(state.packages);
 
@@ -830,7 +850,8 @@
         state.shipments,
         state.packages,
         state.collectionTotal,
-        state.bakiPaidTotal
+        state.bakiPaidTotal,
+        state.bakiPaidTotalFromBaki
       );
 
       const total = stockBalance + hand + pending;
@@ -900,7 +921,7 @@
       render();
     });
 
-    // ✅ NEW) bakiTransactions (ONLY for 8th card Total Due)
+    // ✅ NEW) bakiTransactions (ONLY for 8th card Total Due) + ✅ Paid goes to Hand Cash
     pulse();
     onValue(ref(database, "bakiTransactions"), (snap) => {
       const arr = [];
@@ -915,7 +936,12 @@
       });
 
       state.bakiTransactions = arr;
+
+      // ✅ 8th card due
       state.bakiDueTotal = computeBakiDueFromBakiTransactions(state.bakiTransactions);
+
+      // ✅ Due কমার টাকা Hand Cash এ যাবে
+      state.bakiPaidTotalFromBaki = computeBakiPaidTotalFromBakiTransactions(state.bakiTransactions);
 
       markLoaded('baki');
       render();
