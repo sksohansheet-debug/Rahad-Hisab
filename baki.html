@@ -351,6 +351,25 @@
     }
     .action-btn:active{ transform: scale(.99); }
 
+    /* ✅ NEW: Delete button style (kept minimal, no layout change) */
+    .delete-btn{
+      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+      color: white;
+      border:none;
+      padding: 9px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      transition:.15s;
+      box-shadow: var(--shadow2);
+      font-weight: 1000;
+      display:inline-flex;
+      align-items:center;
+      gap: 7px;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+    .delete-btn:active{ transform: scale(.99); }
+
     /* Column colors */
     .col-no{ font-weight: 1000; color: #64748b; }
     .col-date{ color: #334155; }
@@ -359,6 +378,7 @@
     .col-baki{ color: #b91c1c; font-weight: 1000; }
     .col-paid{ color: #166534; font-weight: 1000; }
     .col-due{ color: #ea580c; font-weight: 1000; }
+    .col-desc{ color: #334155; font-weight: 900; } /* ✅ NEW */
 
     /* Pagination */
     .pagination-bar{
@@ -785,6 +805,7 @@
               <th>তারিখ</th>
               <th>পারসোন নাম</th>
               <th>দোকানের নাম</th>
+              <th>বিবরণ</th>
               <th>বাকীর পরিমান</th>
               <th>জমা</th>
               <th>পাওনা</th>
@@ -817,6 +838,10 @@
     <div class="modal-content">
       <h3>টাকা জমা করুন</h3>
       <p id="modalInfo" style="font-weight: 1000; color: #2563eb; margin: 0 0 10px 0;"></p>
+
+      <!-- ✅ NEW: show last collection info (date + amount) -->
+      <p id="lastCollectionInfo" style="font-weight: 1000; color:#0f172a; margin: 0 0 10px 0; font-size: 13px;"></p>
+
       <label style="font-size:12px;color:#64748b;font-weight:900;">জমার পরিমাণ লিখুন:</label>
       <input type="number" id="collectionInput" placeholder="0.00">
       <div class="modal-btns">
@@ -847,6 +872,10 @@
       <label style="font-size:12px;color:#64748b;font-weight:900;">দোকানের নাম:</label>
       <input type="text" id="addShop" placeholder="দোকানের নাম লিখুন">
 
+      <!-- ✅ NEW: Description -->
+      <label style="font-size:12px;color:#64748b;font-weight:900;">বিবরণ:</label>
+      <input type="text" id="addDesc" placeholder="বিবরণ লিখুন (ঐচ্ছিক)">
+
       <label style="font-size:12px;color:#64748b;font-weight:900;">টাকার পরিমান:</label>
       <input type="number" id="addAmount" placeholder="0.00">
 
@@ -859,7 +888,7 @@
 
   <script type="module">
     import { database } from './firebase-config.js';
-    import { ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     let activeTransactionKey = null;
     let activeDueIndex = null;
@@ -867,6 +896,10 @@
     let activePaid = 0;
     let activePerson = "";
     let activeShop = "";
+
+    // ✅ NEW: for showing last collection date+amount + prevent over-collection
+    let activePayHistory = [];
+    let activeDueNow = 0;
 
     // Store rows
     let renderedItems = [];
@@ -927,6 +960,14 @@
     window.toggleRangePanel = () => {
       document.getElementById('rangePanel').classList.toggle('open');
     };
+
+    function todayISO(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
 
     /* =========================================
        ✅ FIX: Load Persons from `persons` node
@@ -1002,7 +1043,13 @@
             seenTxn.add(uniqueKey);
 
             const totalBaki = parseFloat(due.amt) || 0;
-            const paid = parseFloat(due.paidAmt) || 0;
+
+            // ✅ paidAmt legacy + payHistory support
+            const paidLegacy = parseFloat(due.paidAmt) || 0;
+            const payHistory = Array.isArray(due.payHistory) ? due.payHistory : [];
+            const paidFromHistory = payHistory.reduce((s, r) => s + (parseFloat(r?.amount) || 0), 0);
+            const paid = Math.max(paidLegacy, paidFromHistory);
+
             const balanceRaw = totalBaki - paid;
             const balance = balanceRaw <= 0 ? 0 : balanceRaw;
 
@@ -1014,6 +1061,7 @@
               date: dateStr,
               person: personName,
               shop: shopName,
+              desc: (due && due.desc) ? String(due.desc) : "",
               total: totalBaki,
               paid,
               balance,
@@ -1120,6 +1168,7 @@
             <td class="col-date">${formatDate(it.date)}</td>
             <td class="col-person">${it.person || "-"}</td>
             <td class="col-shop">${it.shop || "-"}</td>
+            <td class="col-desc">${escapeHTML(it.desc || "-")}</td>
             <td class="col-baki">৳${it.total.toFixed(2)}</td>
             <td class="col-paid">৳${it.paid.toFixed(2)}</td>
             <td class="col-due">৳${it.balance.toFixed(2)}</td>
@@ -1127,6 +1176,10 @@
             <td>
               <button class="action-btn" onclick="openPaymentModal('${it.transKey}', ${it.dueIndex}, '${escapeQuotes(it.person || "")}', '${escapeQuotes(it.shop || "")}', ${it.total}, ${it.paid})">
                 <i class="fas fa-hand-holding-usd"></i> কালেকশন
+              </button>
+
+              <button class="delete-btn" onclick="deleteBakiItem('${it.transKey}', ${it.dueIndex})">
+                <i class="fas fa-trash"></i> Delete
               </button>
             </td>
           </tr>
@@ -1207,6 +1260,7 @@
 
       document.getElementById('addPerson').value = "";
       document.getElementById('addShop').value = "";
+      document.getElementById('addDesc').value = "";
       document.getElementById('addAmount').value = "";
       document.getElementById('addBakiModal').style.display = 'flex';
     };
@@ -1219,6 +1273,7 @@
       const date = document.getElementById('addDate').value;
       const person = document.getElementById('addPerson').value;
       const shop = document.getElementById('addShop').value.trim();
+      const desc = document.getElementById('addDesc').value.trim();
       const amt = parseFloat(document.getElementById('addAmount').value) || 0;
 
       if (!date) return alert("তারিখ সিলেক্ট করুন");
@@ -1229,7 +1284,7 @@
       const newTrans = {
         date: date,
         personName: person,
-        dues: [{ shop: shop, amt: amt, paidAmt: 0 }]
+        dues: [{ shop: shop, desc: desc, amt: amt, paidAmt: 0, payHistory: [] }]
       };
 
       // ✅ CHANGE: save ONLY in bakiTransactions (not in transactions)
@@ -1251,11 +1306,32 @@
       activeShop = shopName || "";
 
       const currentDue = Math.max(activeAmt - activePaid, 0);
+      activeDueNow = currentDue;
 
       document.getElementById('modalInfo').innerText =
         (activePerson ? activePerson + " | " : "") +
         (activeShop ? activeShop : "") +
         " (পাওনা: ৳" + currentDue.toFixed(2) + ")";
+
+      // ✅ show last collection (date + amount)
+      document.getElementById('lastCollectionInfo').innerText = "";
+
+      // ✅ get latest payHistory from firebase once (no UI change)
+      onValue(ref(database, `bakiTransactions/${activeTransactionKey}`), (snapshot) => {
+        const data = snapshot.val();
+        const due = (data && Array.isArray(data.dues)) ? data.dues[activeDueIndex] : null;
+        const payHistory = (due && Array.isArray(due.payHistory)) ? due.payHistory : [];
+        activePayHistory = payHistory;
+
+        if (payHistory.length > 0){
+          const last = payHistory[payHistory.length - 1];
+          const dt = last?.date || "-";
+          const am = parseFloat(last?.amount) || 0;
+          document.getElementById('lastCollectionInfo').innerText = `সর্বশেষ জমা: ${formatDate(dt)} | ৳${am.toFixed(2)}`;
+        }else{
+          document.getElementById('lastCollectionInfo').innerText = `সর্বশেষ জমা: নেই`;
+        }
+      }, { onlyOnce: true });
 
       document.getElementById('collectionInput').value = "";
       document.getElementById('paymentModal').style.display = 'flex';
@@ -1269,6 +1345,16 @@
       const amount = parseFloat(document.getElementById('collectionInput').value) || 0;
       if (amount <= 0) return alert("সঠিক অংক লিখুন");
 
+      // ✅ Prevent saving if already complete
+      if (activeDueNow <= 0) {
+        return alert("এটা ইতিমধ্যে Complete হয়েছে, আর জমা করা যাবে না।");
+      }
+
+      // ✅ Prevent over payment
+      if (amount > activeDueNow) {
+        return alert(`পাওনা মাত্র ৳${activeDueNow.toFixed(2)}। এর বেশি জমা করা যাবে না।`);
+      }
+
       // ✅ CHANGE: update ONLY from bakiTransactions node
       onValue(ref(database, `bakiTransactions/${activeTransactionKey}`), (snapshot) => {
         const data = snapshot.val();
@@ -1276,15 +1362,66 @@
           const dues = [...data.dues];
 
           const currentPaid = parseFloat(dues[activeDueIndex].paidAmt) || 0;
+          const totalAmt = parseFloat(dues[activeDueIndex].amt) || 0;
+          const currentDueNow = Math.max(totalAmt - currentPaid, 0);
+
+          // ✅ prevent saving when complete (re-check fresh data)
+          if (currentDueNow <= 0) {
+            closeModal();
+            return alert("এটা ইতিমধ্যে Complete হয়েছে, আর জমা করা যাবে না।");
+          }
+
+          // ✅ prevent over pay (fresh check)
+          if (amount > currentDueNow) {
+            return alert(`পাওনা মাত্র ৳${currentDueNow.toFixed(2)}। এর বেশি জমা করা যাবে না।`);
+          }
+
+          // ✅ add payHistory item with date + amount
+          const payHistory = Array.isArray(dues[activeDueIndex].payHistory) ? [...dues[activeDueIndex].payHistory] : [];
+          const entry = { date: todayISO(), amount: amount };
+          payHistory.push(entry);
+
+          dues[activeDueIndex].payHistory = payHistory;
+
+          // ✅ keep paidAmt also updated (for compatibility)
           dues[activeDueIndex].paidAmt = currentPaid + amount;
 
           update(ref(database, `bakiTransactions/${activeTransactionKey}`), {
             dues: dues
           }).then(() => {
+            // ✅ show in form immediately: date + amount
+            document.getElementById('lastCollectionInfo').innerText =
+              `সর্বশেষ জমা: ${formatDate(entry.date)} | ৳${amount.toFixed(2)}`;
+
             closeModal();
             alert("কালেকশন সফল হয়েছে!");
           });
         }
+      }, { onlyOnce: true });
+    };
+
+    // ✅ NEW: Delete function (deletes single due item; if last due then deletes transaction)
+    window.deleteBakiItem = async (transKey, dueIndex) => {
+      const ok = confirm("আপনি কি নিশ্চিত ডিলিট করতে চান?");
+      if (!ok) return;
+
+      onValue(ref(database, `bakiTransactions/${transKey}`), async (snapshot) => {
+        const data = snapshot.val();
+        if (!data || !Array.isArray(data.dues)) return alert("ডাটা পাওয়া যায়নি!");
+
+        const dues = [...data.dues];
+        if (!dues[dueIndex]) return alert("আইটেম পাওয়া যায়নি!");
+
+        dues.splice(dueIndex, 1);
+
+        if (dues.length === 0) {
+          // remove whole transaction if no dues left
+          await remove(ref(database, `bakiTransactions/${transKey}`));
+        } else {
+          await update(ref(database, `bakiTransactions/${transKey}`), { dues });
+        }
+
+        alert("ডিলিট হয়েছে!");
       }, { onlyOnce: true });
     };
 
@@ -1298,6 +1435,16 @@
 
     function escapeQuotes(str) {
       return String(str).replace(/'/g, "\\'");
+    }
+
+    // ✅ NEW: safe html escape for description cell
+    function escapeHTML(str){
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
   </script>
 </body>
