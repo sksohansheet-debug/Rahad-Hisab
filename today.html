@@ -888,6 +888,10 @@
     q.set("person", personName || "");
     q.set("date", date || "");
     q.set("groupId", groupId || "");
+
+    /* ✅ FIX: returnUrl এখানে থাকবে, বাইরে নয় */
+    q.set("returnUrl", encodeURIComponent(location.href));
+
     const url = `delivery-form.html?${q.toString()}`;
     window.location.href = url;
   }
