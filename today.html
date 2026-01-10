@@ -6,6 +6,9 @@
   <title>Buy & Sell - Hisab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- ✅ PDF: html2pdf (fast download with filename) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
     :root{
       --bg:#f5f7fb;
@@ -32,7 +35,7 @@
       --sb-w: 295px;
 
       /* ✅ Delivery header row height (for sticky 2nd row top) */
-      --del-head-row1: 40px;
+      --del-head-row1: 32px;
     }
 
     *{ box-sizing:border-box; }
@@ -472,8 +475,30 @@
     .due-item:hover{ background: rgba(37,99,235,.04); }
 
     /* =========================
-       ✅ Delivery Table UI (FIXED)
+       ✅ Delivery (FULL PAGE SYSTEM) - SMALLER UI
        ========================= */
+    .delivery-page{
+      display:none;
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(16,185,129,.06), transparent 55%),
+        var(--bg);
+      padding-top: var(--topbar-h);
+      overflow: auto;
+    }
+    .delivery-page-inner{
+      padding: 10px 12px;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+    @media (min-width:1200px){
+      .delivery-page-inner{ padding: 12px 18px; }
+    }
+
     .delivery-headline{
       display:flex;
       align-items:center;
@@ -481,11 +506,16 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 8px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 16px;
+      padding: 10px 10px;
+      box-shadow: var(--shadow2);
     }
     .delivery-person{
       font-weight: 1000;
       color: #2563eb;
-      font-size: 14px;
+      font-size: 13px;
     }
     .delivery-meta{
       display:flex;
@@ -505,57 +535,83 @@
     }
     .meta-box label{
       margin:0;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 1000;
       color: var(--muted);
     }
     .meta-box input{
-      width: 170px;
-      padding: 6px 8px;
+      width: 150px;
+      padding: 5px 8px;
       border-radius: 10px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 900;
+    }
+
+    .delivery-actions{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      margin-left:auto;
+    }
+    .mini-btn{
+      border:none;
+      cursor:pointer;
+      font-weight:1000;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      box-shadow: var(--shadow2);
+      display:flex;
+      align-items:center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .mini-btn:active{ transform: scale(.99); }
+    .mini-save{ background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1)); color:#fff; }
+    .mini-pdf{ background: linear-gradient(135deg, rgba(16,185,129,1), rgba(34,197,94,1)); color:#fff; }
+
+    .delivery-card{
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 10px;
+      overflow: hidden;
     }
 
     .delivery-table-wrap{
       width: 100%;
-      max-height: 62vh;
+      max-height: 72vh;
       overflow: auto;
       border: 1px solid rgba(229,231,235,.9);
       border-radius: 14px;
       background: #fff;
     }
 
-    #deliveryMainModal .modal-content{
-      max-width: 1400px;
-      padding: 12px;
-    }
-
     .delivery-table{
       width: 100%;
       border-collapse: collapse;
       min-width: 1120px;
-      font-size: 11px;
+      font-size: 10px;          /* ✅ smaller */
       white-space: nowrap;
     }
     .delivery-table th, .delivery-table td{
       border: 1px solid rgba(229,231,235,.95);
-      padding: 6px 6px;
+      padding: 4px 4px;         /* ✅ smaller */
       text-align: center;
       vertical-align: middle;
-      font-weight: 900;
-      line-height: 1.1;
+      font-weight: 1000;
+      line-height: 1.05;
     }
 
-    /* ✅ header sticky lock (2 rows) + bigger/bolder */
     .delivery-table thead th{
       background: #ffffff !important;
       color:#0f172a !important;
       position: sticky;
       z-index: 50;
-      font-size: 12px;
+      font-size: 10px;          /* ✅ smaller */
       font-weight: 1000;
-      padding: 10px 6px;
+      padding: 7px 4px;         /* ✅ smaller */
       box-shadow: 0 2px 0 rgba(15,23,42,.08);
       background-clip: padding-box;
     }
@@ -571,7 +627,6 @@
       letter-spacing:.2px;
     }
 
-    /* ✅ Column coloring (full height) */
     .delivery-table thead th:nth-child(2),
     .delivery-table thead th:nth-child(3),
     .delivery-table tbody td:nth-child(2),
@@ -602,15 +657,15 @@
       font-weight: 1000;
       color: #0f172a;
       background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,1));
-      min-width: 260px;
-      max-width: 360px;
+      min-width: 240px;         /* ✅ smaller */
+      max-width: 330px;
       white-space: normal;
       word-break: break-word;
     }
     .pkg-cell *{ color: inherit; }
     .pkg-sub{
       display:block;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 900;
       color: rgba(15,23,42,.62);
       margin-top: 2px;
@@ -619,24 +674,24 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-width: 26px;
+      min-width: 24px;
       padding: 2px 6px;
       border-radius: 999px;
       background: rgba(37,99,235,.12);
       border: 1px solid rgba(37,99,235,.22);
       color: #1d4ed8;
-      font-size: 10px;
+      font-size: 9px;           /* ✅ smaller */
       font-weight: 1000;
-      margin-right: 8px;
+      margin-right: 6px;
     }
 
     .qty-inp{
-      width: 72px;
-      padding: 6px 6px;
+      width: 62px;              /* ✅ smaller */
+      padding: 5px 5px;
       border-radius: 10px;
       border: 1px solid rgba(229,231,235,.95);
       font-weight: 1000;
-      font-size: 11px;
+      font-size: 10px;          /* ✅ smaller */
       outline: none;
       text-align: center;
       color: rgba(15,23,42,.92);
@@ -653,11 +708,13 @@
       font-weight: 1000;
       color:#065f46;
       background: rgba(16,185,129,.08);
+      font-size: 10px;
     }
     .money-cell{
       font-weight: 1000;
       color:#b42318;
       background: rgba(239,68,68,.08);
+      font-size: 10px;
     }
 
     .delivery-table tfoot td{
@@ -672,59 +729,53 @@
     .totals-label{
       text-align:left !important;
       background: linear-gradient(180deg, rgba(15,23,42,.04), rgba(15,23,42,.02));
-      font-size: 11px;
+      font-size: 10px;
     }
     .tot-sellpcs{
       background: rgba(16,185,129,.12);
       color:#065f46;
-      font-size: 11px;
+      font-size: 10px;
     }
     .tot-money{
       background: rgba(239,68,68,.12);
       color:#b42318;
-      font-size: 11px;
+      font-size: 10px;
     }
 
-    .save-delivery-btn{
+    .delivery-close-wrap{
       margin-top: 10px;
-      width: 100%;
-      background: linear-gradient(135deg, rgba(37,99,235,1), rgba(96,165,250,1));
-      color:#fff;
-      border:none;
-      padding: 11px 12px;
-      border-radius: 14px;
-      font-weight: 1000;
-      cursor:pointer;
-      box-shadow: var(--shadow2);
+      display:flex;
+      justify-content:center;
     }
-    .save-delivery-btn:active{ transform: scale(.99); }
-
-    /* ✅ NEW: PDF button style (same look) */
-    .pdf-delivery-btn{
-      margin-top: 10px;
-      width: 100%;
-      background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
-      color:#fff;
+    .close-small{
       border:none;
-      padding: 11px 12px;
-      border-radius: 14px;
-      font-weight: 1000;
       cursor:pointer;
+      font-weight:1000;
+      border-radius: 14px;
+      padding: 9px 14px;
+      font-size: 12px;
+      background: linear-gradient(135deg, rgba(239,68,68,1), rgba(244,63,94,1));
+      color:#fff;
       box-shadow: var(--shadow2);
+      min-width: 160px;
+      text-align:center;
     }
-    .pdf-delivery-btn:active{ transform: scale(.99); }
-    .pdf-delivery-btn[disabled]{ opacity:.7; cursor:not-allowed; transform:none; }
+    .close-small:active{ transform: scale(.99); }
 
     @media (max-width:520px){
       .nav-buttons .btn{ flex:1; justify-content:center; }
       .navbar{ padding: 10px 12px; }
-      #deliveryMainModal .modal-content{ max-width: 1100px; padding:10px; }
-      .delivery-table{ min-width: 1060px; }
       .main-container{ padding: 10px 10px; }
       .form-box{ padding: 10px; }
-      .pkg-cell{ max-width: 320px; }
-      .delivery-table-wrap{ max-height: 58vh; }
+      .delivery-page-inner{ padding: 10px 10px; }
+      .delivery-table{ min-width: 1060px; }
+      .delivery-table-wrap{ max-height: 70vh; }
+      .qty-inp{ width: 56px; }
+      .pkg-cell{ max-width: 300px; min-width: 220px; }
     }
+
+    /* ✅ PDF: only hide buttons (keep everything else same) */
+    .pdf-hide{ display:block; }
 </style>
 </head>
 
@@ -772,56 +823,125 @@
   </div>
 </div>
 
-<div class="main-container">
-  <div class="filter-wrapper">
-    <div class="filter-grid">
-      <div>
-        <label><i class="fas fa-calendar-alt"></i> তারিখ ফিল্টার (শুরু - শেষ):</label>
-        <div class="date-range-box">
-          <input type="date" id="filterStartDate" onchange="applyFilters()">
-          <input type="date" id="filterEndDate" onchange="applyFilters()">
+<!-- ✅ HOME WRAP -->
+<div id="appHome">
+  <div class="main-container">
+    <div class="filter-wrapper">
+      <div class="filter-grid">
+        <div>
+          <label><i class="fas fa-calendar-alt"></i> তারিখ ফিল্টার (শুরু - শেষ):</label>
+          <div class="date-range-box">
+            <input type="date" id="filterStartDate" onchange="applyFilters()">
+            <input type="date" id="filterEndDate" onchange="applyFilters()">
+          </div>
+        </div>
+        <div>
+          <label><i class="fas fa-user"></i> ব্যক্তির নাম:</label>
+          <select id="filterPerson" onchange="applyFilters()"></select>
+        </div>
+        <div class="profit-box">
+          <div style="font-size: 12px; opacity: 0.9;">মোট লাভ</div>
+          <span id="displayTotalProfit">৳0</span>
         </div>
       </div>
-      <div>
-        <label><i class="fas fa-user"></i> ব্যক্তির নাম:</label>
-        <select id="filterPerson" onchange="applyFilters()"></select>
+    </div>
+
+    <div class="history-card">
+      <h3>লেনদেন রিপোর্ট</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>নম্বর</th>
+              <th>তারিখ</th>
+              <th>নাম</th>
+              <th>বহির পণ্য (টাকা)</th>
+              <th>সেল পণ্য (টাকা)</th>
+              <th>জমা (টাকা)</th>
+              <th>একশন</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
       </div>
-      <div class="profit-box">
-        <div style="font-size: 12px; opacity: 0.9;">মোট লাভ</div>
-        <span id="displayTotalProfit">৳0</span>
+
+      <div class="pagination-bar">
+        <div class="pager" id="pager"></div>
+        <div class="page-size">
+          <select id="pageSizeSelect" onchange="changePageSize()">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="history-card">
-    <h3>লেনদেন রিপোর্ট</h3>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>নম্বর</th>
-            <th>তারিখ</th>
-            <th>নাম</th>
-            <th>বহির পণ্য (টাকা)</th>
-            <th>সেল পণ্য (টাকা)</th>
-            <th>জমা (টাকা)</th>
-            <th>একশন</th>
-          </tr>
-        </thead>
-        <tbody id="historyTableBody"></tbody>
-      </table>
+<!-- ✅ DELIVERY FULL PAGE -->
+<div id="deliveryPage" class="delivery-page" aria-hidden="true">
+  <div class="delivery-page-inner">
+    <!-- ✅ Print/PDF area (buttons are outside / hidden in pdf) -->
+    <div id="deliveryPrintArea" class="delivery-card">
+      <div class="delivery-headline">
+        <div id="displaySelectedPerson" class="delivery-person"></div>
+
+        <div class="delivery-meta">
+          <div class="meta-box">
+            <label>তারিখ</label>
+            <input type="date" id="deliveryDate">
+          </div>
+        </div>
+
+        <!-- ✅ Save + PDF one line (small) -->
+        <div class="delivery-actions pdf-hide">
+          <button class="mini-btn mini-save" onclick="saveDeliverySmart()"><i class="fas fa-save"></i> Save</button>
+          <button class="mini-btn mini-pdf" onclick="downloadDeliveryPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+        </div>
+      </div>
+
+      <div class="form-box" style="margin-bottom:0;">
+        <div class="form-title" style="margin-bottom:8px;">ডেলিভারি / ফেরত (টেবিল)</div>
+
+        <div class="delivery-table-wrap">
+          <table class="delivery-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="text-align:left;">প্যাকেজের নাম</th>
+                <th colspan="2">বহির পণ্য</th>
+                <th colspan="2">ফেরত পণ্য</th>
+                <th rowspan="2">সেল পিস</th>
+                <th rowspan="2">টাকা</th>
+              </tr>
+              <tr>
+                <th>কেস</th>
+                <th>পিস</th>
+                <th>কেস</th>
+                <th>পিস</th>
+              </tr>
+            </thead>
+            <tbody id="deliveryPkgTbody"></tbody>
+            <tfoot>
+              <tr>
+                <td class="totals-label">মোট</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="tot-sellpcs" id="totalSellPcsCell">0</td>
+                <td class="tot-money" id="totalMoneyCell">৳0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <div class="pagination-bar">
-      <div class="pager" id="pager"></div>
-      <div class="page-size">
-        <select id="pageSizeSelect" onchange="changePageSize()">
-          <option value="5">5</option>
-          <option value="10" selected>10</option>
-          <option value="15">15</option>
-          <option value="20">20</option>
-        </select>
-      </div>
+    <!-- ✅ Close button centered bottom (small) -->
+    <div class="delivery-close-wrap pdf-hide">
+      <button class="close-small" onclick="closeDeliveryPage()">বন্ধ করুন</button>
     </div>
   </div>
 </div>
@@ -832,63 +952,6 @@
     <select id="mainPersonSelect"></select>
     <button class="save-btn" onclick="startDelivery()">পরবর্তী</button>
     <button class="cancel-btn" onclick="closeModal('deliverySelectModal')">বাতিল করুন</button>
-  </div>
-</div>
-
-<div id="deliveryMainModal" class="modal">
-  <div class="modal-content">
-    <div class="delivery-headline">
-      <div id="displaySelectedPerson" class="delivery-person"></div>
-      <div class="delivery-meta">
-        <div class="meta-box">
-          <label>তারিখ</label>
-          <input type="date" id="deliveryDate">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-box" style="margin-bottom:10px;">
-      <div class="form-title" style="margin-bottom:8px;">ডেলিভারি / ফেরত (টেবিল)</div>
-
-      <div class="delivery-table-wrap">
-        <table class="delivery-table">
-          <thead>
-            <tr>
-              <th rowspan="2" style="text-align:left;">প্যাকেজের নাম</th>
-              <th colspan="2">বহির পণ্য</th>
-              <th colspan="2">ফেরত পণ্য</th>
-              <th rowspan="2">সেল পিস</th>
-              <th rowspan="2">টাকা</th>
-            </tr>
-            <tr>
-              <th>কেস</th>
-              <th>পিস</th>
-              <th>কেস</th>
-              <th>পিস</th>
-            </tr>
-          </thead>
-          <tbody id="deliveryPkgTbody"></tbody>
-          <tfoot>
-            <tr>
-              <td class="totals-label">মোট</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td class="tot-sellpcs" id="totalSellPcsCell">0</td>
-              <td class="tot-money" id="totalMoneyCell">৳0.00</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <button class="save-delivery-btn" onclick="saveDeliverySmart()">✅ Save</button>
-
-      <!-- ✅ NEW: PDF Save button -->
-      <button id="pdfSaveBtn" class="pdf-delivery-btn" onclick="downloadDeliveryPDF()">📄 PDF সেভ</button>
-    </div>
-
-    <span class="close-link" onclick="closeModal('deliveryMainModal')">বন্ধ করুন</span>
   </div>
 </div>
 
@@ -942,10 +1005,6 @@
     <span class="close-link" onclick="closeModal('personListModal')">বন্ধ করুন</span>
   </div>
 </div>
-
-<!-- ✅ NEW: PDF libs (fast client-side) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script type="module">
   import { database } from './firebase-config.js';
@@ -1016,10 +1075,9 @@
     setTimeout(() => { loaderEl.style.display = 'none'; }, 260);
   };
 
-  // ✅ FIX: categories বাদ (এই পেজে লাগছে না)
-  const loadState = { persons:false, packages:false, transactions:false };
+  const loadState = { persons:false, categories:false, packages:false, transactions:false };
   const checkAllLoaded = () => {
-    if (loadState.persons && loadState.packages && loadState.transactions) hideLoader();
+    if (loadState.persons && loadState.categories && loadState.packages && loadState.transactions) hideLoader();
   };
 
   // ✅ Sidebar UI
@@ -1051,6 +1109,25 @@
     if (id === "personListModal") renderPersonListModal();
   };
   window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+
+  /* =========================
+     ✅ Delivery Full Page open/close
+     ========================= */
+  function openDeliveryPage(){
+    document.getElementById('appHome').style.display = 'none';
+    const dp = document.getElementById('deliveryPage');
+    dp.style.display = 'block';
+    dp.setAttribute('aria-hidden', 'false');
+    // scroll to top
+    try{ dp.scrollTop = 0; }catch(e){}
+    try{ window.scrollTo(0,0); }catch(e){}
+  }
+  window.closeDeliveryPage = () => {
+    const dp = document.getElementById('deliveryPage');
+    dp.style.display = 'none';
+    dp.setAttribute('aria-hidden', 'true');
+    document.getElementById('appHome').style.display = 'block';
+  };
 
   /* =========================
      ✅ Person Hide (only website) - LocalStorage
@@ -1216,6 +1293,16 @@
     if (personsFirstLoad) {
       personsFirstLoad = false;
       loadState.persons = true;
+      checkAllLoaded();
+    }
+  });
+
+  // ✅ Categories (loader only)
+  let categoriesFirstLoad = true;
+  onValue(ref(database, 'categories'), () => {
+    if (categoriesFirstLoad) {
+      categoriesFirstLoad = false;
+      loadState.categories = true;
       checkAllLoaded();
     }
   });
@@ -1522,9 +1609,8 @@
           <td><input class="qty-inp" type="number" min="0" value="${retCaseVal}" placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retCase"></td>
           <td><input class="qty-inp" type="number" min="0" value="${retPcsVal}"  placeholder="-" data-skipzero="1" data-idx="${idx}" data-field="retPcs"></td>
 
-          <!-- ✅ Sell pcs অটো (কিছু না থাকলে 0) -->
           <td class="sellpcs-cell">
-            <span id="sellpcs-${idx}" style="min-width:28px; display:inline-block;">${computed.sellPcs}</span>
+            <span id="sellpcs-${idx}" style="min-width:24px; display:inline-block;">${computed.sellPcs}</span>
           </td>
 
           <td class="money-cell" id="amt-${idx}">${computed.amt}</td>
@@ -1554,7 +1640,6 @@
       const field = el.dataset.field;
       if (isNaN(idx) || !field || !deliveryRows[idx]) return;
 
-      // ✅ if user touched return inputs (even typing 0), confirm
       if (field === "retCase" || field === "retPcs") {
         const v = String(el.value ?? "").trim();
         if (v !== "") deliveryRows[idx].retTouched = true; // "0" counts
@@ -1602,7 +1687,9 @@
     renderDeliveryTable();
 
     closeModal('deliverySelectModal');
-    openModal('deliveryMainModal');
+
+    // ✅ open full page (not popup)
+    openDeliveryPage();
   };
 
   window.saveDeliverySmart = async () => {
@@ -1617,16 +1704,13 @@
       if (existingGid) currentDeliveryGroupId = existingGid;
     }
 
-    // ✅ FIX: saleConfirmed হবে যদি কোনো রোতে ফেরত ইনপুট touch হয় (0 দিলেও)
     const saleConfirmed = deliveryRows.some(r => r.retTouched);
 
-    // ✅ retMode triggers stock update mode
     const retMode =
       saleConfirmed ||
       deliveryRows.some(r => pcsFromCasePcs(r.retCase, r.retPcs, r.caseQty) > 0) ||
       currentEditingGroupKey;
 
-    // ✅ if NOT retMode => only Out save, no stock cut
     if (!retMode) {
       try{
         for (const r of deliveryRows) {
@@ -1658,14 +1742,13 @@
 
         applyFilters();
         alert("✅ বহির পণ্য সেভ হয়েছে (স্টক কাটেনি)!");
-        closeModal('deliveryMainModal');
+        closeDeliveryPage();
       }catch(e){
         alert(e.message);
       }
       return;
     }
 
-    // ✅ retMode OR saleConfirmed => stock update
     try{
       for (const r of deliveryRows) {
         const outTotal = pcsFromCasePcs(r.outCase, r.outPcs, r.caseQty);
@@ -1687,7 +1770,6 @@
             dues: currentDuesData,
             appliedSellPcs: r.appliedSellPcs || 0,
 
-            // ✅ important
             saleConfirmed: saleConfirmed
           };
           if (r.outKey) await update(ref(database, `transactions/${r.outKey}`), outPayload);
@@ -1749,7 +1831,7 @@
 
       applyFilters();
       alert("✅ সেভ হয়েছে + সেল পিস অনুযায়ী স্টক আপডেট হয়েছে!");
-      closeModal('deliveryMainModal');
+      closeDeliveryPage();
     }catch(e){
       alert(e.message);
     }
@@ -1792,12 +1874,13 @@
         row.returnKey = item.key;
       }
 
-      // ✅ keep confirm state when reopened
       row.retTouched = savedSaleConfirmed;
     });
 
     renderDeliveryTable();
-    openModal('deliveryMainModal');
+
+    // ✅ open full page (not popup)
+    openDeliveryPage();
   };
 
   /* =========================================================
@@ -1921,7 +2004,6 @@
     const editKey = (document.getElementById('personEditKey').value || "").trim();
     const oldName = (document.getElementById('personOldName').value || "").trim();
 
-    // add
     if(!editKey){
       push(ref(database, 'persons'), { name }).then(() => {
         document.getElementById('personName').value = "";
@@ -1930,7 +2012,6 @@
       return;
     }
 
-    // edit
     try{
       await update(ref(database, `persons/${editKey}`), { name });
       await renamePersonEverywhere(oldName, name);
@@ -1942,172 +2023,92 @@
 
       alert("✅ Person আপডেট হয়েছে!");
       closeModal('personModal');
-      // list refresh
       renderPersonListModal();
     }catch(e){
       alert(e.message);
     }
   };
 
-  setTimeout(attachZeroBehavior, 500);
-
-  /* =========================================================
-     ✅ NEW: Delivery Form => PDF Save (FAST)  [FIXED ✅]
-     - এখন স্ক্রল এর ভিতরে থাকা সব প্যাকেজ (সব রো) PDF এ যাবে
-     - PDF এ সাইজ ছোট করা হয়েছে (তারিখ/নাম কাটবে না)
-     - Save/PDF বাটন PDF এ যাবে না
-     - ফাইল নাম: গ্রহীতার নাম + তারিখ (dd-mm-yyyy)  যেমন: রাহাদ13-12-2026.pdf
-     ========================================================= */
-
-  // ✅ helper: ISO -> dd/mm/yyyy
+  /* =========================
+     ✅ PDF Download (NO DATA MISS)
+     - Clone deliveryPrintArea
+     - Replace inputs with text spans (so values never miss)
+     - Hide buttons automatically (we don't include them in clone anyway)
+     - Filename: Person + dd-mm-yyyy (slashes not allowed in filename)
+     ========================= */
   function isoToDDMMYYYY(iso){
     if(!iso) return "";
-    const [y,m,d] = String(iso).split("-");
-    if(!y || !m || !d) return iso;
-    return `${d}/${m}/${y}`;
+    const [y,m,d] = iso.split("-");
+    return `${d}-${m}-${y}`;
   }
-
-  // ✅ helper: safe filename (no / \ : * ? " < > |)
   function safeFileName(s){
-    return String(s || "")
-      .replace(/গ্রহীতা\s*:\s*/g, "")
-      .replace(/[\/\\:*?"<>|]+/g, "-")
-      .replace(/\s+/g, "")
-      .trim();
+    return String(s || "").replace(/[\\/:*?"<>|]/g, "_").trim();
   }
 
   window.downloadDeliveryPDF = async () => {
-    const btn = document.getElementById('pdfSaveBtn');
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ PDF হচ্ছে..."; }
-
     try{
-      // libs ready?
-      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        alert("PDF লাইব্রেরি লোড হয়নি। ইন্টারনেট অন করে আবার চেষ্টা করুন।");
-        return;
-      }
+      const person = selectedPersonName || "";
+      const iso = document.getElementById('deliveryDate').value || todayISO();
+      const dmy = isoToDDMMYYYY(iso);
 
-      const modal = document.getElementById('deliveryMainModal');
-      const content = modal?.querySelector('.modal-content');
-      if (!content) return;
+      const filename = safeFileName(`${person}${dmy}.pdf`);
 
-      // ensure latest input values are rendered
-      await new Promise(r => requestAnimationFrame(() => r()));
+      const src = document.getElementById('deliveryPrintArea');
+      if(!src) return;
 
-      // clone current UI
-      const clone = content.cloneNode(true);
+      // ✅ clone
+      const clone = src.cloneNode(true);
 
-      // ✅ PDF এ Save / PDF বাটন + close link থাকবে না
-      clone.querySelectorAll('.save-delivery-btn, .pdf-delivery-btn, .close-link').forEach(el => el.remove());
+      // remove any pdf-hide blocks inside clone (buttons)
+      clone.querySelectorAll('.pdf-hide').forEach(el => el.remove());
 
-      // ✅ স্ক্রল কন্টেইনার expand => সব রো (সব প্যাকেজ) দেখা যাবে
-      const tw = clone.querySelector('.delivery-table-wrap');
-      if (tw) {
-        tw.style.maxHeight = "none";
-        tw.style.overflow = "visible";
-        tw.style.borderRadius = "0";
-      }
-
-      // ✅ print-friendly + ছোট সাইজ (নাম/তারিখ কাটবে না)
-      const printStyle = document.createElement('style');
-      printStyle.textContent = `
-        /* PDF Print Override */
-        .delivery-headline{ gap: 8px !important; }
-        .delivery-person{ font-size: 12px !important; }
-        .meta-box label{ font-size: 10px !important; }
-        .meta-box input{ width: 150px !important; font-size: 10px !important; padding: 5px 6px !important; }
-
-        .form-title{ font-size: 12px !important; }
-        .delivery-table{ font-size: 9.5px !important; min-width: 0 !important; white-space: nowrap !important; }
-        .delivery-table th, .delivery-table td{ padding: 4px 4px !important; }
-        .pkg-cell{ min-width: 220px !important; max-width: 320px !important; }
-        .pkg-sub{ font-size: 9px !important; }
-        .qty-inp{ width: 58px !important; font-size: 10px !important; padding: 4px 4px !important; }
-
-        /* sticky off for correct full render */
-        .delivery-table thead th,
-        .delivery-table tfoot td{ position: static !important; top: auto !important; bottom: auto !important; }
-
-        /* remove max-height/scroll visuals */
-        .delivery-table-wrap{ max-height: none !important; overflow: visible !important; }
-      `;
-
-      // offscreen wrapper
-      const wrap = document.createElement('div');
-      wrap.style.position = 'fixed';
-      wrap.style.left = '-100000px';
-      wrap.style.top = '0';
-      wrap.style.background = '#ffffff';
-      wrap.style.padding = '0';
-      wrap.style.zIndex = '999999';
-
-      wrap.appendChild(printStyle);
-      wrap.appendChild(clone);
-      document.body.appendChild(wrap);
-
-      // ✅ IMPORTANT: clone inputs value sync
-      const realInputs = content.querySelectorAll('input');
-      const cloneInputs = wrap.querySelectorAll('input');
-      const len = Math.min(realInputs.length, cloneInputs.length);
-      for (let i=0; i<len; i++){
-        cloneInputs[i].value = realInputs[i].value;
-      }
-
-      // force layout (now that scroll expanded)
-      await new Promise(r => requestAnimationFrame(() => r()));
-
-      // capture full size (including previously hidden rows)
-      const scale = Math.min(2, (window.devicePixelRatio || 1.5));
-      const canvas = await window.html2canvas(wrap, {
-        backgroundColor: '#ffffff',
-        scale,
-        useCORS: true,
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: wrap.scrollWidth,
-        windowHeight: wrap.scrollHeight
+      // ✅ replace input elements with spans (ensures no missing values)
+      clone.querySelectorAll('input').forEach(inp => {
+        const span = document.createElement('span');
+        const isDate = (inp.type === "date");
+        const v = String(inp.value ?? "").trim();
+        span.textContent = isDate ? (v ? isoToDDMMYYYY(v) : "") : (v !== "" ? v : "");
+        span.style.display = "inline-block";
+        span.style.minWidth = inp.style.minWidth || "40px";
+        span.style.padding = "2px 6px";
+        span.style.border = "1px solid rgba(229,231,235,.95)";
+        span.style.borderRadius = "10px";
+        span.style.fontWeight = "1000";
+        span.style.fontSize = "10px";
+        span.style.background = "rgba(255,255,255,.96)";
+        span.style.textAlign = "center";
+        inp.replaceWith(span);
       });
 
-      document.body.removeChild(wrap);
+      // ✅ place clone offscreen
+      const holder = document.createElement('div');
+      holder.style.position = "fixed";
+      holder.style.left = "-99999px";
+      holder.style.top = "0";
+      holder.style.width = "1120px"; // keep table width stable for pdf
+      holder.appendChild(clone);
+      document.body.appendChild(holder);
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const { jsPDF } = window.jspdf;
+      // ✅ generate
+      const opt = {
+        margin:       [6, 6, 6, 6],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+      };
 
-      // A4 landscape
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      await html2pdf().set(opt).from(clone).save();
 
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 6;
-
-      const imgW = pageW - margin*2;
-      const imgH = (canvas.height * imgW) / canvas.width;
-
-      const usableH = pageH - margin*2;
-
-      // ✅ paginate properly (full content)
-      const pages = Math.max(1, Math.ceil(imgH / usableH));
-      for (let i=0; i<pages; i++){
-        if (i > 0) pdf.addPage();
-        const offsetY = i * usableH;
-        pdf.addImage(imgData, 'JPEG', margin, margin - offsetY, imgW, imgH);
-      }
-
-      // ✅ file name: গ্রহীতার নাম + তারিখ
-      const rawPerson = (document.getElementById('displaySelectedPerson')?.innerText || selectedPersonName || "Delivery");
-      const personName = safeFileName(rawPerson) || "Delivery";
-      const dateIso = document.getElementById('deliveryDate')?.value || todayISO();
-      const datePretty = isoToDDMMYYYY(dateIso).replace(/\//g,'-'); // filename safe
-      const fileName = `${personName}${datePretty}.pdf`;
-
-      pdf.save(fileName);
+      // cleanup
+      holder.remove();
     }catch(e){
-      alert(e?.message || "PDF করতে সমস্যা হয়েছে");
-    }finally{
-      if (btn) { btn.disabled = false; btn.innerText = "📄 PDF সেভ"; }
+      alert(e.message || "PDF বানাতে সমস্যা হয়েছে");
     }
   };
+
+  setTimeout(attachZeroBehavior, 500);
 </script>
 </body>
 </html>
