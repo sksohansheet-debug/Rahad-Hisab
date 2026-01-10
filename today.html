@@ -699,6 +699,22 @@
     }
     .save-delivery-btn:active{ transform: scale(.99); }
 
+    /* ✅ NEW: PDF button style (same look) */
+    .pdf-delivery-btn{
+      margin-top: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(15,23,42,1), rgba(31,41,55,1));
+      color:#fff;
+      border:none;
+      padding: 11px 12px;
+      border-radius: 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      box-shadow: var(--shadow2);
+    }
+    .pdf-delivery-btn:active{ transform: scale(.99); }
+    .pdf-delivery-btn[disabled]{ opacity:.7; cursor:not-allowed; transform:none; }
+
     @media (max-width:520px){
       .nav-buttons .btn{ flex:1; justify-content:center; }
       .navbar{ padding: 10px 12px; }
@@ -867,6 +883,9 @@
       </div>
 
       <button class="save-delivery-btn" onclick="saveDeliverySmart()">✅ Save</button>
+
+      <!-- ✅ NEW: PDF Save button -->
+      <button id="pdfSaveBtn" class="pdf-delivery-btn" onclick="downloadDeliveryPDF()">📄 PDF সেভ</button>
     </div>
 
     <span class="close-link" onclick="closeModal('deliveryMainModal')">বন্ধ করুন</span>
@@ -923,6 +942,10 @@
     <span class="close-link" onclick="closeModal('personListModal')">বন্ধ করুন</span>
   </div>
 </div>
+
+<!-- ✅ NEW: PDF libs (fast client-side) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script type="module">
   import { database } from './firebase-config.js';
@@ -1936,6 +1959,124 @@
   };
 
   setTimeout(attachZeroBehavior, 500);
+
+  /* =========================================================
+     ✅ NEW: Delivery Form => PDF Save (FAST)
+     - ক্লিক করলে delivery modal এর বর্তমান অবস্থা 그대로 PDF হয়ে ডাউনলোড হবে
+     ========================================================= */
+  window.downloadDeliveryPDF = async () => {
+    const btn = document.getElementById('pdfSaveBtn');
+    if (btn) { btn.disabled = true; btn.innerText = "⏳ PDF হচ্ছে..."; }
+
+    try{
+      // libs ready?
+      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF লাইব্রেরি লোড হয়নি। ইন্টারনেট অন করে আবার চেষ্টা করুন।");
+        return;
+      }
+
+      // capture only modal content (exact UI)
+      const modal = document.getElementById('deliveryMainModal');
+      const content = modal?.querySelector('.modal-content');
+      if (!content) return;
+
+      // ensure latest input values are rendered
+      await new Promise(r => requestAnimationFrame(() => r()));
+
+      // make a clean clone for capture (so button text changes don't appear)
+      const clone = content.cloneNode(true);
+      // remove "বন্ধ করুন" link in PDF if you want to keep same UI remove nothing? -> keep everything as is except no need to remove.
+      // (No change to layout; clone keeps same)
+
+      // put clone offscreen
+      const wrap = document.createElement('div');
+      wrap.style.position = 'fixed';
+      wrap.style.left = '-100000px';
+      wrap.style.top = '0';
+      wrap.style.width = content.offsetWidth + 'px';
+      wrap.style.background = '#ffffff';
+      wrap.style.padding = '0';
+      wrap.style.zIndex = '999999';
+      wrap.appendChild(clone);
+      document.body.appendChild(wrap);
+
+      // ✅ IMPORTANT: For accurate inputs in clone, copy values
+      // copy delivery date
+      const realDate = document.getElementById('deliveryDate')?.value || "";
+      const cloneDate = wrap.querySelector('#deliveryDate');
+      if (cloneDate) cloneDate.value = realDate;
+
+      // copy all number inputs in table by order
+      const realInputs = content.querySelectorAll('input');
+      const cloneInputs = wrap.querySelectorAll('input');
+      const len = Math.min(realInputs.length, cloneInputs.length);
+      for (let i=0; i<len; i++){
+        cloneInputs[i].value = realInputs[i].value;
+      }
+
+      // capture
+      const scale = Math.min(2, (window.devicePixelRatio || 1.5)); // fast but clear
+      const canvas = await window.html2canvas(wrap, {
+        backgroundColor: '#ffffff',
+        scale,
+        useCORS: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: wrap.scrollWidth,
+        windowHeight: wrap.scrollHeight
+      });
+
+      document.body.removeChild(wrap);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+      const { jsPDF } = window.jspdf;
+
+      // A4 landscape for wide table
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 6;
+
+      const imgW = pageW - margin*2;
+      const imgH = (canvas.height * imgW) / canvas.width;
+
+      // paginate if tall
+      let y = margin;
+      let remaining = imgH;
+
+      pdf.addImage(imgData, 'JPEG', margin, y, imgW, imgH);
+
+      // If image height exceeds page, we add pages by shifting y negatively
+      if (imgH > (pageH - margin*2)) {
+        pdf.deletePage(1);
+        let offsetY = 0;
+        while (remaining > 0) {
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', margin, margin - offsetY, imgW, imgH);
+          remaining -= (pageH - margin*2);
+          offsetY += (pageH - margin*2);
+        }
+        // remove first blank page if exists
+        if (pdf.getNumberOfPages() > 0 && pdf.internal.getCurrentPageInfo().pageNumber === 1) {
+          // nothing
+        }
+      }
+
+      // file name
+      const personText = (document.getElementById('displaySelectedPerson')?.innerText || "Delivery").replace(/[^\w\u0980-\u09FF\- ]+/g,'').trim();
+      const date = document.getElementById('deliveryDate')?.value || todayISO();
+      const fileName = `${personText}_${date}.pdf`.replace(/\s+/g,'_');
+
+      pdf.save(fileName);
+    }catch(e){
+      alert(e?.message || "PDF করতে সমস্যা হয়েছে");
+    }finally{
+      if (btn) { btn.disabled = false; btn.innerText = "📄 PDF সেভ"; }
+    }
+  };
 </script>
 </body>
 </html>
